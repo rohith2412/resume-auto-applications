@@ -1,5 +1,69 @@
 "use client"
-import { useState } from "react"
+import { useState, useEffect } from "react"
+
+// ── Live notification toasts ──────────────────────────────────
+const NOTIFS = [
+  { name: 'Thomas K.',  photo: 'https://i.pravatar.cc/150?img=12', msg: 'just got an interview call from Meta',   emoji: '🎉' },
+  { name: 'Sarah M.',   photo: 'https://i.pravatar.cc/150?img=5',  msg: 'applied to 89 jobs while sleeping',      emoji: '🚀' },
+  { name: 'James L.',   photo: 'https://i.pravatar.cc/150?img=33', msg: 'landed an interview at Google',          emoji: '📞' },
+  { name: 'Emily R.',   photo: 'https://i.pravatar.cc/150?img=47', msg: 'got a callback from Amazon',             emoji: '✅' },
+  { name: 'David C.',   photo: 'https://i.pravatar.cc/150?img=68', msg: 'applied to 120 jobs overnight',          emoji: '🌙' },
+  { name: 'Priya S.',   photo: 'https://i.pravatar.cc/150?img=44', msg: 'got an interview at Stripe',             emoji: '🎯' },
+]
+
+function NotifToast() {
+  const [idx, setIdx]         = useState(0)
+  const [phase, setPhase]     = useState('in') // 'in' | 'hold' | 'out' | 'hidden'
+
+  useEffect(() => {
+    const timers = []
+    if (phase === 'in')     timers.push(setTimeout(() => setPhase('hold'),  400))
+    if (phase === 'hold')   timers.push(setTimeout(() => setPhase('out'),   3400))
+    if (phase === 'out')    timers.push(setTimeout(() => setPhase('hidden'), 350))
+    if (phase === 'hidden') timers.push(setTimeout(() => { setIdx(i => (i + 1) % NOTIFS.length); setPhase('in') }, 900))
+    return () => timers.forEach(clearTimeout)
+  }, [phase])
+
+  if (phase === 'hidden') return null
+  const n = NOTIFS[idx]
+  const animIn  = 'notif-in 0.38s cubic-bezier(0.34,1.56,0.64,1) forwards'
+  const animOut = 'notif-out 0.3s ease forwards'
+
+  return (
+    <div style={{
+      position: 'fixed', bottom: 24, right: 24, zIndex: 999,
+      display: 'flex', alignItems: 'center', gap: 11,
+      background: '#fff', borderRadius: 14,
+      border: '1px solid #ebebeb',
+      boxShadow: '0 8px 32px rgba(0,0,0,0.10), 0 1.5px 4px rgba(0,0,0,0.06)',
+      padding: '11px 16px 11px 12px',
+      maxWidth: 290, minWidth: 240,
+      animation: phase === 'out' ? animOut : animIn,
+      fontFamily: "'DM Sans', system-ui, sans-serif",
+    }}>
+      {/* Avatar */}
+      <div style={{ position: 'relative', flexShrink: 0 }}>
+        <img src={n.photo} alt={n.name} width={38} height={38}
+          style={{ borderRadius: '50%', display: 'block', objectFit: 'cover', border: '2px solid #f0f0f0' }} />
+        <span style={{
+          position: 'absolute', bottom: -1, right: -1,
+          width: 16, height: 16, borderRadius: '50%',
+          background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: 9, border: '1.5px solid #f0f0f0',
+        }}>{n.emoji}</span>
+      </div>
+      {/* Text */}
+      <div style={{ minWidth: 0 }}>
+        <div style={{ fontSize: 12.5, fontWeight: 600, color: '#0a0a0a', marginBottom: 2, letterSpacing: '-0.01em' }}>{n.name}</div>
+        <div style={{ fontSize: 11.5, color: '#888', fontWeight: 400, lineHeight: 1.4 }}>{n.msg}</div>
+      </div>
+      {/* Live dot */}
+      <div style={{ flexShrink: 0, marginLeft: 'auto', paddingLeft: 8 }}>
+        <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#16a34a', boxShadow: '0 0 0 2px #dcfce7' }} />
+      </div>
+    </div>
+  )
+}
 
 // ── Auth Modal (unchanged) ────────────────────────────────────
 function AuthModal({ onClose, initialMode }) {
@@ -135,6 +199,8 @@ export default function BlurredPreview() {
         html, body { height: 100%; overflow: hidden; }
         .lp { font-family: 'DM Sans', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
         .lp-btn { font-family: 'DM Sans', system-ui, sans-serif; cursor: pointer; border: none; transition: all 0.15s; letter-spacing: -0.01em; }
+        @keyframes notif-in  { from { opacity:0; transform: translateX(110%) scale(0.95); } to { opacity:1; transform: translateX(0) scale(1); } }
+        @keyframes notif-out { from { opacity:1; transform: translateX(0) scale(1); } to { opacity:0; transform: translateX(110%) scale(0.95); } }
 
         /* ── Responsive ── */
         @media (max-width: 560px) {
@@ -239,21 +305,19 @@ export default function BlurredPreview() {
             {/* Overlapping avatars */}
             <div style={{ display: 'flex', alignItems: 'center' }}>
               {[
-                { bg: '#dbeafe', color: '#3b82f6', initials: 'AK' },
-                { bg: '#fce7f3', color: '#ec4899', initials: 'MR' },
-                { bg: '#d1fae5', color: '#10b981', initials: 'JS' },
-                { bg: '#ede9fe', color: '#8b5cf6', initials: 'TL' },
-              ].map(({ bg, color, initials }, i) => (
-                <div key={initials} style={{
-                  width: 32, height: 32, borderRadius: '50%',
-                  background: bg, border: '2px solid #fff',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 10, fontWeight: 700, color,
-                  marginLeft: i === 0 ? 0 : -10,
-                  zIndex: 4 - i, position: 'relative',
-                }}>
-                  {initials}
-                </div>
+                'https://i.pravatar.cc/150?img=5',
+                'https://i.pravatar.cc/150?img=12',
+                'https://i.pravatar.cc/150?img=44',
+                'https://i.pravatar.cc/150?img=33',
+              ].map((src, i) => (
+                <img key={src} src={src} alt="user" width={32} height={32}
+                  style={{
+                    borderRadius: '50%', objectFit: 'cover',
+                    border: '2px solid #fff',
+                    marginLeft: i === 0 ? 0 : -10,
+                    zIndex: 4 - i, position: 'relative',
+                    display: 'block',
+                  }} />
               ))}
             </div>
             {/* Stars + text */}
@@ -279,6 +343,7 @@ export default function BlurredPreview() {
       </div>
 
       {showModal && <AuthModal onClose={() => setShowModal(false)} initialMode={modalMode} />}
+      <NotifToast />
     </>
   )
 }
