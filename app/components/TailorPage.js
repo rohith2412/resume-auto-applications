@@ -592,27 +592,12 @@ function ProfileView({ user, toast }) {
     github: user.profile?.github || '',
     portfolio: user.profile?.portfolio || '',
     summary: user.profile?.summary || '',
-    university: user.education?.university || '',
-    degree: user.education?.degree || '',
-    gpa: user.education?.gpa || '',
-    graduationYear: user.education?.graduationYear || '',
-    relevantCourses: user.education?.relevantCourses || '',
-    technical: user.skills?.technical || '',
-    languages: user.skills?.languages || '',
-    tools: user.skills?.tools || '',
-    soft: user.skills?.soft || '',
-    targetRole: user.jobPreferences?.targetRole || '',
-    experienceLevel: user.jobPreferences?.experienceLevel || '',
-    preferredLocation: user.jobPreferences?.preferredLocation || '',
-    remote: user.jobPreferences?.remote || false,
-    openToRelocation: user.jobPreferences?.openToRelocation || false,
-    targetCompanies: user.jobPreferences?.targetCompanies || '',
-    availableFrom: user.jobPreferences?.availableFrom || '',
-    expectedSalary: user.jobPreferences?.expectedSalary || '',
   })
   const [saving, setSaving] = useState(false)
   const [resumeFile, setResumeFile] = useState(null)
   const [uploadingResume, setUploadingResume] = useState(false)
+  const [cancelingSub, setCancelingSub] = useState(false)
+  const [subCanceled, setSubCanceled] = useState(false)
   const hasResume = !!user.resumeText
 
   function update(key, value) { setForm(p => ({ ...p, [key]: value })) }
@@ -639,6 +624,17 @@ function ProfileView({ user, toast }) {
       else toast('Failed to upload', 'error')
     } catch { toast('Something went wrong', 'error') }
     setUploadingResume(false)
+  }
+
+  async function handleCancelSub() {
+    if (!window.confirm('Cancel your subscription? You\'ll keep access until the end of your billing period.')) return
+    setCancelingSub(true)
+    try {
+      const res = await fetch('/api/stripe/cancel', { method: 'POST' })
+      if (res.ok) { setSubCanceled(true); toast('Subscription canceled.') }
+      else toast('Failed to cancel — try again.', 'error')
+    } catch { toast('Something went wrong', 'error') }
+    setCancelingSub(false)
   }
 
   return (
@@ -690,52 +686,59 @@ function ProfileView({ user, toast }) {
           </PRow>
         </ProfileSection>
 
-        <ProfileSection title="Education & training" desc="Degrees, certifications, bootcamps, or trade credentials">
-          <TwoCol>
-            <PRow label="Institution"><AutocompleteInput value={form.university} onChange={v => update('university', v)} placeholder="University, bootcamp, trade school..." suggestions={UNIVERSITIES} /></PRow>
-            <PRow label="Degree / Certification"><input value={form.degree} onChange={e => update('degree', e.target.value)} placeholder="B.S. Computer Science, AWS Certified..." className="input" /></PRow>
-          </TwoCol>
-          <TwoCol>
-            <PRow label="GPA / Grade (optional)"><input value={form.gpa} onChange={e => update('gpa', e.target.value)} placeholder="3.8 / 4.0" className="input" /></PRow>
-            <PRow label="Graduation / Completion"><input value={form.graduationYear} onChange={e => update('graduationYear', e.target.value)} placeholder="May 2025, In progress..." className="input" /></PRow>
-          </TwoCol>
-          <PRow label="Relevant coursework (comma-separated)">
-            <input value={form.relevantCourses} onChange={e => update('relevantCourses', e.target.value)} placeholder="Machine Learning, Corporate Finance, UX Research..." className="input" />
-          </PRow>
-        </ProfileSection>
-
-        <ProfileSection title="Skills & expertise" desc="Helps AI highlight the right keywords">
-          <PRow label="Specialized skills"><input value={form.languages} onChange={e => update('languages', e.target.value)} placeholder="Python, SQL, Financial modeling, Patient assessment..." className="input" /></PRow>
-          <PRow label="Tools & software"><input value={form.tools} onChange={e => update('tools', e.target.value)} placeholder="Excel, Salesforce, Figma, React, Tableau, Epic EMR..." className="input" /></PRow>
-          <PRow label="Domain knowledge"><input value={form.technical} onChange={e => update('technical', e.target.value)} placeholder="GAAP, Agile, HIPAA compliance, SEO, Machine Learning..." className="input" /></PRow>
-          <PRow label="Soft skills"><input value={form.soft} onChange={e => update('soft', e.target.value)} placeholder="Leadership, Communication, Stakeholder management..." className="input" /></PRow>
-        </ProfileSection>
-
-        <ProfileSection title="Job preferences" desc="Guides AI on targeting the right roles">
-          <TwoCol>
-            <PRow label="Target role"><input value={form.targetRole} onChange={e => update('targetRole', e.target.value)} placeholder="Software Engineer" className="input" /></PRow>
-            <PRow label="Experience level"><input value={form.experienceLevel} onChange={e => update('experienceLevel', e.target.value)} placeholder="Entry Level, Mid-Level, Senior..." className="input" /></PRow>
-          </TwoCol>
-          <TwoCol>
-            <PRow label="Preferred location"><AutocompleteInput value={form.preferredLocation} onChange={v => update('preferredLocation', v)} placeholder="San Francisco, New York..." suggestions={LOCATIONS} /></PRow>
-            <PRow label="Available from"><input value={form.availableFrom} onChange={e => update('availableFrom', e.target.value)} placeholder="May 2025, Immediately..." className="input" /></PRow>
-          </TwoCol>
-          <TwoCol>
-            <PRow label="Expected salary (optional)"><input value={form.expectedSalary} onChange={e => update('expectedSalary', e.target.value)} placeholder="$120,000 – $150,000" className="input" /></PRow>
-            <PRow label="Dream companies (optional)"><input value={form.targetCompanies} onChange={e => update('targetCompanies', e.target.value)} placeholder="Google, Stripe, Airbnb..." className="input" /></PRow>
-          </TwoCol>
-          <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap' }}>
-            <ProfileCheck label="Open to remote" checked={form.remote} onChange={v => update('remote', v)} />
-            <ProfileCheck label="Open to relocation" checked={form.openToRelocation} onChange={v => update('openToRelocation', v)} />
-          </div>
-        </ProfileSection>
-
         <div>
           <button type="submit" disabled={saving} className="btn btn-black" style={{ minWidth: '150px', height: '42px' }}>
             {saving ? <span className="spinner" /> : 'Save all changes'}
           </button>
         </div>
       </form>
+
+      {/* Membership card */}
+      <div style={{ marginTop: '2.5rem', border: '1px solid #e5e7eb', borderRadius: '12px', overflow: 'hidden' }}>
+        <div style={{ padding: '1.1rem 1.25rem', borderBottom: '1px solid #f0f0f0', background: '#fafafa', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><rect x="2" y="5" width="12" height="9" rx="1.5" stroke="#888" strokeWidth="1.3"/><path d="M5 5V4a3 3 0 0 1 6 0v1" stroke="#888" strokeWidth="1.3" strokeLinecap="round"/></svg>
+          <span style={{ fontSize: '0.9rem', fontWeight: 600, color: '#333' }}>Membership</span>
+        </div>
+        <div style={{ padding: '1.25rem' }}>
+          {subCanceled || !user.subscriptionActive ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#d1d5db', flexShrink: 0 }} />
+                <span style={{ fontSize: '0.875rem', color: '#888' }}>No active subscription</span>
+              </div>
+              <a href="/paywall" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '9px 20px', background: '#0a0a0a', color: '#fff', borderRadius: 8, fontSize: '0.875rem', fontWeight: 500, textDecoration: 'none', width: 'fit-content' }}>
+                Upgrade to Pro →
+              </a>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                    <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#16a34a', flexShrink: 0 }} />
+                    <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#0a0a0a' }}>Pro — Active</span>
+                  </div>
+                  <span style={{ fontSize: '0.8125rem', color: '#888' }}>$20 / month · 700 auto-applications</span>
+                </div>
+                <span style={{ background: '#f0fdf4', color: '#16a34a', border: '1px solid #bbf7d0', borderRadius: 99, fontSize: 11, fontWeight: 600, padding: '3px 10px' }}>Active</span>
+              </div>
+              <button
+                onClick={handleCancelSub}
+                disabled={cancelingSub}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 16px', background: '#fff', border: '1px solid #fecdd3', color: '#e11d48', borderRadius: 8, fontSize: '0.8125rem', fontWeight: 500, cursor: cancelingSub ? 'not-allowed' : 'pointer', width: 'fit-content', fontFamily: 'inherit', opacity: cancelingSub ? 0.6 : 1 }}
+              >
+                {cancelingSub ? <span className="spinner" style={{ width: 13, height: 13, borderColor: '#e11d48', borderTopColor: 'transparent' }} /> : (
+                  <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5.5" stroke="currentColor" strokeWidth="1.3"/><path d="M5 5l4 4M9 5l-4 4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/></svg>
+                )}
+                Cancel subscription
+              </button>
+              <p style={{ fontSize: '0.75rem', color: '#bbb', lineHeight: 1.5 }}>
+                You'll keep access until the end of your current billing period. No refunds for partial months.
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
 
     </div>
   )

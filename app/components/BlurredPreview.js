@@ -9,7 +9,7 @@ const NOTIFS = [
   { name: 'Emily R.',   photo: 'https://i.pravatar.cc/150?img=47', msg: 'Callback from Amazon 🏆'            },
   { name: 'David C.',   photo: 'https://i.pravatar.cc/150?img=68', msg: '120 applications sent tonight ⭐️'  },
   { name: 'Priya S.',   photo: 'https://i.pravatar.cc/150?img=44', msg: 'Interview offer from Stripe 🎯'     },
-  { name: 'Aiden W.',   photo: 'https://i.pravatar.cc/150?img=3',  msg: 'Hired at Apple — thank you! 🍎'     },
+  { name: 'Aiden W.',   photo: 'https://i.pravatar.cc/150?img=3',  msg: 'Hired at Apple - thank you! 🍎'     },
   { name: 'Mia T.',     photo: 'https://i.pravatar.cc/150?img=9',  msg: '200 apps sent while I slept 🌼'     },
   { name: 'Noah B.',    photo: 'https://i.pravatar.cc/150?img=15', msg: 'Offer letter from Netflix ❄️'       },
   { name: 'Chloe F.',   photo: 'https://i.pravatar.cc/150?img=20', msg: 'Recruiter reached out from X 🍀'   },
@@ -21,7 +21,7 @@ const NOTIFS = [
   { name: 'Isabelle D.',photo: 'https://i.pravatar.cc/150?img=56', msg: 'Callback from Airbnb 🌏'           },
   { name: 'Lucas R.',   photo: 'https://i.pravatar.cc/150?img=60', msg: 'Landed a role at OpenAI 🪐'        },
   { name: 'Grace O.',   photo: 'https://i.pravatar.cc/150?img=64', msg: 'LinkedIn recruiter messaged me ⛅️'  },
-  { name: 'Ryan V.',    photo: 'https://i.pravatar.cc/150?img=7',  msg: '500 applications — zero effort 🍓'  },
+  { name: 'Ryan V.',    photo: 'https://i.pravatar.cc/150?img=7',  msg: '500 applications - zero effort 🍓'  },
   { name: 'Nina K.',    photo: 'https://i.pravatar.cc/150?img=16', msg: 'Interview scheduled at Uber 🍎'     },
   { name: 'Oscar M.',   photo: 'https://i.pravatar.cc/150?img=22', msg: 'Job offer accepted today 🥂'        },
   { name: 'Lily Q.',    photo: 'https://i.pravatar.cc/150?img=48', msg: 'Screening call from Microsoft 🎖️'   },
@@ -61,7 +61,8 @@ function StaticPill({ notifStart, delay }) {
   if (phase === 'hidden') return null
 
   return (
-    <div style={{
+    <span className="sp-outer" style={{ display: 'inline-block' }}>
+    <div className="sp-pill" style={{
       zIndex: 20, pointerEvents: 'none',
       display: 'inline-flex', alignItems: 'center', gap: 8, whiteSpace: 'nowrap',
       background: 'rgba(255,255,255,0.93)',
@@ -87,6 +88,7 @@ function StaticPill({ notifStart, delay }) {
         <div style={{ fontSize: 10.5, color: '#777', fontWeight: 400, marginTop: 1 }}>{n.msg}</div>
       </div>
     </div>
+    </span>
   )
 }
 
@@ -244,17 +246,48 @@ export default function BlurredPreview() {
 
         /* ── Responsive ── */
         @media (max-width: 560px) {
-          .lp-nav  { padding: 0 1.1rem !important; height: 52px !important; }
-          .lp-hero { padding: 0 1.1rem !important; }
-          .lp-label { margin-bottom: 14px !important; }
-          .lp-hero h1 { font-size: clamp(2rem, 9vw, 2.6rem) !important; margin-bottom: 14px !important; }
-          .lp-hero p  { font-size: 13px !important; max-width: 100% !important; margin-bottom: 22px !important; }
-          .lp-pill { flex-direction: column !important; align-self: stretch !important; border-radius: 14px !important; margin-bottom: 22px !important; }
-          .lp-pill > div { justify-content: center !important; }
-          .lp-ctas { flex-direction: column !important; align-items: stretch !important; width: 100% !important; max-width: 340px !important; }
-          .lp-ctas .lp-btn { width: 100% !important; padding: 13px 20px !important; }
-          .lp-footer { height: auto !important; padding: 10px 1rem !important; }
-          .lp-footer span { font-size: 10px !important; line-height: 1.7 !important; }
+          /* Nav */
+          .lp-nav { padding: 0 1rem !important; height: 50px !important; }
+
+          /* Hero */
+          .lp-hero { padding: 0 1rem !important; overflow: hidden; justify-content: flex-start !important; padding-top: 18px !important; }
+
+          /* Label */
+          .lp-label { margin-bottom: 10px !important; font-size: 9px !important; }
+
+          /* Headline — give room above/below for pills */
+          .lp-hero h1 { font-size: clamp(1.9rem, 9vw, 2.4rem) !important; margin-top: 52px !important; margin-bottom: 52px !important; position: relative !important; line-height: 1.08 !important; }
+          .sp-word { position: static !important; }
+
+          /* Subtitle */
+          .lp-hero p { font-size: 12.5px !important; max-width: 100% !important; margin-bottom: 16px !important; line-height: 1.55 !important; }
+
+          /* Pricing pill — stay horizontal, compact */
+          .lp-pill { margin-bottom: 16px !important; }
+          .lp-pill > div:first-child { padding: 8px 14px !important; }
+          .lp-pill > div:last-child  { padding: 8px 14px !important; }
+          .lp-pill > div:last-child span { font-size: 11.5px !important; }
+
+          /* CTAs */
+          .lp-ctas { flex-direction: column !important; align-items: stretch !important; width: 100% !important; gap: 8px !important; }
+          .lp-ctas .lp-btn { width: 100% !important; padding: 12px 20px !important; font-size: 13.5px !important; }
+
+          /* Footer */
+          .lp-footer { height: auto !important; padding: 8px 1rem !important; }
+          .lp-footer span { font-size: 9.5px !important; line-height: 1.6 !important; }
+
+          /* Notification pills */
+          .sp-outer { display: inline-block; }
+          .sp-pill { max-width: 165px !important; padding: 3px 8px 3px 3px !important; gap: 4px !important; }
+          .sp-pill img { width: 20px !important; height: 20px !important; }
+          .sp-pill > div > div:first-child { font-size: 8.5px !important; white-space: nowrap; }
+          .sp-pill > div > div:last-child  { font-size: 7.5px !important; white-space: nowrap; }
+
+          /* Pill positions — scattered around headline */
+          .sp-h-1 { position: absolute !important; top: -50px !important; left: 2px !important; bottom: auto !important; right: auto !important; transform: none !important; margin: 0 !important; }
+          .sp-h-2 { position: absolute !important; top: -28px !important; right: 2px !important; left: auto !important; bottom: auto !important; transform: none !important; margin: 0 !important; }
+          .sp-h-3 { position: absolute !important; bottom: -28px !important; left: 2px !important; top: auto !important; right: auto !important; transform: none !important; margin: 0 !important; }
+          .sp-h-4 { position: absolute !important; bottom: -50px !important; right: 2px !important; top: auto !important; left: auto !important; transform: none !important; margin: 0 !important; }
         }
       `}</style>
 
@@ -304,35 +337,35 @@ export default function BlurredPreview() {
           </div>
 
           {/* Headline */}
-          <h1 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 'clamp(2.8rem, 7vw, 5rem)', fontWeight: 800, lineHeight: 1.05, letterSpacing: '-0.03em', marginBottom: 22, maxWidth: 700 }}>
+          <h1 className="lp-h1" style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 'clamp(2.8rem, 7vw, 5rem)', fontWeight: 800, lineHeight: 1.05, letterSpacing: '-0.03em', marginBottom: 22, maxWidth: 700 }}>
             {/* holder left of "Apply" */}
-            <span style={{ position: 'relative', display: 'inline-block' }}>
+            <span className="sp-word" style={{ position: 'relative', display: 'inline-block' }}>
               Apply
-              <span style={{ position: 'absolute', top: '50%', right: '80%', transform: 'translateY(-50%)', marginRight: 6 }}>
+              <span className="sp-h sp-h-1" style={{ position: 'absolute', top: '50%', right: '80%', transform: 'translateY(-50%)', marginRight: 6 }}>
                 <StaticPill notifStart={3} delay={2600} />
               </span>
             </span>
             {' '}to{' '}
             {/* holder above "hundreds" */}
-            <span style={{ position: 'relative', display: 'inline-block' }}>
+            <span className="sp-word" style={{ position: 'relative', display: 'inline-block' }}>
               hundreds
-              <span style={{ position: 'absolute', bottom: '50%', right: 0, marginBottom: 5 }}>
+              <span className="sp-h sp-h-2" style={{ position: 'absolute', bottom: '50%', right: 0, marginBottom: 5 }}>
                 <StaticPill notifStart={0} delay={800} />
               </span>
             </span>
             <br />
             {/* holder left of "of jobs" */}
-            <span style={{ position: 'relative', display: 'inline-block' }}>
+            <span className="sp-word" style={{ position: 'relative', display: 'inline-block' }}>
               of jobs
-              <span style={{ position: 'absolute', top: '70%', right: '50%', transform: 'translateY(-50%)', marginRight: 6 }}>
+              <span className="sp-h sp-h-3" style={{ position: 'absolute', top: '70%', right: '50%', transform: 'translateY(-50%)', marginRight: 6 }}>
                 <StaticPill notifStart={2} delay={1800} />
               </span>
             </span>
             {' '}
             {/* holder right of "overnight" */}
-            <span style={{ position: 'relative', display: 'inline-block' }}>
+            <span className="sp-word" style={{ position: 'relative', display: 'inline-block' }}>
               <em style={{ fontStyle: 'italic', color: '#aaa' }}>overnight.</em>
-              <span style={{ position: 'absolute', top: '50%', left: '80%', transform: 'translateY(-50%)', marginLeft: 6 }}>
+              <span className="sp-h sp-h-4" style={{ position: 'absolute', top: '50%', left: '80%', transform: 'translateY(-50%)', marginLeft: 6 }}>
                 <StaticPill notifStart={4} delay={3400} />
               </span>
             </span>
