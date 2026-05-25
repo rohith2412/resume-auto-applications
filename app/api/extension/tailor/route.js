@@ -3,11 +3,10 @@ import { connectDB } from '@/lib/mongodb'
 import mongoose from 'mongoose'
 import { corsJson, corsOk } from '@/lib/extensionCors'
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
-
 export async function OPTIONS() { return corsOk() }
 
 export async function POST(request) {
+  const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
   const apiKey = (request.headers.get('Authorization') || '').replace('Bearer ', '').trim()
   if (!apiKey) return corsJson({ error: 'Unauthorized' }, { status: 401 })
 
