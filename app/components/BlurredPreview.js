@@ -11,84 +11,62 @@ const NOTIFS = [
   { name: 'Priya S.',   photo: 'https://i.pravatar.cc/150?img=44', msg: 'Interview offer from Stripe 🎯',  },
 ]
 
-// Positions within the hero div — beside / above the headline, not over CTAs
-const L_TOPS = ['14%', '36%', '58%']
-const R_TOPS = ['20%', '42%', '62%']
-
-function NotifPill({ side, startIdx, initialDelay }) {
-  const [idx,    setIdx]    = useState(startIdx % NOTIFS.length)
-  const [phase,  setPhase]  = useState('hidden')
-  const [topIdx, setTopIdx] = useState(0)
+// Inline notification — sits between headline and subtitle in the flow
+function NotifInline() {
+  const [idx,   setIdx]   = useState(0)
+  const [phase, setPhase] = useState('hidden')
 
   useEffect(() => {
-    const t = setTimeout(() => setPhase('in'), initialDelay)
+    const t = setTimeout(() => setPhase('in'), 1000)
     return () => clearTimeout(t)
-  }, [initialDelay])
+  }, [])
 
   useEffect(() => {
     if (phase === 'hidden') return
-    const map  = { in: 380, hold: 3200, out: 300 }
+    const map  = { in: 350, hold: 3000, out: 280 }
     const next = { in: 'hold', hold: 'out', out: 'hidden' }
     const t = setTimeout(() => {
       if (phase === 'out') {
-        setIdx(i => (i + 2) % NOTIFS.length)
-        setTopIdx(i => (i + 1) % (side === 'left' ? L_TOPS.length : R_TOPS.length))
-        setTimeout(() => setPhase('in'), 650)
+        setIdx(i => (i + 1) % NOTIFS.length)
+        setTimeout(() => setPhase('in'), 500)
       } else {
         setPhase(next[phase])
       }
     }, map[phase])
     return () => clearTimeout(t)
-  }, [phase, side])
+  }, [phase])
 
-  if (phase === 'hidden') return null
-
-  const n      = NOTIFS[idx]
-  const tops   = side === 'left' ? L_TOPS : R_TOPS
-  const pos    = side === 'left' ? { left: '3%' } : { right: '3%' }
-  const animIn  = side === 'left'
-    ? 'pill-in-l 0.44s cubic-bezier(0.34,1.4,0.64,1) forwards'
-    : 'pill-in-r 0.44s cubic-bezier(0.34,1.4,0.64,1) forwards'
-  const animOut = side === 'left'
-    ? 'pill-out-l 0.26s ease forwards'
-    : 'pill-out-r 0.26s ease forwards'
+  const n = NOTIFS[idx]
+  const anim = {
+    in:  'notif-rise 0.38s cubic-bezier(0.34,1.4,0.64,1) forwards',
+    hold:'notif-rise 0s forwards',
+    out: 'notif-sink 0.26s ease forwards',
+    hidden: 'none',
+  }
 
   return (
-    <div style={{
-      position: 'absolute',
-      top: tops[topIdx],
-      ...pos,
-      zIndex: 10,
-      display: 'flex', alignItems: 'center', gap: 9,
-      background: 'rgba(255,255,255,0.88)',
-      backdropFilter: 'blur(16px)',
-      WebkitBackdropFilter: 'blur(16px)',
-      borderRadius: 99,
-      border: '1px solid rgba(0,0,0,0.07)',
-      boxShadow: '0 4px 20px rgba(0,0,0,0.07)',
-      padding: '5px 12px 5px 5px',
-      maxWidth: 210,
-      animation: phase === 'out' ? animOut : animIn,
-      fontFamily: "'DM Sans', system-ui, sans-serif",
-      pointerEvents: 'none',
-      whiteSpace: 'nowrap',
-    }}>
-      <img src={n.photo} alt={n.name} width={26} height={26}
-        style={{ borderRadius: '50%', display: 'block', objectFit: 'cover', flexShrink: 0 }} />
-      <div>
-        <div style={{ fontSize: 10.5, fontWeight: 700, color: '#111', letterSpacing: '-0.01em' }}>{n.name}</div>
-        <div style={{ fontSize: 10, color: '#777', fontWeight: 400, marginTop: 1 }}>{n.msg}</div>
-      </div>
+    <div style={{ height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '18px 0 20px' }}>
+      {phase !== 'hidden' && (
+        <div style={{
+          display: 'inline-flex', alignItems: 'center', gap: 9,
+          background: '#f7f7f7',
+          borderRadius: 99,
+          border: '1px solid #efefef',
+          padding: '6px 14px 6px 6px',
+          animation: anim[phase],
+          fontFamily: "'DM Sans', system-ui, sans-serif",
+          whiteSpace: 'nowrap',
+        }}>
+          <img src={n.photo} alt={n.name} width={28} height={28}
+            style={{ borderRadius: '50%', objectFit: 'cover', display: 'block', flexShrink: 0 }} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+            <span style={{ fontSize: 12, fontWeight: 700, color: '#111', letterSpacing: '-0.01em' }}>{n.name}</span>
+            <span style={{ fontSize: 11.5, color: '#888', fontWeight: 400 }}>{n.msg}</span>
+          </div>
+          <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#16a34a', marginLeft: 2, flexShrink: 0 }} />
+        </div>
+      )}
     </div>
-  )
-}
-
-function NotifToasts() {
-  return (
-    <>
-      <NotifPill side="left"  startIdx={0} initialDelay={1400} />
-      <NotifPill side="right" startIdx={3} initialDelay={3200} />
-    </>
   )
 }
 
@@ -226,10 +204,8 @@ export default function BlurredPreview() {
         html, body { height: 100%; overflow: hidden; }
         .lp { font-family: 'DM Sans', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
         .lp-btn { font-family: 'DM Sans', system-ui, sans-serif; cursor: pointer; border: none; transition: all 0.15s; letter-spacing: -0.01em; }
-        @keyframes pill-in-l  { from { opacity:0; transform:translateX(-110%) scale(0.9); } to { opacity:1; transform:translateX(0) scale(1); } }
-        @keyframes pill-out-l { from { opacity:1; transform:translateX(0) scale(1); } to { opacity:0; transform:translateX(-110%) scale(0.9); } }
-        @keyframes pill-in-r  { from { opacity:0; transform:translateX(110%) scale(0.9); } to { opacity:1; transform:translateX(0) scale(1); } }
-        @keyframes pill-out-r { from { opacity:1; transform:translateX(0) scale(1); } to { opacity:0; transform:translateX(110%) scale(0.9); } }
+        @keyframes notif-rise { from { opacity:0; transform:translateY(10px) scale(0.95); } to { opacity:1; transform:translateY(0) scale(1); } }
+        @keyframes notif-sink { from { opacity:1; transform:translateY(0) scale(1); } to { opacity:0; transform:translateY(-8px) scale(0.95); } }
 
         /* ── Responsive ── */
         @media (max-width: 560px) {
@@ -283,8 +259,7 @@ export default function BlurredPreview() {
         </nav>
 
         {/* Hero — vertically centered */}
-        <div className="lp-hero" style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 1.5rem', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
-          <NotifToasts />
+        <div className="lp-hero" style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 1.5rem', textAlign: 'center' }}>
 
           {/* Label */}
           <div className="lp-label" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 11, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#aaa', marginBottom: 28 }}>
@@ -294,9 +269,12 @@ export default function BlurredPreview() {
           </div>
 
           {/* Headline */}
-          <h1 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 'clamp(2.8rem, 7vw, 5rem)', fontWeight: 800, lineHeight: 1.05, letterSpacing: '-0.03em', marginBottom: 22, maxWidth: 700 }}>
+          <h1 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 'clamp(2.8rem, 7vw, 5rem)', fontWeight: 800, lineHeight: 1.05, letterSpacing: '-0.03em', marginBottom: 0, maxWidth: 700 }}>
             Apply to hundreds<br />of jobs <em style={{ fontStyle: 'italic', color: '#aaa' }}>overnight.</em>
           </h1>
+
+          {/* Live notification — between headline and subtitle */}
+          <NotifInline />
 
           {/* Sub */}
           <p style={{ fontSize: 'clamp(0.95rem, 2vw, 1.1rem)', color: '#888', fontWeight: 300, lineHeight: 1.7, maxWidth: 420, marginBottom: 44 }}>
