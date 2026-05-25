@@ -234,6 +234,41 @@ export default function BlurredPreview() {
             </button>
           </div>
 
+          {/* Social proof */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 32 }}>
+            {/* Overlapping avatars */}
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              {[
+                { bg: '#dbeafe', color: '#3b82f6', initials: 'AK' },
+                { bg: '#fce7f3', color: '#ec4899', initials: 'MR' },
+                { bg: '#d1fae5', color: '#10b981', initials: 'JS' },
+                { bg: '#ede9fe', color: '#8b5cf6', initials: 'TL' },
+              ].map(({ bg, color, initials }, i) => (
+                <div key={initials} style={{
+                  width: 32, height: 32, borderRadius: '50%',
+                  background: bg, border: '2px solid #fff',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 10, fontWeight: 700, color,
+                  marginLeft: i === 0 ? 0 : -10,
+                  zIndex: 4 - i, position: 'relative',
+                }}>
+                  {initials}
+                </div>
+              ))}
+            </div>
+            {/* Stars + text */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <div style={{ display: 'flex', gap: 2 }}>
+                {[...Array(5)].map((_, i) => (
+                  <svg key={i} width="13" height="13" viewBox="0 0 16 16" fill="#f59e0b">
+                    <path d="M8 1l1.8 3.6L14 5.3l-3 2.9.7 4.1L8 10.4l-3.7 1.9.7-4.1-3-2.9 4.2-.7z"/>
+                  </svg>
+                ))}
+              </div>
+              <span style={{ fontSize: 11.5, color: '#aaa', fontWeight: 400 }}>Loved by <strong style={{ color: '#555', fontWeight: 600 }}>2,000+</strong> job seekers</span>
+            </div>
+          </div>
+
         </div>
 
         {/* Footer */}
