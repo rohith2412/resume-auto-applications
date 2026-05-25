@@ -90,7 +90,7 @@ function PaywallContent() {
             <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
               <div style={{ display: 'inline-block', fontSize: '11px', fontWeight: 500, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#888', marginBottom: '16px' }}>One plan · Everything included</div>
               <h1 style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: '3rem', fontWeight: 800, letterSpacing: '-0.04em', marginBottom: '6px', lineHeight: 1 }}>
-                $15<span style={{ fontSize: '1.1rem', fontWeight: 400, color: '#888', fontFamily: "'DM Sans','Inter',sans-serif" }}>/mo</span>
+                $20<span style={{ fontSize: '1.1rem', fontWeight: 400, color: '#888', fontFamily: "'DM Sans','Inter',sans-serif" }}>/mo</span>
               </h1>
               <p style={{ fontSize: '13px', color: '#888', fontWeight: 300 }}>Everything you need to land more interviews.</p>
             </div>
@@ -112,7 +112,7 @@ function PaywallContent() {
                   disabled={loading}
                   style={{ width: '100%', padding: '13px', background: '#0a0a0a', color: '#fff', border: 'none', borderRadius: '10px', fontSize: '14px', fontWeight: 500, fontFamily: "'DM Sans','Inter',sans-serif", cursor: loading ? 'not-allowed' : 'pointer', letterSpacing: '-0.01em', opacity: loading ? 0.6 : 1, transition: 'opacity 0.15s' }}
                 >
-                  {loading ? 'Redirecting...' : 'Subscribe — $15 / month'}
+                  {loading ? 'Redirecting...' : 'Subscribe — $20 / month'}
                 </button>
               </div>
             </div>
