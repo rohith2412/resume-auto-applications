@@ -34,6 +34,82 @@ function LogoMark() {
   )
 }
 
+const CMP_ROWS = [
+  { label: 'Monthly price',           manual: 'Free',   lazy: '$30+',  massive: '$39',     reblet: '$20'  },
+  { label: 'Applications / month',    manual: '~20',    lazy: '~150',  massive: '~250',    reblet: '700'  },
+  { label: 'AI fills screening Qs',   manual: false,    lazy: false,   massive: 'partial', reblet: true   },
+  { label: 'LinkedIn Easy Apply',     manual: false,    lazy: true,    massive: true,      reblet: true   },
+  { label: 'Application tracking',    manual: false,    lazy: false,   massive: true,      reblet: true   },
+  { label: 'Runs overnight (async)',  manual: false,    lazy: true,    massive: true,      reblet: true   },
+  { label: 'Cancel anytime',          manual: 'N/A',    lazy: true,    massive: true,      reblet: true   },
+]
+
+const COLS = [
+  { key: 'manual',  label: 'Manual',    highlight: false },
+  { key: 'lazy',    label: 'LazyApply', highlight: false },
+  { key: 'massive', label: 'Massive',   highlight: false },
+  { key: 'reblet',  label: 'reblet',    highlight: true  },
+]
+
+function CmpCell({ val, highlight }) {
+  if (val === true)  return <span style={{ color: highlight ? '#16a34a' : '#22c55e', fontSize: 16, lineHeight: 1 }}>✓</span>
+  if (val === false) return <span style={{ color: '#e0e0e0', fontSize: 16, lineHeight: 1 }}>✕</span>
+  return <span style={{ fontSize: 12.5, fontWeight: highlight ? 700 : 500, color: highlight ? '#0a0a0a' : '#555' }}>{val}</span>
+}
+
+function ComparisonTable() {
+  return (
+    <div style={{ marginBottom: 36 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center', marginBottom: 28 }}>
+        <span style={{ width: 20, height: 1, background: '#e0e0e0', display: 'inline-block' }} />
+        <span style={{ fontSize: 10.5, fontWeight: 600, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#bbb' }}>How we compare</span>
+        <span style={{ width: 20, height: 1, background: '#e0e0e0', display: 'inline-block' }} />
+      </div>
+
+      <div style={{ overflowX: 'auto', borderRadius: 16, border: '1px solid #ebebeb', boxShadow: '0 2px 16px rgba(0,0,0,0.04)' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 520 }}>
+          <thead>
+            <tr>
+              <th style={{ padding: '14px 20px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: '#bbb', letterSpacing: '0.08em', textTransform: 'uppercase', borderBottom: '1px solid #f0f0f0', background: '#fafafa', minWidth: 170 }}>Feature</th>
+              {COLS.map(({ key, label, highlight }) => (
+                <th key={key} style={{
+                  padding: '14px 20px', textAlign: 'center',
+                  fontSize: 12, fontWeight: 700, letterSpacing: '-0.01em',
+                  borderBottom: `2px solid ${highlight ? '#0a0a0a' : '#f0f0f0'}`,
+                  background: highlight ? '#0a0a0a' : '#fafafa',
+                  color: highlight ? '#fff' : '#aaa',
+                  minWidth: 100,
+                }}>
+                  {highlight && <span style={{ display: 'block', fontSize: 9, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#e8c99a', marginBottom: 2 }}>YOU ARE HERE</span>}
+                  {label}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {CMP_ROWS.map(({ label, ...vals }, i) => (
+              <tr key={label} style={{ background: i % 2 === 0 ? '#fff' : '#fafafa' }}>
+                <td style={{ padding: '13px 20px', fontSize: 13, fontWeight: 500, color: '#555', borderBottom: '1px solid #f5f5f5' }}>{label}</td>
+                {COLS.map(({ key, highlight }) => (
+                  <td key={key} style={{
+                    padding: '13px 20px', textAlign: 'center',
+                    borderBottom: '1px solid #f5f5f5',
+                    background: highlight ? (i % 2 === 0 ? '#f5f5f0' : '#f0f0eb') : 'transparent',
+                    borderLeft: highlight ? '1px solid #e8e8e0' : 'none',
+                    borderRight: highlight ? '1px solid #e8e8e0' : 'none',
+                  }}>
+                    <CmpCell val={vals[key]} highlight={highlight} />
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+}
+
 function CheckIcon() {
   return (
     <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0 }}>
@@ -101,6 +177,9 @@ function PaywallContent() {
           .pw-left { border-right: none !important; border-bottom: 1px solid #f0f0f0 !important; padding-bottom: 2rem !important; }
           .pw-stats { grid-template-columns: repeat(3, 1fr) !important; }
         }
+        @media (max-width: 520px) {
+          .pw-stats { grid-template-columns: 1fr !important; gap: 1px !important; }
+        }
       `}</style>
 
       <div className="pw" style={{ minHeight: '100vh', background: '#fff', color: '#0a0a0a', display: 'flex', flexDirection: 'column' }}>
@@ -142,6 +221,9 @@ function PaywallContent() {
                 </div>
               ))}
             </div>
+
+            {/* Comparison table */}
+            <ComparisonTable />
 
             {/* Card */}
             <div style={{ border: '1px solid #ebebeb', borderRadius: 20, overflow: 'hidden', boxShadow: '0 2px 24px rgba(0,0,0,0.05)' }}>
