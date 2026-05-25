@@ -28,7 +28,8 @@ export async function POST(request) {
     await createSession(user._id.toString())
 
     return Response.json({ success: true })
-  } catch {
+  } catch (err) {
+    console.error('[signup]', err?.message ?? err)
     return Response.json({ error: 'Something went wrong' }, { status: 500 })
   }
 }

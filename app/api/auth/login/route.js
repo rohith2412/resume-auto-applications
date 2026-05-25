@@ -29,7 +29,8 @@ export async function POST(request) {
       success: true,
       subscriptionActive: user.subscriptionActive,
     })
-  } catch {
+  } catch (err) {
+    console.error('[login]', err?.message ?? err)
     return Response.json({ error: 'Something went wrong' }, { status: 500 })
   }
 }
