@@ -11,9 +11,9 @@ const NOTIFS = [
   { name: 'Priya S.',   photo: 'https://i.pravatar.cc/150?img=44', msg: 'Interview offer from Stripe 🎯',  },
 ]
 
-// Positions within the hero div (absolute), avoiding the centered text block
-const L_TOPS = ['12%', '48%', '70%']
-const R_TOPS = ['18%', '54%', '74%']
+// Positions within the hero div — beside / above the headline, not over CTAs
+const L_TOPS = ['14%', '36%', '58%']
+const R_TOPS = ['20%', '42%', '62%']
 
 function NotifPill({ side, startIdx, initialDelay }) {
   const [idx,    setIdx]    = useState(startIdx % NOTIFS.length)
@@ -66,18 +66,18 @@ function NotifPill({ side, startIdx, initialDelay }) {
       borderRadius: 99,
       border: '1px solid rgba(0,0,0,0.07)',
       boxShadow: '0 4px 20px rgba(0,0,0,0.07)',
-      padding: '6px 14px 6px 6px',
-      maxWidth: 220,
+      padding: '5px 12px 5px 5px',
+      maxWidth: 210,
       animation: phase === 'out' ? animOut : animIn,
       fontFamily: "'DM Sans', system-ui, sans-serif",
       pointerEvents: 'none',
       whiteSpace: 'nowrap',
     }}>
-      <img src={n.photo} alt={n.name} width={28} height={28}
+      <img src={n.photo} alt={n.name} width={26} height={26}
         style={{ borderRadius: '50%', display: 'block', objectFit: 'cover', flexShrink: 0 }} />
       <div>
-        <div style={{ fontSize: 11, fontWeight: 700, color: '#111', letterSpacing: '-0.01em' }}>{n.name}</div>
-        <div style={{ fontSize: 10.5, color: '#777', fontWeight: 400, marginTop: 1 }}>{n.msg}</div>
+        <div style={{ fontSize: 10.5, fontWeight: 700, color: '#111', letterSpacing: '-0.01em' }}>{n.name}</div>
+        <div style={{ fontSize: 10, color: '#777', fontWeight: 400, marginTop: 1 }}>{n.msg}</div>
       </div>
     </div>
   )
