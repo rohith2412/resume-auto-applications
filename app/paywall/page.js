@@ -35,20 +35,20 @@ function LogoMark() {
 }
 
 const CMP_ROWS = [
-  { label: 'Monthly price',           manual: 'Free',   lazy: '$30+',  massive: '$39',     reblet: '$20'  },
-  { label: 'Applications / month',    manual: '~20',    lazy: '~150',  massive: '~250',    reblet: '700'  },
-  { label: 'AI fills screening Qs',   manual: false,    lazy: false,   massive: 'partial', reblet: true   },
-  { label: 'LinkedIn Easy Apply',     manual: false,    lazy: true,    massive: true,      reblet: true   },
-  { label: 'Application tracking',    manual: false,    lazy: false,   massive: true,      reblet: true   },
-  { label: 'Runs overnight (async)',  manual: false,    lazy: true,    massive: true,      reblet: true   },
-  { label: 'Cancel anytime',          manual: 'N/A',    lazy: true,    massive: true,      reblet: true   },
+  { label: 'Monthly price',           manual: 'Free',  a: '$30+',  b: '$40+',    reblet: '$20'  },
+  { label: 'Applications / month',    manual: '~20',   a: '~150',  b: '~250',    reblet: '700'  },
+  { label: 'AI fills screening Qs',   manual: false,   a: false,   b: 'partial', reblet: true   },
+  { label: 'LinkedIn Easy Apply',     manual: false,   a: true,    b: true,      reblet: true   },
+  { label: 'Application tracking',    manual: false,   a: false,   b: true,      reblet: true   },
+  { label: 'Runs overnight (async)',  manual: false,   a: true,    b: true,      reblet: true   },
+  { label: 'Cancel anytime',          manual: 'N/A',   a: true,    b: true,      reblet: true   },
 ]
 
 const COLS = [
-  { key: 'manual',  label: 'Manual',    highlight: false },
-  { key: 'lazy',    label: 'LazyApply', highlight: false },
-  { key: 'massive', label: 'Massive',   highlight: false },
-  { key: 'reblet',  label: 'reblet',    highlight: true  },
+  { key: 'manual', label: 'Manual',       highlight: false },
+  { key: 'a',      label: 'Competitor A', highlight: false },
+  { key: 'b',      label: 'Competitor B', highlight: false },
+  { key: 'reblet', label: 'reblet',       highlight: true  },
 ]
 
 function CmpCell({ val, highlight }) {
