@@ -122,29 +122,36 @@ function PaywallContent() {
   const success = searchParams.get('success')
   const sessionId = searchParams.get('session_id')
   const [loading, setLoading] = useState(false)
+  const [showManual, setShowManual] = useState(false)
 
   useEffect(() => {
     if (success !== 'true') return
 
-    // If we have a session_id, verify directly with Stripe (works without webhook)
-    if (sessionId) {
-      fetch('/api/stripe/verify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sessionId }),
-      })
-        .then(r => r.json())
-        .then(d => { if (d.active) router.push('/my-resumes') })
-      return
+    async function activate() {
+      // Try session_id verify first (fastest, no webhook needed)
+      if (sessionId) {
+        const res = await fetch('/api/stripe/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionId }),
+        })
+        const d = await res.json()
+        if (d.active) { router.push('/my-resumes'); return }
+      }
+
+      // Poll /api/auth/me for up to 12s (webhook may have already fired)
+      let attempts = 0
+      const interval = setInterval(async () => {
+        attempts++
+        const res = await fetch('/api/auth/me')
+        const data = await res.json()
+        if (data.user?.subscriptionActive) { clearInterval(interval); router.push('/my-resumes'); return }
+        if (attempts >= 6) { clearInterval(interval); setShowManual(true) }
+      }, 2000)
+      return () => clearInterval(interval)
     }
 
-    // Fallback: poll /api/auth/me (requires webhook to have fired)
-    const interval = setInterval(async () => {
-      const res = await fetch('/api/auth/me')
-      const data = await res.json()
-      if (data.user?.subscriptionActive) { clearInterval(interval); router.push('/my-resumes') }
-    }, 2000)
-    return () => clearInterval(interval)
+    activate()
   }, [success, sessionId, router])
 
   async function handleSubscribe() {
@@ -165,13 +172,19 @@ function PaywallContent() {
         </div>
         <div style={{ textAlign: 'center', animation: '_fade 0.4s ease 0.1s both' }}>
           <h2 style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: '1.6rem', fontWeight: 800, color: '#f5f5f0', letterSpacing: '-0.03em', marginBottom: 6 }}>You&apos;re in.</h2>
-          <p style={{ color: '#555', fontSize: '13px', fontWeight: 300 }}>Activating your account&hellip;</p>
+          <p style={{ color: '#555', fontSize: '13px', fontWeight: 300 }}>{showManual ? 'Payment confirmed.' : 'Setting up your account…'}</p>
         </div>
+        {showManual ? (
+          <a href="/my-resumes" style={{ marginTop: 8, padding: '11px 28px', background: '#f5f5f0', color: '#0a0a0a', borderRadius: 10, fontSize: 14, fontWeight: 600, textDecoration: 'none', animation: '_fade 0.4s ease forwards' }}>
+            Go to dashboard →
+          </a>
+        ) : (
         <div style={{ display: 'flex', gap: 5, animation: '_fade 0.4s ease 0.2s both' }}>
           {[0,1,2].map(i => (
             <div key={i} style={{ width: 5, height: 5, borderRadius: '50%', background: '#333', animation: `_spin 1.2s ease-in-out ${i * 0.2}s infinite` }} />
           ))}
         </div>
+        )}
       </div>
     )
   }
