@@ -120,17 +120,32 @@ function PaywallContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const success = searchParams.get('success')
+  const sessionId = searchParams.get('session_id')
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     if (success !== 'true') return
+
+    // If we have a session_id, verify directly with Stripe (works without webhook)
+    if (sessionId) {
+      fetch('/api/stripe/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId }),
+      })
+        .then(r => r.json())
+        .then(d => { if (d.active) router.push('/my-resumes') })
+      return
+    }
+
+    // Fallback: poll /api/auth/me (requires webhook to have fired)
     const interval = setInterval(async () => {
       const res = await fetch('/api/auth/me')
       const data = await res.json()
       if (data.user?.subscriptionActive) { clearInterval(interval); router.push('/my-resumes') }
     }, 2000)
     return () => clearInterval(interval)
-  }, [success, router])
+  }, [success, sessionId, router])
 
   async function handleSubscribe() {
     setLoading(true)
