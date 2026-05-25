@@ -35,20 +35,18 @@ function LogoMark() {
 }
 
 const CMP_ROWS = [
-  { label: 'Monthly price',           manual: 'Free',  a: '$30+',  b: '$40+',    reblet: '$20'  },
-  { label: 'Applications / month',    manual: '~20',   a: '~150',  b: '~250',    reblet: '700'  },
-  { label: 'AI fills screening Qs',   manual: false,   a: false,   b: 'partial', reblet: true   },
-  { label: 'LinkedIn Easy Apply',     manual: false,   a: true,    b: true,      reblet: true   },
-  { label: 'Application tracking',    manual: false,   a: false,   b: true,      reblet: true   },
-  { label: 'Runs overnight (async)',  manual: false,   a: true,    b: true,      reblet: true   },
-  { label: 'Cancel anytime',          manual: 'N/A',   a: true,    b: true,      reblet: true   },
+  { label: 'Monthly price',           others: '$20–$40+', reblet: '$20'  },
+  { label: 'Applications / month',    others: '~150',     reblet: '700'  },
+  { label: 'AI fills screening Qs',   others: false,      reblet: true   },
+  { label: 'LinkedIn Easy Apply',     others: true,       reblet: true   },
+  { label: 'Application tracking',    others: false,      reblet: true   },
+  { label: 'Runs overnight (async)',  others: false,      reblet: true   },
+  { label: 'Cancel anytime',          others: true,       reblet: true   },
 ]
 
 const COLS = [
-  { key: 'manual', label: 'Manual',       highlight: false },
-  { key: 'a',      label: 'Competitor A', highlight: false },
-  { key: 'b',      label: 'Competitor B', highlight: false },
-  { key: 'reblet', label: 'reblet',       highlight: true  },
+  { key: 'others', label: 'Others', highlight: false },
+  { key: 'reblet', label: 'reblet', highlight: true  },
 ]
 
 function CmpCell({ val, highlight }) {
