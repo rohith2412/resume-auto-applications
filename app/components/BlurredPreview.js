@@ -3,70 +3,105 @@ import { useState, useEffect } from "react"
 
 // ── Live notification toasts ──────────────────────────────────
 const NOTIFS = [
-  { name: 'Thomas K.',  photo: 'https://i.pravatar.cc/150?img=12', msg: 'Interview call from Meta 🎉',      },
-  { name: 'Sarah M.',   photo: 'https://i.pravatar.cc/150?img=5',  msg: 'Applied to 89 jobs overnight 🚀', },
-  { name: 'James L.',   photo: 'https://i.pravatar.cc/150?img=33', msg: 'Interview landed at Google 📞',   },
-  { name: 'Emily R.',   photo: 'https://i.pravatar.cc/150?img=47', msg: 'Callback from Amazon ✅',         },
-  { name: 'David C.',   photo: 'https://i.pravatar.cc/150?img=68', msg: '120 applications sent tonight 🌙',},
-  { name: 'Priya S.',   photo: 'https://i.pravatar.cc/150?img=44', msg: 'Interview offer from Stripe 🎯',  },
+  { name: 'Thomas K.',  photo: 'https://i.pravatar.cc/150?img=12', msg: 'Interview call from Meta 🎉'         },
+  { name: 'Sarah M.',   photo: 'https://i.pravatar.cc/150?img=5',  msg: 'Applied to 89 jobs overnight 🎊'    },
+  { name: 'James L.',   photo: 'https://i.pravatar.cc/150?img=33', msg: 'Interview landed at Google 🎖️'      },
+  { name: 'Emily R.',   photo: 'https://i.pravatar.cc/150?img=47', msg: 'Callback from Amazon 🏆'            },
+  { name: 'David C.',   photo: 'https://i.pravatar.cc/150?img=68', msg: '120 applications sent tonight ⭐️'  },
+  { name: 'Priya S.',   photo: 'https://i.pravatar.cc/150?img=44', msg: 'Interview offer from Stripe 🎯'     },
+  { name: 'Aiden W.',   photo: 'https://i.pravatar.cc/150?img=3',  msg: 'Hired at Apple — thank you! 🍎'     },
+  { name: 'Mia T.',     photo: 'https://i.pravatar.cc/150?img=9',  msg: '200 apps sent while I slept 🌼'     },
+  { name: 'Noah B.',    photo: 'https://i.pravatar.cc/150?img=15', msg: 'Offer letter from Netflix ❄️'       },
+  { name: 'Chloe F.',   photo: 'https://i.pravatar.cc/150?img=20', msg: 'Recruiter reached out from X 🍀'   },
+  { name: 'Liam H.',    photo: 'https://i.pravatar.cc/150?img=25', msg: 'First interview in 2 days 👑'       },
+  { name: 'Zoe A.',     photo: 'https://i.pravatar.cc/150?img=29', msg: 'Applied to 300 roles this week 🌱'  },
+  { name: 'Ethan J.',   photo: 'https://i.pravatar.cc/150?img=35', msg: 'Got a call from Shopify 🛍️'        },
+  { name: 'Ava N.',     photo: 'https://i.pravatar.cc/150?img=39', msg: 'Resume shortlisted at Tesla 🌝'     },
+  { name: 'Mason P.',   photo: 'https://i.pravatar.cc/150?img=52', msg: '3 interviews booked this morning ☀️'},
+  { name: 'Isabelle D.',photo: 'https://i.pravatar.cc/150?img=56', msg: 'Callback from Airbnb 🌏'           },
+  { name: 'Lucas R.',   photo: 'https://i.pravatar.cc/150?img=60', msg: 'Landed a role at OpenAI 🪐'        },
+  { name: 'Grace O.',   photo: 'https://i.pravatar.cc/150?img=64', msg: 'LinkedIn recruiter messaged me ⛅️'  },
+  { name: 'Ryan V.',    photo: 'https://i.pravatar.cc/150?img=7',  msg: '500 applications — zero effort 🍓'  },
+  { name: 'Nina K.',    photo: 'https://i.pravatar.cc/150?img=16', msg: 'Interview scheduled at Uber 🍎'     },
+  { name: 'Oscar M.',   photo: 'https://i.pravatar.cc/150?img=22', msg: 'Job offer accepted today 🥂'        },
+  { name: 'Lily Q.',    photo: 'https://i.pravatar.cc/150?img=48', msg: 'Screening call from Microsoft 🎖️'   },
+  { name: 'Finn S.',    photo: 'https://i.pravatar.cc/150?img=57', msg: '150 easy applies while I ate lunch 🎀'},
+  { name: 'Arjun T.',   photo: 'https://i.pravatar.cc/150?img=61', msg: 'Offer from Salesforce signed 🦁'    },
 ]
 
-// Inline notification — sits between headline and subtitle in the flow
-function NotifInline() {
-  const [idx,   setIdx]   = useState(0)
+// Notification pill — fades in, holds, fades out slowly, then next person
+function StaticPill({ notifStart, delay }) {
+  const [idx,   setIdx]   = useState(notifStart % NOTIFS.length)
   const [phase, setPhase] = useState('hidden')
 
   useEffect(() => {
-    const t = setTimeout(() => setPhase('in'), 1000)
+    const t = setTimeout(() => setPhase('in'), delay)
     return () => clearTimeout(t)
-  }, [])
+  }, [delay])
 
   useEffect(() => {
     if (phase === 'hidden') return
-    const map  = { in: 350, hold: 3000, out: 280 }
-    const next = { in: 'hold', hold: 'out', out: 'hidden' }
+    const dur = { in: 450, hold: 3200, out: 1400 }
     const t = setTimeout(() => {
       if (phase === 'out') {
         setIdx(i => (i + 1) % NOTIFS.length)
         setTimeout(() => setPhase('in'), 500)
       } else {
-        setPhase(next[phase])
+        setPhase({ in: 'hold', hold: 'out' }[phase])
       }
-    }, map[phase])
+    }, dur[phase])
     return () => clearTimeout(t)
   }, [phase])
 
   const n = NOTIFS[idx]
-  const anim = {
-    in:  'notif-rise 0.38s cubic-bezier(0.34,1.4,0.64,1) forwards',
-    hold:'notif-rise 0s forwards',
-    out: 'notif-sink 0.26s ease forwards',
-    hidden: 'none',
-  }
+  const anim =
+    phase === 'in'   ? 'sp-in  0.45s ease forwards' :
+    phase === 'out'  ? 'sp-out 1.4s  ease forwards' : 'none'
+
+  if (phase === 'hidden') return null
 
   return (
-    <div style={{ height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '18px 0 20px' }}>
-      {phase !== 'hidden' && (
-        <div style={{
-          display: 'inline-flex', alignItems: 'center', gap: 9,
-          background: '#f7f7f7',
-          borderRadius: 99,
-          border: '1px solid #efefef',
-          padding: '6px 14px 6px 6px',
-          animation: anim[phase],
-          fontFamily: "'DM Sans', system-ui, sans-serif",
-          whiteSpace: 'nowrap',
-        }}>
-          <img src={n.photo} alt={n.name} width={28} height={28}
-            style={{ borderRadius: '50%', objectFit: 'cover', display: 'block', flexShrink: 0 }} />
-          <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-            <span style={{ fontSize: 12, fontWeight: 700, color: '#111', letterSpacing: '-0.01em' }}>{n.name}</span>
-            <span style={{ fontSize: 11.5, color: '#888', fontWeight: 400 }}>{n.msg}</span>
-          </div>
-          <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#16a34a', marginLeft: 2, flexShrink: 0 }} />
-        </div>
-      )}
+    <div style={{
+      zIndex: 20, pointerEvents: 'none',
+      display: 'inline-flex', alignItems: 'center', gap: 8, whiteSpace: 'nowrap',
+      background: 'rgba(255,255,255,0.93)',
+      backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)',
+      borderRadius: 99,
+      border: '1px solid rgba(0,0,0,0.07)',
+      boxShadow: '0 3px 16px rgba(0,0,0,0.07)',
+      padding: '5px 12px 5px 5px',
+      fontFamily: "'DM Sans', system-ui, sans-serif",
+      fontSize: '13px',
+      fontWeight: 400,
+      fontStyle: 'normal',
+      letterSpacing: 'normal',
+      lineHeight: 'normal',
+      textAlign: 'left',
+      whiteSpace: 'nowrap',
+      animation: anim,
+    }}>
+      <img src={n.photo} alt={n.name} width={28} height={28}
+        style={{ borderRadius: '50%', objectFit: 'cover', display: 'block', flexShrink: 0 }} />
+      <div>
+        <div style={{ fontSize: 11, fontWeight: 700, color: '#111', letterSpacing: '-0.01em', lineHeight: 1.2 }}>{n.name}</div>
+        <div style={{ fontSize: 10.5, color: '#777', fontWeight: 400, marginTop: 1 }}>{n.msg}</div>
+      </div>
     </div>
+  )
+}
+
+function NotifFloat() {
+  return (
+    <>
+      {/* top-right — over "hundreds" */}
+      <StaticPill top="20%" right="5%"                               notifStart={0} delay={800}  />
+      {/* mid-left — peeks in beside "of jobs" */}
+      <StaticPill top="38%" left="-52px"                             notifStart={2} delay={1600} />
+      {/* mid-right — peeks in beside "overnight" */}
+      <StaticPill top="44%" right="-52px"                            notifStart={4} delay={2400} />
+      {/* lower-center — over subtitle */}
+      <StaticPill top="63%" left="50%" transform="translateX(-50%)"  notifStart={1} delay={1200} />
+    </>
   )
 }
 
@@ -204,8 +239,8 @@ export default function BlurredPreview() {
         html, body { height: 100%; overflow: hidden; }
         .lp { font-family: 'DM Sans', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
         .lp-btn { font-family: 'DM Sans', system-ui, sans-serif; cursor: pointer; border: none; transition: all 0.15s; letter-spacing: -0.01em; }
-        @keyframes notif-rise { from { opacity:0; transform:translateY(10px) scale(0.95); } to { opacity:1; transform:translateY(0) scale(1); } }
-        @keyframes notif-sink { from { opacity:1; transform:translateY(0) scale(1); } to { opacity:0; transform:translateY(-8px) scale(0.95); } }
+        @keyframes sp-in  { from { opacity:0; transform:scale(0.88); } to { opacity:1; transform:scale(1); } }
+        @keyframes sp-out { from { opacity:1; } to { opacity:0; } }
 
         /* ── Responsive ── */
         @media (max-width: 560px) {
@@ -258,7 +293,7 @@ export default function BlurredPreview() {
           </div>
         </nav>
 
-        {/* Hero — vertically centered */}
+        {/* Hero — vertically centered position: 'absolute', top: '50%', right: '105%', transform: 'translateY(-50%)', marginRight: 6 */} 
         <div className="lp-hero" style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 1.5rem', textAlign: 'center' }}>
 
           {/* Label */}
@@ -269,12 +304,39 @@ export default function BlurredPreview() {
           </div>
 
           {/* Headline */}
-          <h1 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 'clamp(2.8rem, 7vw, 5rem)', fontWeight: 800, lineHeight: 1.05, letterSpacing: '-0.03em', marginBottom: 0, maxWidth: 700 }}>
-            Apply to hundreds<br />of jobs <em style={{ fontStyle: 'italic', color: '#aaa' }}>overnight.</em>
+          <h1 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 'clamp(2.8rem, 7vw, 5rem)', fontWeight: 800, lineHeight: 1.05, letterSpacing: '-0.03em', marginBottom: 22, maxWidth: 700 }}>
+            {/* holder left of "Apply" */}
+            <span style={{ position: 'relative', display: 'inline-block' }}>
+              Apply
+              <span style={{ position: 'absolute', top: '50%', right: '80%', transform: 'translateY(-50%)', marginRight: 6 }}>
+                <StaticPill notifStart={3} delay={2600} />
+              </span>
+            </span>
+            {' '}to{' '}
+            {/* holder above "hundreds" */}
+            <span style={{ position: 'relative', display: 'inline-block' }}>
+              hundreds
+              <span style={{ position: 'absolute', bottom: '50%', right: 0, marginBottom: 5 }}>
+                <StaticPill notifStart={0} delay={800} />
+              </span>
+            </span>
+            <br />
+            {/* holder left of "of jobs" */}
+            <span style={{ position: 'relative', display: 'inline-block' }}>
+              of jobs
+              <span style={{ position: 'absolute', top: '70%', right: '50%', transform: 'translateY(-50%)', marginRight: 6 }}>
+                <StaticPill notifStart={2} delay={1800} />
+              </span>
+            </span>
+            {' '}
+            {/* holder right of "overnight" */}
+            <span style={{ position: 'relative', display: 'inline-block' }}>
+              <em style={{ fontStyle: 'italic', color: '#aaa' }}>overnight.</em>
+              <span style={{ position: 'absolute', top: '50%', left: '80%', transform: 'translateY(-50%)', marginLeft: 6 }}>
+                <StaticPill notifStart={4} delay={3400} />
+              </span>
+            </span>
           </h1>
-
-          {/* Live notification — between headline and subtitle */}
-          <NotifInline />
 
           {/* Sub */}
           <p style={{ fontSize: 'clamp(0.95rem, 2vw, 1.1rem)', color: '#888', fontWeight: 300, lineHeight: 1.7, maxWidth: 420, marginBottom: 44 }}>
