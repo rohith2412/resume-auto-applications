@@ -122,35 +122,19 @@ function PaywallContent() {
   const success = searchParams.get('success')
   const sessionId = searchParams.get('session_id')
   const [loading, setLoading] = useState(false)
-  const [showManual, setShowManual] = useState(false)
 
   useEffect(() => {
     if (success !== 'true') return
-
     async function activate() {
-      // Try session_id verify first (fastest, no webhook needed)
       if (sessionId) {
-        const res = await fetch('/api/stripe/verify', {
+        await fetch('/api/stripe/verify', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ sessionId }),
         })
-        const d = await res.json()
-        if (d.active) { router.push('/my-resumes'); return }
       }
-
-      // Poll /api/auth/me for up to 12s (webhook may have already fired)
-      let attempts = 0
-      const interval = setInterval(async () => {
-        attempts++
-        const res = await fetch('/api/auth/me')
-        const data = await res.json()
-        if (data.user?.subscriptionActive) { clearInterval(interval); router.push('/my-resumes'); return }
-        if (attempts >= 6) { clearInterval(interval); setShowManual(true) }
-      }, 2000)
-      return () => clearInterval(interval)
+      router.push('/my-resumes')
     }
-
     activate()
   }, [success, sessionId, router])
 
@@ -162,29 +146,12 @@ function PaywallContent() {
     else setLoading(false)
   }
 
-  // ── Post-payment confirmation screen ──────────────────────────
+  // ── Post-payment: just show a spinner while verify + redirect runs ──
   if (success === 'true') {
     return (
-      <div style={{ minHeight: '100vh', background: '#0a0a0a', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '1.25rem', fontFamily: "'DM Sans','Inter',sans-serif" }}>
-        <style>{`@keyframes _spin{to{transform:rotate(360deg)}} @keyframes _fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}`}</style>
-        <div style={{ width: 56, height: 56, borderRadius: '50%', border: '1.5px solid #2a2a2a', display: 'flex', alignItems: 'center', justifyContent: 'center', animation: '_fade 0.4s ease forwards' }}>
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M5 12l5 5L19 7" stroke="#e8c99a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-        </div>
-        <div style={{ textAlign: 'center', animation: '_fade 0.4s ease 0.1s both' }}>
-          <h2 style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: '1.6rem', fontWeight: 800, color: '#f5f5f0', letterSpacing: '-0.03em', marginBottom: 6 }}>You&apos;re in.</h2>
-          <p style={{ color: '#555', fontSize: '13px', fontWeight: 300 }}>{showManual ? 'Payment confirmed.' : 'Setting up your account…'}</p>
-        </div>
-        {showManual ? (
-          <a href="/my-resumes" style={{ marginTop: 8, padding: '11px 28px', background: '#f5f5f0', color: '#0a0a0a', borderRadius: 10, fontSize: 14, fontWeight: 600, textDecoration: 'none', animation: '_fade 0.4s ease forwards' }}>
-            Go to dashboard →
-          </a>
-        ) : (
-        <div style={{ display: 'flex', gap: 5, animation: '_fade 0.4s ease 0.2s both' }}>
-          {[0,1,2].map(i => (
-            <div key={i} style={{ width: 5, height: 5, borderRadius: '50%', background: '#333', animation: `_spin 1.2s ease-in-out ${i * 0.2}s infinite` }} />
-          ))}
-        </div>
-        )}
+      <div style={{ minHeight: '100vh', background: '#0a0a0a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'DM Sans','Inter',sans-serif" }}>
+        <style>{`@keyframes _spin { to { transform: rotate(360deg) } }`}</style>
+        <div style={{ width: 22, height: 22, border: '2px solid #333', borderTopColor: '#e8c99a', borderRadius: '50%', animation: '_spin 0.7s linear infinite' }} />
       </div>
     )
   }
