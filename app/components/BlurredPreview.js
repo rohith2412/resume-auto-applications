@@ -11,13 +11,13 @@ const NOTIFS = [
   { name: 'Priya S.',   photo: 'https://i.pravatar.cc/150?img=44', msg: 'Interview offer from Stripe 🎯',  },
 ]
 
-// Random top positions (%) that avoid the dead-center hero text
-const L_TOPS = ['18%', '52%', '72%']
-const R_TOPS = ['24%', '58%', '76%']
+// Positions within the hero div (absolute), avoiding the centered text block
+const L_TOPS = ['12%', '48%', '70%']
+const R_TOPS = ['18%', '54%', '74%']
 
 function NotifPill({ side, startIdx, initialDelay }) {
-  const [idx,   setIdx]   = useState(startIdx % NOTIFS.length)
-  const [phase, setPhase] = useState('hidden')
+  const [idx,    setIdx]    = useState(startIdx % NOTIFS.length)
+  const [phase,  setPhase]  = useState('hidden')
   const [topIdx, setTopIdx] = useState(0)
 
   useEffect(() => {
@@ -27,13 +27,13 @@ function NotifPill({ side, startIdx, initialDelay }) {
 
   useEffect(() => {
     if (phase === 'hidden') return
-    const map = { in: 380, hold: 3200, out: 320 }
+    const map  = { in: 380, hold: 3200, out: 300 }
     const next = { in: 'hold', hold: 'out', out: 'hidden' }
     const t = setTimeout(() => {
       if (phase === 'out') {
         setIdx(i => (i + 2) % NOTIFS.length)
         setTopIdx(i => (i + 1) % (side === 'left' ? L_TOPS.length : R_TOPS.length))
-        setTimeout(() => setPhase('in'), 700)
+        setTimeout(() => setPhase('in'), 650)
       } else {
         setPhase(next[phase])
       }
@@ -43,40 +43,41 @@ function NotifPill({ side, startIdx, initialDelay }) {
 
   if (phase === 'hidden') return null
 
-  const n    = NOTIFS[idx]
-  const tops = side === 'left' ? L_TOPS : R_TOPS
-  const pos  = side === 'left' ? { left: 'max(16px, 3vw)' } : { right: 'max(16px, 3vw)' }
-  const slideIn  = side === 'left'
-    ? 'pill-in-l 0.42s cubic-bezier(0.34,1.4,0.64,1) forwards'
-    : 'pill-in-r 0.42s cubic-bezier(0.34,1.4,0.64,1) forwards'
-  const slideOut = side === 'left'
-    ? 'pill-out-l 0.28s ease forwards'
-    : 'pill-out-r 0.28s ease forwards'
+  const n      = NOTIFS[idx]
+  const tops   = side === 'left' ? L_TOPS : R_TOPS
+  const pos    = side === 'left' ? { left: '3%' } : { right: '3%' }
+  const animIn  = side === 'left'
+    ? 'pill-in-l 0.44s cubic-bezier(0.34,1.4,0.64,1) forwards'
+    : 'pill-in-r 0.44s cubic-bezier(0.34,1.4,0.64,1) forwards'
+  const animOut = side === 'left'
+    ? 'pill-out-l 0.26s ease forwards'
+    : 'pill-out-r 0.26s ease forwards'
 
   return (
     <div style={{
-      position: 'fixed',
+      position: 'absolute',
       top: tops[topIdx],
       ...pos,
-      zIndex: 90,
+      zIndex: 10,
       display: 'flex', alignItems: 'center', gap: 9,
-      background: 'rgba(255,255,255,0.92)',
-      backdropFilter: 'blur(14px)',
-      WebkitBackdropFilter: 'blur(14px)',
+      background: 'rgba(255,255,255,0.88)',
+      backdropFilter: 'blur(16px)',
+      WebkitBackdropFilter: 'blur(16px)',
       borderRadius: 99,
       border: '1px solid rgba(0,0,0,0.07)',
-      boxShadow: '0 4px 24px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.05)',
+      boxShadow: '0 4px 20px rgba(0,0,0,0.07)',
       padding: '6px 14px 6px 6px',
-      maxWidth: 230,
-      animation: phase === 'out' ? slideOut : slideIn,
+      maxWidth: 220,
+      animation: phase === 'out' ? animOut : animIn,
       fontFamily: "'DM Sans', system-ui, sans-serif",
       pointerEvents: 'none',
+      whiteSpace: 'nowrap',
     }}>
-      <img src={n.photo} alt={n.name} width={30} height={30}
-        style={{ borderRadius: '50%', display: 'block', objectFit: 'cover', flexShrink: 0, border: '1.5px solid rgba(255,255,255,0.8)' }} />
-      <div style={{ minWidth: 0 }}>
-        <div style={{ fontSize: 11, fontWeight: 700, color: '#111', letterSpacing: '-0.01em', lineHeight: 1.2 }}>{n.name}</div>
-        <div style={{ fontSize: 10.5, color: '#777', fontWeight: 400, lineHeight: 1.3, marginTop: 1 }}>{n.msg}</div>
+      <img src={n.photo} alt={n.name} width={28} height={28}
+        style={{ borderRadius: '50%', display: 'block', objectFit: 'cover', flexShrink: 0 }} />
+      <div>
+        <div style={{ fontSize: 11, fontWeight: 700, color: '#111', letterSpacing: '-0.01em' }}>{n.name}</div>
+        <div style={{ fontSize: 10.5, color: '#777', fontWeight: 400, marginTop: 1 }}>{n.msg}</div>
       </div>
     </div>
   )
@@ -85,8 +86,8 @@ function NotifPill({ side, startIdx, initialDelay }) {
 function NotifToasts() {
   return (
     <>
-      <NotifPill side="left"  startIdx={0} initialDelay={1200} />
-      <NotifPill side="right" startIdx={3} initialDelay={3000} />
+      <NotifPill side="left"  startIdx={0} initialDelay={1400} />
+      <NotifPill side="right" startIdx={3} initialDelay={3200} />
     </>
   )
 }
@@ -282,7 +283,8 @@ export default function BlurredPreview() {
         </nav>
 
         {/* Hero — vertically centered */}
-        <div className="lp-hero" style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 1.5rem', textAlign: 'center' }}>
+        <div className="lp-hero" style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 1.5rem', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
+          <NotifToasts />
 
           {/* Label */}
           <div className="lp-label" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 11, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#aaa', marginBottom: 28 }}>
@@ -371,7 +373,6 @@ export default function BlurredPreview() {
       </div>
 
       {showModal && <AuthModal onClose={() => setShowModal(false)} initialMode={modalMode} />}
-      <NotifToasts />
     </>
   )
 }
