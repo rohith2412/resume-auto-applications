@@ -1,0 +1,239 @@
+/* reblet extension — uses system fonts only (LinkedIn CSP blocks @import) */
+
+/* ── Floating panel ─────────────────────────────────────── */
+#qr-panel {
+  position: fixed;
+  top: 80px;
+  right: 18px;
+  z-index: 99999;
+  width: 230px;
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 14px;
+  box-shadow: 0 8px 32px rgba(0,0,0,.13), 0 2px 8px rgba(0,0,0,.07);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  font-size: 13px;
+  color: #0a0a0a;
+  overflow: hidden;
+  animation: qr-slideIn .22s ease;
+}
+
+@keyframes qr-slideIn {
+  from { opacity: 0; transform: translateX(18px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* ── Header ──────────────────────────────────────────────── */
+.qr-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 11px 14px 10px;
+  border-bottom: 1px solid #f0f0f0;
+}
+.qr-logo-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.qr-brand {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: -.01em;
+  color: #0a0a0a;
+}
+.qr-x {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 17px;
+  color: #bbb;
+  line-height: 1;
+  padding: 0 2px;
+  transition: color .15s;
+}
+.qr-x:hover { color: #0a0a0a; }
+
+/* ── Stats row ───────────────────────────────────────────── */
+.qr-stats {
+  display: flex;
+  align-items: center;
+  padding: 10px 14px 9px;
+  border-bottom: 1px solid #f0f0f0;
+}
+.qr-stat {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.qr-stat-n {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -.03em;
+  line-height: 1;
+  color: #0a0a0a;
+}
+.qr-stat-l {
+  font-size: 10px;
+  color: #999;
+  margin-top: 2px;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+.qr-stat-sep {
+  width: 1px;
+  height: 28px;
+  background: #e8e8e8;
+  margin: 0 6px;
+}
+
+/* ── Status row ──────────────────────────────────────────── */
+.qr-status-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 14px 4px;
+}
+.qr-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #d1d5db;
+  flex-shrink: 0;
+  transition: background .3s;
+}
+.qr-dot.qr-dot-active {
+  background: #16a34a;
+  box-shadow: 0 0 0 3px rgba(22,163,74,.18);
+  animation: qr-pulse 1.6s ease-in-out infinite;
+}
+@keyframes qr-pulse {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(22,163,74,.18); }
+  50%       { box-shadow: 0 0 0 6px rgba(22,163,74,.06); }
+}
+.qr-status-txt {
+  font-size: 11.5px;
+  color: #555;
+  line-height: 1.4;
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Current job ─────────────────────────────────────────── */
+.qr-job-row {
+  padding: 4px 14px 6px;
+}
+.qr-job-name {
+  display: block;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #0a0a0a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.qr-job-co {
+  display: block;
+  font-size: 11px;
+  color: #888;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Buttons ─────────────────────────────────────────────── */
+.qr-btns {
+  padding: 8px 12px 12px;
+}
+.qr-btn-start {
+  width: 100%;
+  padding: 9px 12px;
+  background: #0a0a0a;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  letter-spacing: -.01em;
+  transition: background .15s;
+}
+.qr-btn-start:hover { background: #2a2a2a; }
+
+.qr-run-btns {
+  display: flex;
+  gap: 7px;
+}
+.qr-btn-pause,
+.qr-btn-stop {
+  flex: 1;
+  padding: 8px 4px;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .15s;
+}
+.qr-btn-pause {
+  background: #f7f7f5;
+  color: #0a0a0a;
+  border: 1px solid #e0e0e0;
+}
+.qr-btn-pause:hover { border-color: #0a0a0a; }
+
+.qr-btn-stop {
+  background: #fff5f5;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+.qr-btn-stop:hover { background: #fee2e2; }
+
+.qr-btn-diag {
+  width: 100%;
+  margin-top: 6px;
+  padding: 7px;
+  background: transparent;
+  color: #aaa;
+  border: 1px dashed #e0e0e0;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 11.5px;
+  cursor: pointer;
+  transition: all .15s;
+}
+.qr-btn-diag:hover { border-color: #888; color: #555; }
+
+/* ── Activity log ────────────────────────────────────────── */
+.qr-log-wrap {
+  border-top: 1px solid #f0f0f0;
+  padding: 6px 0 0;
+}
+.qr-log-label {
+  font-size: 9.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: #ccc;
+  padding: 0 14px 4px;
+}
+.qr-log {
+  max-height: 130px;
+  overflow-y: auto;
+  padding: 0 14px 10px;
+}
+.qr-log-line {
+  font-size: 10.5px;
+  color: #888;
+  line-height: 1.6;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.qr-log-ok   { color: #16a34a; }
+.qr-log-warn { color: #dc2626; }

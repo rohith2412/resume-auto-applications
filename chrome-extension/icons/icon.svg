@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <!-- Background -->
+  <rect width="128" height="128" rx="28" fill="#1a1a1a"/>
+  <!-- Document body -->
+  <rect x="39" y="18" width="50" height="68" rx="5" fill="#ffffff"/>
+  <!-- Header bar -->
+  <rect x="46" y="25" width="36" height="7" rx="2" fill="#d0d0d0"/>
+  <!-- Lines -->
+  <rect x="46" y="36" width="36" height="4" rx="1.5" fill="#e8e8e8"/>
+  <rect x="46" y="44" width="28" height="4" rx="1.5" fill="#e8e8e8"/>
+  <rect x="46" y="52" width="32" height="4" rx="1.5" fill="#e8e8e8"/>
+  <!-- Gold block -->
+  <rect x="39" y="86" width="50" height="10" rx="0" fill="#e8c99a"/>
+  <!-- Pencil tip triangle -->
+  <polygon points="39,96 89,96 64,114" fill="#e8c99a"/>
+  <!-- Tip cap -->
+  <polygon points="57,106 71,106 64,114" fill="#666"/>
+</svg>

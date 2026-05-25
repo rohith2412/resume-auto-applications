@@ -1,0 +1,133 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  width: 280px;
+  font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  background: #fff;
+  color: #0a0a0a;
+}
+
+/* ── Header ── */
+.header {
+  display: flex; align-items: center; gap: 8px;
+  padding: 12px 14px;
+  border-bottom: 1px solid #e0e0e0;
+}
+.brand {
+  font-size: 14px; font-weight: 500;
+  letter-spacing: -0.02em; color: #0a0a0a;
+}
+
+/* ── Section wrapper ── */
+.section { padding: 14px 14px 16px; }
+
+/* ── User block (connected) ── */
+.user-block {
+  display: flex; align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.user-name {
+  font-size: 13.5px; font-weight: 600;
+  letter-spacing: -0.01em; color: #0a0a0a;
+  margin-bottom: 1px;
+}
+.user-email {
+  font-size: 11px; color: #bbb; font-weight: 400;
+  word-break: break-all;
+}
+.status-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: #16a34a; flex-shrink: 0;
+  box-shadow: 0 0 0 2px #dcfce7;
+}
+
+/* ── Search prefs ── */
+.search-prefs {
+  font-size: 11px; color: #aaa;
+  line-height: 1.55; margin-bottom: 12px;
+  padding: 8px 10px;
+  background: #fafafa; border-radius: 7px;
+  border: 1px solid #f0f0f0;
+}
+.search-prefs strong { color: #555; font-weight: 500; }
+
+/* ── LinkedIn button ── */
+.btn-linkedin {
+  width: 100%; padding: 10px 14px;
+  background: #0a66c2; color: #fff;
+  border: none; border-radius: 8px;
+  font-family: inherit; font-size: 13px; font-weight: 600;
+  cursor: pointer; letter-spacing: -0.01em;
+  transition: background 0.15s;
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+  margin-bottom: 10px;
+}
+.btn-linkedin:hover { background: #0858a8; }
+
+/* ── Footer row ── */
+.footer-row {
+  display: flex; align-items: center;
+  justify-content: space-between;
+}
+.footer-link {
+  font-size: 11.5px; color: #888; font-weight: 500;
+  text-decoration: none; letter-spacing: -0.01em;
+}
+.footer-link:hover { color: #0a0a0a; }
+.btn-disconnect {
+  background: none; border: none; cursor: pointer;
+  font-family: inherit; font-size: 11.5px;
+  color: #ccc; font-weight: 500;
+  padding: 0; transition: color 0.15s;
+}
+.btn-disconnect:hover { color: #888; }
+
+/* ── Connect state ── */
+.connect-title {
+  font-size: 14px; font-weight: 600;
+  letter-spacing: -0.02em; margin-bottom: 5px;
+}
+.connect-sub {
+  font-size: 11.5px; color: #999; line-height: 1.6;
+  margin-bottom: 14px; font-weight: 300;
+}
+.inline-link {
+  color: #0a66c2; text-decoration: none; font-weight: 500;
+}
+.inline-link:hover { text-decoration: underline; }
+
+/* ── Field ── */
+.field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 10px; }
+.field-label {
+  font-size: 10px; font-weight: 600; color: #bbb;
+  letter-spacing: 0.07em; text-transform: uppercase;
+}
+.input {
+  border: 1.5px solid #ebebeb; border-radius: 7px;
+  padding: 8px 11px; font-size: 12.5px;
+  font-family: inherit; color: #0a0a0a; outline: none;
+  transition: border-color 0.15s; width: 100%; background: #fff;
+}
+.input:focus { border-color: #0a0a0a; }
+.input::placeholder { color: #d8d8d8; }
+
+/* ── Error ── */
+.error {
+  background: #fff5f5; border: 1px solid #fecaca;
+  border-radius: 6px; padding: 7px 10px;
+  font-size: 11.5px; color: #dc2626;
+  margin-bottom: 10px; line-height: 1.5;
+}
+
+/* ── Connect button ── */
+.btn-dark {
+  width: 100%; padding: 10px;
+  background: #0a0a0a; color: #fff;
+  border: none; border-radius: 7px;
+  font-family: inherit; font-size: 13px; font-weight: 600;
+  cursor: pointer; letter-spacing: -0.01em; transition: background 0.15s;
+}
+.btn-dark:hover:not(:disabled) { background: #2a2a2a; }
+.btn-dark:disabled { opacity: 0.5; cursor: not-allowed; }
