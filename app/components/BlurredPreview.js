@@ -3,65 +3,91 @@ import { useState, useEffect } from "react"
 
 // ── Live notification toasts ──────────────────────────────────
 const NOTIFS = [
-  { name: 'Thomas K.',  photo: 'https://i.pravatar.cc/150?img=12', msg: 'just got an interview call from Meta',   emoji: '🎉' },
-  { name: 'Sarah M.',   photo: 'https://i.pravatar.cc/150?img=5',  msg: 'applied to 89 jobs while sleeping',      emoji: '🚀' },
-  { name: 'James L.',   photo: 'https://i.pravatar.cc/150?img=33', msg: 'landed an interview at Google',          emoji: '📞' },
-  { name: 'Emily R.',   photo: 'https://i.pravatar.cc/150?img=47', msg: 'got a callback from Amazon',             emoji: '✅' },
-  { name: 'David C.',   photo: 'https://i.pravatar.cc/150?img=68', msg: 'applied to 120 jobs overnight',          emoji: '🌙' },
-  { name: 'Priya S.',   photo: 'https://i.pravatar.cc/150?img=44', msg: 'got an interview at Stripe',             emoji: '🎯' },
+  { name: 'Thomas K.',  photo: 'https://i.pravatar.cc/150?img=12', msg: 'Interview call from Meta 🎉',      },
+  { name: 'Sarah M.',   photo: 'https://i.pravatar.cc/150?img=5',  msg: 'Applied to 89 jobs overnight 🚀', },
+  { name: 'James L.',   photo: 'https://i.pravatar.cc/150?img=33', msg: 'Interview landed at Google 📞',   },
+  { name: 'Emily R.',   photo: 'https://i.pravatar.cc/150?img=47', msg: 'Callback from Amazon ✅',         },
+  { name: 'David C.',   photo: 'https://i.pravatar.cc/150?img=68', msg: '120 applications sent tonight 🌙',},
+  { name: 'Priya S.',   photo: 'https://i.pravatar.cc/150?img=44', msg: 'Interview offer from Stripe 🎯',  },
 ]
 
-function NotifToast() {
-  const [idx, setIdx]         = useState(0)
-  const [phase, setPhase]     = useState('in') // 'in' | 'hold' | 'out' | 'hidden'
+// Random top positions (%) that avoid the dead-center hero text
+const L_TOPS = ['18%', '52%', '72%']
+const R_TOPS = ['24%', '58%', '76%']
+
+function NotifPill({ side, startIdx, initialDelay }) {
+  const [idx,   setIdx]   = useState(startIdx % NOTIFS.length)
+  const [phase, setPhase] = useState('hidden')
+  const [topIdx, setTopIdx] = useState(0)
 
   useEffect(() => {
-    const timers = []
-    if (phase === 'in')     timers.push(setTimeout(() => setPhase('hold'),  400))
-    if (phase === 'hold')   timers.push(setTimeout(() => setPhase('out'),   3400))
-    if (phase === 'out')    timers.push(setTimeout(() => setPhase('hidden'), 350))
-    if (phase === 'hidden') timers.push(setTimeout(() => { setIdx(i => (i + 1) % NOTIFS.length); setPhase('in') }, 900))
-    return () => timers.forEach(clearTimeout)
-  }, [phase])
+    const t = setTimeout(() => setPhase('in'), initialDelay)
+    return () => clearTimeout(t)
+  }, [initialDelay])
+
+  useEffect(() => {
+    if (phase === 'hidden') return
+    const map = { in: 380, hold: 3200, out: 320 }
+    const next = { in: 'hold', hold: 'out', out: 'hidden' }
+    const t = setTimeout(() => {
+      if (phase === 'out') {
+        setIdx(i => (i + 2) % NOTIFS.length)
+        setTopIdx(i => (i + 1) % (side === 'left' ? L_TOPS.length : R_TOPS.length))
+        setTimeout(() => setPhase('in'), 700)
+      } else {
+        setPhase(next[phase])
+      }
+    }, map[phase])
+    return () => clearTimeout(t)
+  }, [phase, side])
 
   if (phase === 'hidden') return null
-  const n = NOTIFS[idx]
-  const animIn  = 'notif-in 0.38s cubic-bezier(0.34,1.56,0.64,1) forwards'
-  const animOut = 'notif-out 0.3s ease forwards'
+
+  const n    = NOTIFS[idx]
+  const tops = side === 'left' ? L_TOPS : R_TOPS
+  const pos  = side === 'left' ? { left: 'max(16px, 3vw)' } : { right: 'max(16px, 3vw)' }
+  const slideIn  = side === 'left'
+    ? 'pill-in-l 0.42s cubic-bezier(0.34,1.4,0.64,1) forwards'
+    : 'pill-in-r 0.42s cubic-bezier(0.34,1.4,0.64,1) forwards'
+  const slideOut = side === 'left'
+    ? 'pill-out-l 0.28s ease forwards'
+    : 'pill-out-r 0.28s ease forwards'
 
   return (
     <div style={{
-      position: 'fixed', bottom: 24, right: 24, zIndex: 999,
-      display: 'flex', alignItems: 'center', gap: 11,
-      background: '#fff', borderRadius: 14,
-      border: '1px solid #ebebeb',
-      boxShadow: '0 8px 32px rgba(0,0,0,0.10), 0 1.5px 4px rgba(0,0,0,0.06)',
-      padding: '11px 16px 11px 12px',
-      maxWidth: 290, minWidth: 240,
-      animation: phase === 'out' ? animOut : animIn,
+      position: 'fixed',
+      top: tops[topIdx],
+      ...pos,
+      zIndex: 90,
+      display: 'flex', alignItems: 'center', gap: 9,
+      background: 'rgba(255,255,255,0.92)',
+      backdropFilter: 'blur(14px)',
+      WebkitBackdropFilter: 'blur(14px)',
+      borderRadius: 99,
+      border: '1px solid rgba(0,0,0,0.07)',
+      boxShadow: '0 4px 24px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.05)',
+      padding: '6px 14px 6px 6px',
+      maxWidth: 230,
+      animation: phase === 'out' ? slideOut : slideIn,
       fontFamily: "'DM Sans', system-ui, sans-serif",
+      pointerEvents: 'none',
     }}>
-      {/* Avatar */}
-      <div style={{ position: 'relative', flexShrink: 0 }}>
-        <img src={n.photo} alt={n.name} width={38} height={38}
-          style={{ borderRadius: '50%', display: 'block', objectFit: 'cover', border: '2px solid #f0f0f0' }} />
-        <span style={{
-          position: 'absolute', bottom: -1, right: -1,
-          width: 16, height: 16, borderRadius: '50%',
-          background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 9, border: '1.5px solid #f0f0f0',
-        }}>{n.emoji}</span>
-      </div>
-      {/* Text */}
+      <img src={n.photo} alt={n.name} width={30} height={30}
+        style={{ borderRadius: '50%', display: 'block', objectFit: 'cover', flexShrink: 0, border: '1.5px solid rgba(255,255,255,0.8)' }} />
       <div style={{ minWidth: 0 }}>
-        <div style={{ fontSize: 12.5, fontWeight: 600, color: '#0a0a0a', marginBottom: 2, letterSpacing: '-0.01em' }}>{n.name}</div>
-        <div style={{ fontSize: 11.5, color: '#888', fontWeight: 400, lineHeight: 1.4 }}>{n.msg}</div>
-      </div>
-      {/* Live dot */}
-      <div style={{ flexShrink: 0, marginLeft: 'auto', paddingLeft: 8 }}>
-        <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#16a34a', boxShadow: '0 0 0 2px #dcfce7' }} />
+        <div style={{ fontSize: 11, fontWeight: 700, color: '#111', letterSpacing: '-0.01em', lineHeight: 1.2 }}>{n.name}</div>
+        <div style={{ fontSize: 10.5, color: '#777', fontWeight: 400, lineHeight: 1.3, marginTop: 1 }}>{n.msg}</div>
       </div>
     </div>
+  )
+}
+
+function NotifToasts() {
+  return (
+    <>
+      <NotifPill side="left"  startIdx={0} initialDelay={1200} />
+      <NotifPill side="right" startIdx={3} initialDelay={3000} />
+    </>
   )
 }
 
@@ -199,8 +225,10 @@ export default function BlurredPreview() {
         html, body { height: 100%; overflow: hidden; }
         .lp { font-family: 'DM Sans', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
         .lp-btn { font-family: 'DM Sans', system-ui, sans-serif; cursor: pointer; border: none; transition: all 0.15s; letter-spacing: -0.01em; }
-        @keyframes notif-in  { from { opacity:0; transform: translateX(110%) scale(0.95); } to { opacity:1; transform: translateX(0) scale(1); } }
-        @keyframes notif-out { from { opacity:1; transform: translateX(0) scale(1); } to { opacity:0; transform: translateX(110%) scale(0.95); } }
+        @keyframes pill-in-l  { from { opacity:0; transform:translateX(-110%) scale(0.9); } to { opacity:1; transform:translateX(0) scale(1); } }
+        @keyframes pill-out-l { from { opacity:1; transform:translateX(0) scale(1); } to { opacity:0; transform:translateX(-110%) scale(0.9); } }
+        @keyframes pill-in-r  { from { opacity:0; transform:translateX(110%) scale(0.9); } to { opacity:1; transform:translateX(0) scale(1); } }
+        @keyframes pill-out-r { from { opacity:1; transform:translateX(0) scale(1); } to { opacity:0; transform:translateX(110%) scale(0.9); } }
 
         /* ── Responsive ── */
         @media (max-width: 560px) {
@@ -329,7 +357,7 @@ export default function BlurredPreview() {
                   </svg>
                 ))}
               </div>
-              <span style={{ fontSize: 11.5, color: '#aaa', fontWeight: 400 }}>Loved by <strong style={{ color: '#555', fontWeight: 600 }}>2,000+</strong> job seekers</span>
+              <span style={{ fontSize: 11.5, color: '#aaa', fontWeight: 400 }}>Loved by <strong style={{ color: '#555', fontWeight: 600 }}>150,000+</strong> job seekers</span>
             </div>
           </div>
 
@@ -343,7 +371,7 @@ export default function BlurredPreview() {
       </div>
 
       {showModal && <AuthModal onClose={() => setShowModal(false)} initialMode={modalMode} />}
-      <NotifToast />
+      <NotifToasts />
     </>
   )
 }
