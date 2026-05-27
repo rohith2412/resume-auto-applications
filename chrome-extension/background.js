@@ -149,6 +149,22 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
           break
         }
 
+        case 'AI_ANALYZE_STEP': {
+          const { apiKey: ak2 } = await getConfig()
+          if (!ak2) { sendResponse({ answers: [] }); break }
+          const data = await apiFetch('/api/extension/ai-step', {
+            method: 'POST',
+            body: JSON.stringify({
+              jobTitle:    msg.jobTitle,
+              company:     msg.company,
+              stepFields:  msg.stepFields  || [],
+              errorFields: msg.errorFields || [],
+            }),
+          })
+          sendResponse(data)
+          break
+        }
+
         case 'TRACK': {
           const { apiKey } = await getConfig()
           if (!apiKey) {
@@ -165,6 +181,28 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
             }),
           })
           sendResponse(data)
+          break
+        }
+
+        case 'LOOKUP_QUESTIONS': {
+          const { apiKey } = await getConfig()
+          if (!apiKey) { sendResponse({ answers: [] }); break }
+          const data = await apiFetch('/api/extension/questions/lookup', {
+            method: 'POST',
+            body: JSON.stringify({ labels: msg.labels || [] }),
+          })
+          sendResponse(data)
+          break
+        }
+
+        case 'SAVE_QUESTIONS': {
+          const { apiKey } = await getConfig()
+          if (!apiKey) { sendResponse({ ok: true }); break }
+          await apiFetch('/api/extension/questions/save', {
+            method: 'POST',
+            body: JSON.stringify({ questions: msg.questions || [] }),
+          })
+          sendResponse({ ok: true })
           break
         }
 

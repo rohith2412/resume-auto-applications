@@ -1,0 +1,15 @@
+{
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "8e490d97-13aa-4bcf-805d-c8faaa9b01f2"
+      }
+    },
+    "ios": {
+      "bundleIdentifier": "com.rohith.com.thequickresume",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    }
+  }
+}

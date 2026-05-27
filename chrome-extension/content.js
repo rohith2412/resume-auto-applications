@@ -22,6 +22,10 @@
   /* ═══════════════════════════════════════════════════════════
      UTILITIES
   ═══════════════════════════════════════════════════════════ */
+  function normalizeLabel(label = '') {
+    return label.toLowerCase().replace(/[^\w\s]/g, ' ').replace(/\s+/g, ' ').trim()
+  }
+
   const sleep = ms => new Promise(r => setTimeout(r, ms))
   const jitter = (lo, hi) => sleep(lo + Math.random() * (hi - lo))
 
@@ -62,6 +66,17 @@
     el.dispatchEvent(new Event('change', { bubbles: true }))
   }
 
+  // Returns a date string relative to today (offset = days from now)
+  function futureDate(offsetDays = 14, fmt = 'YYYY-MM-DD') {
+    const d = new Date()
+    d.setDate(d.getDate() + offsetDays)
+    const y = d.getFullYear()
+    const m = String(d.getMonth() + 1).padStart(2, '0')
+    const day = String(d.getDate()).padStart(2, '0')
+    if (fmt === 'YYYY-MM') return `${y}-${m}`
+    return `${y}-${m}-${day}`
+  }
+
   async function fillField(el, value) {
     if (!el || value == null || value === '') return
     try {
@@ -69,6 +84,7 @@
       await jitter(60, 120)
       el.focus()
       await jitter(50, 100)
+
       if (el.tagName === 'SELECT') {
         const v = String(value).toLowerCase()
         const opt = [...el.options].find(o =>
@@ -79,9 +95,15 @@
           el.dispatchEvent(new Event('change', { bubbles: true }))
         }
       } else {
+        // Respect character limits — truncate cleanly at a word boundary
+        let finalVal = String(value)
+        const maxLen = el.maxLength > 0 ? el.maxLength : Infinity
+        if (finalVal.length > maxLen) {
+          finalVal = finalVal.slice(0, maxLen - 1).replace(/\s+\S*$/, '') // trim at last word
+        }
         reactSet(el, '')
         await jitter(30, 60)
-        reactSet(el, String(value))
+        reactSet(el, finalVal)
       }
       await jitter(50, 100)
 
@@ -292,87 +314,324 @@
     if (!pane) return []
     const SKIP = /^(first.?name|last.?name|full.?name|email|phone|mobile|linkedin url)/i
     const out  = []
+    const seen = new Set()
 
     pane.querySelectorAll('fieldset, [class*="form-element"]').forEach(fs => {
       const labelEl  = fs.querySelector('legend, label, [class*="label"]')
       const labelTxt = labelEl?.innerText?.trim()
-      if (!labelTxt || SKIP.test(labelTxt)) return
-      const input = fs.querySelector('input, select, textarea')
-      if (!input) return
-      const type = input.type || input.tagName.toLowerCase()
-      const options = type === 'select-one'
-        ? [...input.options].map(o => o.text).filter(t => t && !/select an option/i.test(t))
-        : [...fs.querySelectorAll('input[type=radio]')]
-            .map(r => document.querySelector(`label[for="${r.id}"]`)?.innerText?.trim() ||
-                      r.closest('label')?.innerText?.trim())
-            .filter(Boolean)
-      out.push({ label: labelTxt, type, options })
+      if (!labelTxt || SKIP.test(labelTxt) || seen.has(labelTxt)) return
+      seen.add(labelTxt)
+
+      const radios     = [...fs.querySelectorAll('input[type=radio]')]
+      const checkboxes = [...fs.querySelectorAll('input[type=checkbox]')]
+      const select     = fs.querySelector('select')
+      const textarea   = fs.querySelector('textarea')
+      const input      = fs.querySelector('input:not([type=radio]):not([type=checkbox]):not([type=hidden])')
+
+      if (select) {
+        out.push({
+          label: labelTxt, type: 'select',
+          options: [...select.options].map(o => o.text).filter(t => t && !/select an option/i.test(t)),
+        })
+      } else if (radios.length) {
+        out.push({
+          label: labelTxt, type: 'radio',
+          options: radios.map(r =>
+            document.querySelector(`label[for="${r.id}"]`)?.innerText?.trim() ||
+            r.closest('label')?.innerText?.trim()
+          ).filter(Boolean),
+        })
+      } else if (checkboxes.length) {
+        out.push({
+          label: labelTxt, type: 'checkbox',
+          options: checkboxes.map(c =>
+            document.querySelector(`label[for="${c.id}"]`)?.innerText?.trim() ||
+            c.closest('label')?.innerText?.trim()
+          ).filter(Boolean),
+        })
+      } else if (textarea) {
+        out.push({ label: labelTxt, type: 'textarea' })
+      } else if (input) {
+        out.push({
+          label: labelTxt,
+          type: input.type || 'text',
+          placeholder: input.placeholder || '',
+        })
+      }
     })
+    // Secondary pass: catch checkbox groups outside standard fieldset wrappers (e.g. Greenhouse)
+    const allCbInputs = [...pane.querySelectorAll('input[type=checkbox]')]
+    const cbSeen = new Set()
+    for (const cb of allCbInputs) {
+      let container = cb.parentElement
+      while (container && container !== pane) {
+        if ([...container.querySelectorAll('input[type=checkbox]')].length > 1) break
+        container = container.parentElement
+      }
+      if (!container || container === pane || cbSeen.has(container)) continue
+      if (container.matches('fieldset, [class*="form-element"]')) continue
+      cbSeen.add(container)
+
+      const labelTxt = (
+        container.querySelector('legend')?.innerText?.trim() ||
+        container.querySelector('h1,h2,h3,h4,h5')?.innerText?.trim() ||
+        [...container.querySelectorAll('label')].find(l => !l.htmlFor && !l.querySelector('input'))?.innerText?.trim() ||
+        container.querySelector('[class*="label"],[class*="title"]')?.innerText?.trim() ||
+        ''
+      )
+      if (!labelTxt || SKIP.test(labelTxt) || seen.has(labelTxt)) continue
+      seen.add(labelTxt)
+
+      const options = [...container.querySelectorAll('input[type=checkbox]')].map(c =>
+        document.querySelector(`label[for="${c.id}"]`)?.innerText?.trim() ||
+        c.closest('label')?.innerText?.trim() || c.value || ''
+      ).filter(Boolean)
+      out.push({ label: labelTxt, type: 'checkbox', options })
+    }
+
     return out
+  }
+
+  // Build a rich description of every field on the current step for AI deep-analysis.
+  function describeFormStep(pane) {
+    if (!pane) return []
+    const fields = []
+    const seen   = new Set()
+
+    pane.querySelectorAll('fieldset, [class*="form-element"]').forEach(fs => {
+      const labelEl  = fs.querySelector('legend, label, [class*="label"]')
+      const labelTxt = labelEl?.innerText?.trim()
+      if (!labelTxt || seen.has(labelTxt)) return
+      seen.add(labelTxt)
+
+      const hasError   = !!fs.querySelector('[class*="error"], .artdeco-inline-feedback--error')
+      const radios     = [...fs.querySelectorAll('input[type=radio]')]
+      const checkboxes = [...fs.querySelectorAll('input[type=checkbox]')]
+      const select     = fs.querySelector('select')
+      const textarea   = fs.querySelector('textarea')
+      const input      = fs.querySelector('input:not([type=radio]):not([type=checkbox]):not([type=hidden])')
+
+      if (select) {
+        fields.push({
+          label: labelTxt, type: 'select', hasError,
+          currentValue: select.options[select.selectedIndex]?.text || '',
+          options: [...select.options].map(o => o.text).filter(t => t && !/select an option/i.test(t)),
+        })
+      } else if (radios.length) {
+        const checked = radios.find(r => r.checked)
+        fields.push({
+          label: labelTxt, type: 'radio', hasError,
+          currentValue: checked
+            ? (document.querySelector(`label[for="${checked.id}"]`)?.innerText?.trim() || '')
+            : '',
+          options: radios.map(r =>
+            document.querySelector(`label[for="${r.id}"]`)?.innerText?.trim() ||
+            r.closest('label')?.innerText?.trim()
+          ).filter(Boolean),
+        })
+      } else if (checkboxes.length) {
+        const checkedLabels = checkboxes
+          .filter(c => c.checked)
+          .map(c => document.querySelector(`label[for="${c.id}"]`)?.innerText?.trim() || c.closest('label')?.innerText?.trim())
+          .filter(Boolean)
+        fields.push({
+          label: labelTxt, type: 'checkbox', hasError,
+          currentValue: checkedLabels.join(', '),
+          options: checkboxes.map(c =>
+            document.querySelector(`label[for="${c.id}"]`)?.innerText?.trim() ||
+            c.closest('label')?.innerText?.trim()
+          ).filter(Boolean),
+        })
+      } else if (textarea) {
+        fields.push({ label: labelTxt, type: 'textarea', hasError, currentValue: textarea.value || '' })
+      } else if (input) {
+        fields.push({
+          label: labelTxt, type: input.type || 'text', hasError,
+          currentValue: input.value || '',
+          placeholder: input.placeholder || '',
+        })
+      }
+    })
+    return fields
   }
 
   /* ═══════════════════════════════════════════════════════════
      SMART DEFAULTS
+     Covers all 13 LinkedIn screening question categories +
+     common ATS (Greenhouse, Lever, Workday) custom fields.
   ═══════════════════════════════════════════════════════════ */
-  // Always returns SOMETHING — never an empty string.
   function smartDefault(label = '', options = []) {
     const l = label.toLowerCase()
-
-    // Referral — always No
-    if (/refer|referral|referred|know anyone|employee referral/i.test(l))
-      return options.find(o => /no/i.test(o)) || 'No'
-    // Previously worked here — always No
-    if (/previous(ly)?.*work|work.*before|former.*employ|employ.*before|worked.*here|worked.*compan/i.test(l))
-      return options.find(o => /no/i.test(o)) || 'No'
-
-    // Pull live profile values so answers match what the user actually filled in
-    const p  = profile?.profile  || {}
-    const ed = profile?.education || {}
+    const p  = profile?.profile       || {}
+    const ed = profile?.education      || {}
     const jp = profile?.jobPreferences || {}
 
-    if (/author|legal|eligible|permit/i.test(l)) {
+    const opt = pat => options.find(o => pat.test(o))
+
+    // ── 1. Referral / previous employment ───────────────────────
+    if (/refer|referral|referred|know anyone|employee referral/i.test(l))
+      return opt(/\bno\b/i) || 'No'
+    if (/previous(ly)?.{0,10}work|work.{0,10}before|former.{0,10}employ|worked.{0,10}here|worked.{0,10}compan/i.test(l))
+      return opt(/\bno\b/i) || 'No'
+
+    // ── 2. Work authorization & visa sponsorship ─────────────────
+    if (/authoriz|legal.*work|eligible.*work|right to work|work.*permit|allowed.*work/i.test(l)) {
       const auth = p.workAuth || 'Yes'
       return options.find(o => o.toLowerCase().includes(auth.toLowerCase())) ||
-             options.find(o => /yes/i.test(o)) || 'Yes'
+             opt(/\byes\b/i) || 'Yes'
     }
-    if (/sponsor/i.test(l)) {
+    if (/\bsponsor/i.test(l)) {
       const spons = p.sponsorship || 'No'
       return options.find(o => o.toLowerCase().includes(spons.toLowerCase())) ||
-             options.find(o => /no/i.test(o)) || 'No'
+             opt(/\bno\b/i) || 'No'
     }
-    if (/salary|compensation|expected|pay/i.test(l))
-      return String(jp.salary || p.salary || '85000').replace(/[^0-9]/g, '') || '85000'
-    if (/year|experience/i.test(l))
-      return String(p.yearsExp || '2')
-    if (/gpa|grade/i.test(l))                         return '3.5'
-    if (/language|proficien/i.test(l))
-      return options.find(o => /english|full|professional/i.test(o)) || options[0] || 'English'
-    if (/willing|able|open|availab/i.test(l))         return options.find(o => /yes/i.test(o))  || 'Yes'
-    if (/degree|education|bachelors?|masters?/i.test(l)) {
+    if (/visa|immigration|h1b|h-1b|opt\b|cpt\b|ead\b|citizenship|citizen status/i.test(l)) {
+      if (/yes/i.test(p.workAuth || 'Yes'))
+        return opt(/citizen|permanent.*resident|authorized|no.*sponsor|don.t.*need/i) || opt(/\byes\b/i) || 'Authorized to work'
+      return opt(/visa|sponsored/i) || options[0] || 'Require sponsorship'
+    }
+
+    // ── 3. Background check / consent / agreements ───────────────
+    if (/background.?check|drug.?test|credit.?check|consent|agree.*condition|acknowledge|certif.*accurate/i.test(l))
+      return opt(/yes|agree|i consent|i acknowledge|i certify/i) || 'Yes'
+
+    // ── 4. Salary / compensation ──────────────────────────────────
+    if (/salary|compensation|expected.{0,10}pay|pay.{0,10}expect|ctc|remunerat|wage/i.test(l))
+      return String(jp.expectedSalary || '85000').replace(/[^0-9]/g, '') || '85000'
+
+    // ── 5. Years of experience ────────────────────────────────────
+    if (/how many year|years.{0,15}experience|experience.{0,15}year|years? of/i.test(l))
+      return String(jp.yearsExp || '2')
+
+    // ── 6. Education / degree ─────────────────────────────────────
+    if (/degree|education|bachelors?|masters?|highest.{0,15}education|academic/i.test(l)) {
       const deg = ed.degree || "Bachelor's"
       return options.find(o => o.toLowerCase().includes(deg.toLowerCase().slice(0, 8))) ||
-             options.find(o => /bachelor|undergrad/i.test(o)) || options[0] || deg
+             opt(/bachelor|undergrad/i) || options[0] || deg
     }
-    if (/race|gender|veteran|disability|ethnicity/i.test(l))
-      return options.find(o => /prefer not|decline|not wish/i.test(o)) || options[options.length - 1] || options[0] || 'Prefer not to say'
-    if (/notice|start date|when can/i.test(l))
-      return p.notice || '2 weeks'
-    if (/cover letter/i.test(l))                      return 'I am excited about this opportunity and confident my skills are a strong match.'
-    if (/why|motivation|interest/i.test(l))           return 'I am highly motivated and believe my background aligns well with this role.'
-    if (/strength|skill/i.test(l))                    return 'Problem solving, communication, and teamwork.'
+    if (/gpa|grade.{0,10}point|cgpa/i.test(l))
+      return ed.gpa || '3.5'
+    if (/major|field.{0,10}study|area.{0,10}study/i.test(l))
+      return profile?.educationField || ed.degree || 'Computer Science'
+    if (/graduation|grad.{0,10}year|when.*graduat/i.test(l))
+      return ed.graduationYear || new Date().getFullYear().toString()
+    if (/university|school|college|institution/i.test(l))
+      return ed.university || ''
 
-    // Dropdown/radio — pick first option
+    // ── 7. Language / proficiency ─────────────────────────────────
+    if (/language|proficien|fluency|fluent|english level/i.test(l))
+      return opt(/native|bilingual/i) ||
+             opt(/full.{0,10}professional/i) ||
+             opt(/professional.{0,10}working/i) ||
+             opt(/english/i) ||
+             options[0] || 'Full Professional'
+
+    // ── 8. Notice period / availability / start date ─────────────
+    if (/notice|start.?date|when.*start|available.*start|earliest.*start|join.*date/i.test(l))
+      return jp.noticePeriod || p.notice || '2 weeks'
+    // Date-picker specific (HTML date/month inputs get a formatted date)
+    if (/availab|when.{0,10}can.*start|start.{0,10}date/i.test(l))
+      return futureDate(14)
+
+    // ── 9. Remote / hybrid / on-site preference ───────────────────
+    if (/remote|hybrid|on.?site|in.?office|work.*location|work.*arrangement|work.*setting/i.test(l)) {
+      const wt = jp.workType
+      if (wt === '2') return opt(/remote/i)  || 'Remote'
+      if (wt === '3') return opt(/hybrid/i)  || 'Hybrid'
+      if (wt === '1') return opt(/on.?site|office/i) || 'On-site'
+      return opt(/yes|open|flexible|willing/i) || options[0] || 'Yes'
+    }
+
+    // ── 10. Relocation ────────────────────────────────────────────
+    if (/relocat|willing.*move|open.*relocat/i.test(l))
+      return opt(/yes|willing|open/i) || 'Yes'
+
+    // ── 11. Travel ────────────────────────────────────────────────
+    if (/\btravel\b|commut/i.test(l))
+      return opt(/yes|willing|open|occasional|up to/i) || options[0] || 'Yes'
+
+    // ── 12. Demographics / EEO / voluntary disclosure ─────────────
+    if (/race|ethnicity|gender|sex\b|veteran|disability|disab|eeo|voluntary|disclos/i.test(l))
+      return opt(/prefer not|decline|not wish|i don.t|do not wish|choose not/i) ||
+             options[options.length - 1] || options[0] || 'Prefer not to say'
+
+    // ── 13. Certifications / licenses ────────────────────────────
+    if (/certif|licen|pmp\b|aws\b|cpa\b|cfa\b/i.test(l))
+      return opt(/\bno\b|none|don.t have/i) || opt(/\byes\b/i) || options[0] || 'No'
+
+    // ── Phone number type (radio: Mobile / Home / Work / Other) ──────
+    if (/^type$/i.test(l.trim()) || /phone.*type|type.*phone|number.*type|contact.*type/i.test(l))
+      return opt(/mobile|cell/i) || opt(/home/i) || options[0] || 'Mobile'
+
+    // ── Skills / expertise level ──────────────────────────────────
+    if (/skill|expertise|proficien|experience.*with|familiar.*with/i.test(l)) {
+      if (options.length) return opt(/advanced|expert|senior|proficient/i) || opt(/intermediate/i) || options[Math.floor(options.length / 2)] || options[0]
+      return String(jp.yearsExp || '2')
+    }
+
+    // ── Industry / sector ─────────────────────────────────────────
+    if (/industry|sector/i.test(l))
+      return opt(/tech|software|information/i) || options[0] || 'Technology'
+
+    // ── Willing / able / open ─────────────────────────────────────
+    if (/willing|able\b|open to|availab/i.test(l))
+      return opt(/\byes\b/i) || 'Yes'
+
+    // ── How did you hear about us ─────────────────────────────────
+    if (/how.*hear|learn.*about.*us|source.*application|referral.*source|find.*this.*job/i.test(l))
+      return opt(/linkedin/i) || opt(/other/i) || options[0] || 'LinkedIn'
+
+    // ── Long-form: examples / projects / achievements ─────────────
+    if (/example|project|impact|achievement|accomplishment|evidence|highlight|tell us|describe|explain.*time|situation.*where/i.test(l)) {
+      const fn = p.fullName?.split(' ')[0] || 'I'
+      return `${fn} led the development of a full-stack application that reduced processing time by 40%. I architected the system, implemented core features, and deployed on cloud infrastructure, working cross-functionally with stakeholders. This delivered measurable impact and sharpened my ability to own projects end-to-end.`
+    }
+
+    // ── Cover letter / motivation / why this role ─────────────────
+    if (/cover letter/i.test(l))
+      return `I am excited about this opportunity and confident my skills are a strong match for the ${jp.keywords || 'role'}.`
+    if (/why.*role|why.*company|why.*position|motivat|interest.*role|passion/i.test(l))
+      return 'I am highly motivated by this opportunity and believe my background aligns strongly with what you are looking for.'
+    if (/strength|what.*bring|value.*add|about yourself/i.test(l))
+      return 'Strong problem-solving skills, a collaborative mindset, and a track record of delivering high-quality technical work on time.'
+
+    // ── Current / previous employer ───────────────────────────────
+    if (/current.*company|current.*employer|where.*work|employer.*name/i.test(l))
+      return ''   // leave blank — don't expose current employer
+
+    // ── URL / link fields ─────────────────────────────────────────
+    if (/\blinkedin\b/i.test(l))    return p.linkedin  || ''
+    if (/\bgithub\b/i.test(l))      return p.github    || ''
+    if (/portfolio|personal.*url|additional.*link|website/i.test(l)) return p.portfolio || p.github || ''
+
+    // ── "Please specify" follow-up text fields ────────────────────
+    if (/please specify|specify.*below|please.*provide/i.test(l)) return ''
+
+    // ── Dropdown/radio fallback — pick first sensible option ──────
     if (options.length === 2 && /yes/i.test(options[0])) return 'Yes'
-    if (options.length)                               return options[0]
+    if (options.length) return options[0]
 
-    // Last resort for plain text / number fields — never leave blank
-    return '2'
+    // ── Numeric fallback ──────────────────────────────────────────
+    if (/year|count|how many|number/i.test(l)) return String(jp.yearsExp || '2')
+
+    // ── Plain text: return empty rather than garbage ───────────────
+    return ''
   }
 
   /* ═══════════════════════════════════════════════════════════
      FILL ONE STEP
   ═══════════════════════════════════════════════════════════ */
-  // Detect if the current modal step is about work/job experience
+  // Detect video-prompt steps — we can't answer these, skip the whole job
+  function isVideoPromptStep(pane) {
+    if (!pane) return false
+    const text = pane.innerText || ''
+    return (
+      /record.*video|video.*response|video.*answer|video.*question|video.*interview/i.test(text) ||
+      !!pane.querySelector('video, [class*="video-record"], [class*="video-prompt"]')
+    )
+  }
+
+  // Detect if current modal step is about work/job experience
   // → we skip filling it and just click Next (LinkedIn pre-fills from your profile)
   function isWorkExperienceStep(pane) {
     if (!pane) return false
@@ -411,17 +670,34 @@
 
     // Standard contact fields
     const contacts = [
-      { sel: 'input[id*="firstName"],input[aria-label*="First name"]',        val: p.fullName?.split(' ')[0] },
-      { sel: 'input[id*="lastName"],input[aria-label*="Last name"]',           val: p.fullName?.split(' ').slice(1).join(' ') },
-      { sel: 'input[type="tel"],input[id*="phone"],input[id*="phoneNumber"]',  val: p.phone },
-      { sel: 'input[id*="city"],input[aria-label*="City"]',                    val: p.location },
-      { sel: 'input[id*="linkedin"],input[aria-label*="LinkedIn"]',            val: p.linkedin },
-      { sel: 'input[id*="github"],input[aria-label*="GitHub"]',               val: p.github },
-      { sel: 'input[id*="website"],input[id*="portfolio"]',                   val: p.website },
+      { sel: 'input[id*="firstName"],input[aria-label*="First name"],input[aria-label*="first name"]', val: p.fullName?.split(' ')[0] },
+      { sel: 'input[id*="lastName"],input[aria-label*="Last name"],input[aria-label*="last name"]',     val: p.fullName?.split(' ').slice(1).join(' ') },
+      { sel: 'input[type="tel"],input[id*="phone"],input[id*="phoneNumber"],input[aria-label*="Phone"]', val: p.phone },
+      { sel: 'input[id*="city"],input[aria-label*="City"],input[aria-label*="Location"]',               val: p.location },
+      { sel: 'input[id*="linkedin"],input[aria-label*="LinkedIn"],input[placeholder*="linkedin"],input[aria-label*="Profile URL"]', val: p.linkedin },
+      { sel: 'input[id*="github"],input[aria-label*="GitHub"],input[placeholder*="github"]',            val: p.github },
+      { sel: 'input[id*="website"],input[id*="portfolio"],input[aria-label*="Website"],input[aria-label*="Portfolio"],input[aria-label*="Additional"],input[aria-label*="Personal URL"]', val: p.portfolio || p.github },
     ]
     for (const { sel, val } of contacts) {
       const el = pane.querySelector(sel)
-      if (el && val && (force || !el.value)) await fillField(el, val)
+      if (!el) continue
+      // Use profile value first; fall back to any AI answer that matches this field
+      let useVal = val || null
+      if (!useVal) {
+        const elLabel = (
+          pane.querySelector(`label[for="${el.id}"]`)?.innerText?.trim() ||
+          el.getAttribute('aria-label') ||
+          el.placeholder || ''
+        )
+        if (elLabel) {
+          const hit = aiAnswers.find(a =>
+            normalizeLabel(elLabel).includes(normalizeLabel(a.label || '').slice(0, 20)) ||
+            normalizeLabel(a.label || '').includes(normalizeLabel(elLabel).slice(0, 20))
+          )
+          useVal = hit?.answer || null
+        }
+      }
+      if (useVal && (force || !el.value)) await fillField(el, useVal)
     }
 
     // Screening / custom question fields
@@ -436,40 +712,96 @@
         // normal pass: only fill if empty
       }
 
-      const options = [
-        ...[...fs.querySelectorAll('option')].map(o => o.text),
-        ...[...fs.querySelectorAll('input[type=radio]')]
-          .map(r => document.querySelector(`label[for="${r.id}"]`)?.innerText?.trim() ||
-                    r.closest('label')?.innerText?.trim()),
-      ].filter(Boolean)
+      // Compute select options and radio options separately so a fieldset
+      // that contains BOTH a text/tel input AND radios (e.g. LinkedIn's
+      // "Primary Phone Number" + "Type" in the same form element) gets the
+      // right answer for each: phone field gets profile/AI phone value,
+      // radio gets "Mobile" etc.
+      const selectOptions = [...fs.querySelectorAll('option')].map(o => o.text).filter(Boolean)
+      const radioInputs   = [...fs.querySelectorAll('input[type=radio]')]
+      const radioOptions  = radioInputs.map(r =>
+        document.querySelector(`label[for="${r.id}"]`)?.innerText?.trim() ||
+        r.closest('label')?.innerText?.trim()
+      ).filter(Boolean)
+      const allOptions = [...selectOptions, ...radioOptions]
 
       const aiMatch = aiAnswers.find(a =>
         labelTxt.toLowerCase().includes((a.label || '').toLowerCase().slice(0, 35)) ||
         (a.label || '').toLowerCase().includes(labelTxt.toLowerCase().slice(0, 35))
       )
-      // smartDefault now always returns something — never blank
-      const answer = aiMatch?.answer || smartDefault(labelTxt, options)
+      // answer used for select/text fields (no radio options polluting it)
+      const answer      = aiMatch?.answer || smartDefault(labelTxt, selectOptions)
+      // radioAnswer uses radio option labels so smartDefault can match them
+      const radioAnswer = aiMatch?.answer || smartDefault(labelTxt, radioOptions.length ? radioOptions : allOptions)
 
-      // Text / select / textarea
-      const textEl = fs.querySelector('input:not([type=radio]):not([type=checkbox]), select, textarea')
-      if (textEl) {
-        if (force || !textEl.value || hasError) await fillField(textEl, answer)
+      // Checkboxes — answer is comma-separated option labels to check
+      const checkboxes = [...fs.querySelectorAll('input[type=checkbox]')]
+      if (checkboxes.length) {
+        if (answer && !/^none$/i.test(answer)) {
+          const toCheck = answer.split(',').map(s => s.trim().toLowerCase()).filter(Boolean)
+          for (const cb of checkboxes) {
+            const cbLbl = (
+              document.querySelector(`label[for="${cb.id}"]`)?.innerText?.trim() ||
+              cb.closest('label')?.innerText?.trim() || ''
+            ).toLowerCase()
+            const shouldCheck = toCheck.some(v =>
+              cbLbl.includes(v) || v.includes(cbLbl.slice(0, 20))
+            )
+            if (shouldCheck && !cb.checked) { cb.click(); await jitter(80, 150) }
+            if (!shouldCheck && cb.checked && force) { cb.click(); await jitter(80, 150) }
+          }
+        }
+        await jitter(60, 100)
         continue
       }
 
-      // Radio
-      const radios = fs.querySelectorAll('input[type=radio]')
-      if (radios.length && (force || ![...radios].some(r => r.checked))) {
+      // Date / month pickers — ensure value is in the correct format
+      const dateEl = fs.querySelector('input[type=date], input[type=month]')
+      if (dateEl && (force || !dateEl.value || hasError)) {
+        const fmt = dateEl.type === 'month' ? 'YYYY-MM' : 'YYYY-MM-DD'
+        // If AI answer looks like a date use it, otherwise default to 2 weeks out
+        const dateVal = /\d{4}-\d{2}/.test(answer) ? answer : futureDate(14, fmt)
+        await fillField(dateEl, dateVal)
+        continue
+      }
+
+      // Text / select / textarea / number
+      // NOTE: no `continue` here — fall through so radios in the same fieldset
+      // are also handled (e.g. phone type radio co-located with tel input).
+      const textEl = fs.querySelector(
+        'input:not([type=radio]):not([type=checkbox]):not([type=date]):not([type=month]):not([type=hidden]), select, textarea'
+      )
+      if (textEl) {
+        // For tel/phone inputs prefer the profile phone value, then AI, then smartDefault
+        const isPhoneField = textEl.type === 'tel' ||
+          /phone|mobile/i.test(labelTxt) ||
+          /phone/i.test(textEl.id || textEl.getAttribute('aria-label') || '')
+        const phoneVal = isPhoneField ? (p.phone || null) : null
+        // If profile phone is missing but AI returned one, use it
+        const phoneAiAnswer = isPhoneField && !phoneVal
+          ? (aiMatch?.answer || null)
+          : null
+        const finalTextAnswer = phoneVal || phoneAiAnswer || answer
+        if (finalTextAnswer && (force || !textEl.value || hasError))
+          await fillField(textEl, finalTextAnswer)
+        // Do NOT continue — fall through to handle radios in same fieldset
+      }
+
+      // Radio (runs even when textEl was also present above)
+      if (radioInputs.length && (force || !radioInputs.some(r => r.checked))) {
         let picked = false
-        for (const r of radios) {
-          const rLbl = document.querySelector(`label[for="${r.id}"]`)?.innerText?.trim() ||
-                       r.closest('label')?.innerText?.trim() || ''
-          if (rLbl.toLowerCase().includes(answer.toLowerCase().slice(0, 20))) {
-            r.click(); await jitter(100, 200); picked = true; break
+        const ansLower = radioAnswer.toLowerCase()
+        for (const r of radioInputs) {
+          const rLbl = (
+            document.querySelector(`label[for="${r.id}"]`)?.innerText?.trim() ||
+            r.closest('label')?.innerText?.trim() || ''
+          ).toLowerCase()
+          // Match: answer text contains label OR label contains answer text
+          if (rLbl.includes(ansLower.slice(0, 25)) || ansLower.includes(rLbl.slice(0, 25))) {
+            simulateClick(r); await jitter(100, 200); picked = true; break
           }
         }
-        // If no label matched, just pick the first radio
-        if (!picked && force) { radios[0].click(); await jitter(100, 200) }
+        if (!picked && force) { simulateClick(radioInputs[0]); await jitter(100, 200) }
       }
       await jitter(60, 120)
     }
@@ -483,6 +815,136 @@
         sel.dispatchEvent(new Event('change', { bubbles: true }))
       }
     }
+
+    // ── Broad checkbox sweep ─────────────────────────────────────────────
+    // Catches Greenhouse-embedded forms and any layout that doesn't use
+    // fieldset / [class*="form-element"] wrappers (the main loop above misses these).
+    const allCbs = [...pane.querySelectorAll('input[type=checkbox]')]
+    const cbGroupsSeen = new Set()
+
+    for (const cb of allCbs) {
+      // Find the tightest ancestor that contains multiple checkboxes
+      let container = cb.parentElement
+      while (container && container !== pane) {
+        if ([...container.querySelectorAll('input[type=checkbox]')].length > 1) break
+        container = container.parentElement
+      }
+      if (!container || container === pane || cbGroupsSeen.has(container)) continue
+      cbGroupsSeen.add(container)
+
+      // Already handled by the fieldset loop above?
+      if (container.matches('fieldset, [class*="form-element"]')) continue
+
+      // Extract group label from legends, unlabelled label, heading, or first text node
+      const groupLabel = (
+        container.querySelector('legend')?.innerText?.trim() ||
+        container.querySelector('h1,h2,h3,h4,h5')?.innerText?.trim() ||
+        // A <label> that isn't paired to an input (acts as a group heading)
+        [...container.querySelectorAll('label')].find(l => !l.htmlFor && !l.querySelector('input'))?.innerText?.trim() ||
+        container.querySelector('[class*="label"],[class*="title"],[class*="heading"]')?.innerText?.trim() ||
+        ''
+      )
+      if (!groupLabel) continue
+
+      const groupCbs = [...container.querySelectorAll('input[type=checkbox]')]
+      const options  = groupCbs.map(c =>
+        document.querySelector(`label[for="${c.id}"]`)?.innerText?.trim() ||
+        c.closest('label')?.innerText?.trim() || c.value || ''
+      ).filter(Boolean)
+
+      const aiMatch = aiAnswers.find(a =>
+        groupLabel.toLowerCase().includes((a.label || '').toLowerCase().slice(0, 35)) ||
+        (a.label || '').toLowerCase().includes(groupLabel.toLowerCase().slice(0, 35))
+      )
+      const answer = aiMatch?.answer || smartDefault(groupLabel, options)
+      if (!answer || /^none$/i.test(answer)) continue
+
+      const toCheck = answer.split(',').map(s => s.trim().toLowerCase()).filter(Boolean)
+      let anyChecked = false
+      for (const c of groupCbs) {
+        const lbl = (
+          document.querySelector(`label[for="${c.id}"]`)?.innerText?.trim() ||
+          c.closest('label')?.innerText?.trim() || ''
+        ).toLowerCase()
+        const shouldCheck = toCheck.some(v => lbl.includes(v) || v.includes(lbl.slice(0, 25)))
+        if (shouldCheck && !c.checked) { simulateClick(c); await jitter(80, 160); anyChecked = true }
+        if (!shouldCheck && c.checked && force) { simulateClick(c); await jitter(80, 160) }
+      }
+      // If nothing matched, check the safest-looking option (LinkedIn > Other > first)
+      if (!anyChecked && force) {
+        const safe =
+          groupCbs.find(c => /linkedin/i.test(c.closest('label')?.innerText || '')) ||
+          groupCbs.find(c => /other/i.test(c.closest('label')?.innerText    || '')) ||
+          groupCbs[0]
+        if (safe && !safe.checked) { simulateClick(safe); await jitter(80, 160) }
+      }
+      await jitter(60, 120)
+    }
+    // ─────────────────────────────────────────────────────────────────────
+
+    // ── Broad radio sweep ────────────────────────────────────────────────
+    // Mirrors the broad checkbox sweep above. Catches radio groups that sit
+    // outside standard fieldset/[class*="form-element"] wrappers — e.g.
+    // LinkedIn's "Type" radio for phone number when it renders separately.
+    // Groups radios by name attribute (same name = same group).
+    const radioGroupMap = new Map()
+    for (const r of pane.querySelectorAll('input[type=radio]')) {
+      const key = r.name || r.id
+      if (!key) continue
+      if (!radioGroupMap.has(key)) radioGroupMap.set(key, [])
+      radioGroupMap.get(key).push(r)
+    }
+    for (const [, groupRadios] of radioGroupMap) {
+      // Skip if already handled (i.e. already checked) or inside a standard wrapper
+      if (groupRadios.some(r => r.checked)) continue
+      const wrapper = groupRadios[0].closest('fieldset, [class*="form-element"]')
+      if (wrapper) continue   // already covered by fieldset loop above
+
+      // Find a label for this group from surrounding DOM
+      const container = (() => {
+        let el = groupRadios[0].parentElement
+        while (el && el !== pane) {
+          if ([...el.querySelectorAll('input[type=radio]')].length >= groupRadios.length) return el
+          el = el.parentElement
+        }
+        return null
+      })()
+      if (!container) continue
+
+      const groupLabel = (
+        container.querySelector('legend')?.innerText?.trim() ||
+        container.querySelector('h1,h2,h3,h4,h5')?.innerText?.trim() ||
+        [...container.querySelectorAll('label')].find(l => !l.htmlFor && !l.querySelector('input'))?.innerText?.trim() ||
+        container.querySelector('[class*="label"],[class*="title"],[class*="heading"]')?.innerText?.trim() ||
+        'type'
+      )
+      const groupOptions = groupRadios.map(r =>
+        document.querySelector(`label[for="${r.id}"]`)?.innerText?.trim() ||
+        r.closest('label')?.innerText?.trim() || r.value || ''
+      ).filter(Boolean)
+
+      const aiMatchR = aiAnswers.find(a =>
+        groupLabel.toLowerCase().includes((a.label || '').toLowerCase().slice(0, 35)) ||
+        (a.label || '').toLowerCase().includes(groupLabel.toLowerCase().slice(0, 35))
+      )
+      const radioAns = (aiMatchR?.answer || smartDefault(groupLabel, groupOptions)).toLowerCase()
+
+      let picked = false
+      for (const r of groupRadios) {
+        const rLbl = (
+          document.querySelector(`label[for="${r.id}"]`)?.innerText?.trim() ||
+          r.closest('label')?.innerText?.trim() || ''
+        ).toLowerCase()
+        if (rLbl.includes(radioAns.slice(0, 25)) || radioAns.includes(rLbl.slice(0, 25))) {
+          simulateClick(r); await jitter(80, 160); picked = true; break
+        }
+      }
+      if (!picked && (force || !groupRadios.some(r => r.checked))) {
+        simulateClick(groupRadios[0]); await jitter(80, 160)
+      }
+      await jitter(60, 120)
+    }
+    // ─────────────────────────────────────────────────────────────────────
   }
 
   /* ═══════════════════════════════════════════════════════════
@@ -558,14 +1020,56 @@
     return false
   }
 
+  // Dismiss the post-apply success modal AND any follow-up upsell dialogs LinkedIn
+  // shows (e.g. "Turn your resume into a profile", premium prompts, etc.).
+  // Loops up to 4 times so nested overlays are cleared one by one.
   async function dismissSuccess() {
     await jitter(700, 1100)
-    const done = [
-      'button[aria-label="Dismiss"]',
-      'button[aria-label="Done"]',
-    ].reduce((found, sel) => found || document.querySelector(sel), null) ||
-    [...document.querySelectorAll('button')].find(b => /^done$/i.test(b.textContent?.trim()))
-    if (done) { done.click(); await jitter(400, 700) }
+
+    for (let pass = 0; pass < 4; pass++) {
+      // Standard "Done" / "Dismiss" button on the success modal
+      const done =
+        document.querySelector('button[aria-label="Dismiss"]') ||
+        document.querySelector('button[aria-label="Done"]')    ||
+        [...document.querySelectorAll('button')].find(b =>
+          /^(done|got it|close|ok)$/i.test(b.textContent?.trim())
+        )
+      if (done) { done.click(); await jitter(500, 800); continue }
+
+      // LinkedIn upsell / promo dialogs — "Not now", "Skip", "Maybe later", "No thanks"
+      const skip = [...document.querySelectorAll('button')].find(b =>
+        /not now|skip|maybe later|no.?thanks|remind me later/i.test(b.textContent?.trim())
+      )
+      if (skip) { skip.click(); await jitter(500, 800); continue }
+
+      // Any remaining visible modal/overlay that has a close-ish button
+      const anyX = [...document.querySelectorAll('button')].find(b => {
+        const lbl = (b.getAttribute('aria-label') || b.textContent || '').toLowerCase().trim()
+        return lbl === 'dismiss' || lbl === '×' || lbl === '✕' || lbl === 'close'
+      })
+      if (anyX) { anyX.click(); await jitter(500, 800); continue }
+
+      break  // nothing left to dismiss
+    }
+  }
+
+  // Proactively clear any post-apply overlays that might still be open before
+  // we try to start a new Easy Apply.  Called in autoApplyLoop just before
+  // simulateClick(easyApplyBtn).
+  async function clearPostApplyOverlays() {
+    // If no blocking overlay is visible, return immediately
+    const overlayVisible = !!(
+      document.querySelector('.jobs-post-apply-modal') ||
+      document.querySelector('[data-test-modal-id="post-apply-modal"]') ||
+      [...document.querySelectorAll('h2, h3, h4')].find(h =>
+        /application was sent|application submitted|you applied|turn your resume|update.*profile|profile that recruiter/i.test(h.textContent)
+      )
+    )
+    if (!overlayVisible) return
+
+    log('Clearing post-apply overlay before next job…')
+    await dismissSuccess()
+    await jitter(400, 700)
   }
 
   /* ═══════════════════════════════════════════════════════════
@@ -599,6 +1103,13 @@
       const pane = getFormPane()
       const hasUpload = pane?.querySelector('[class*="document-upload"]')
 
+      // Video-prompt step — we can't answer these, skip the whole job
+      if (isVideoPromptStep(pane)) {
+        log('⚠ Video prompt detected — skipping this job')
+        await closeModal()
+        return 'skipped'
+      }
+
       if (hasUpload) {
         log(`Step ${stepCount + 1}: resume — using existing`)
         await jitter(500, 800)
@@ -606,23 +1117,75 @@
         log(`Step ${stepCount + 1}: work experience — passing through (LinkedIn pre-fills)`)
         await jitter(500, 800)
       } else {
+        // ── Per-step AI: get answers for any questions not yet covered ──
+        const stepQs = extractQuestions()
+        const newQs  = stepQs.filter(q =>
+          !aiAnswers.some(a =>
+            (a.label || '').toLowerCase().includes(q.label.toLowerCase().slice(0, 30)) ||
+            q.label.toLowerCase().includes((a.label || '').toLowerCase().slice(0, 30))
+          )
+        )
+        if (newQs.length) {
+          log(`Step ${stepCount + 1}: ${newQs.length} new question(s) — asking AI…`)
+          const res = await sendMsg('TAILOR', {
+            jobTitle:       currentJob?.jobTitle,
+            company:        currentJob?.company,
+            jobDescription: currentJob?.jobDescription,
+            questions:      newQs,
+          })
+          if (res.answers?.length) {
+            aiAnswers = [...aiAnswers, ...res.answers]
+            log(`AI answered ${res.answers.length} new question(s)`)
+          }
+        }
+        // ──────────────────────────────────────────────────────────────
         log(`Step ${stepCount + 1}: filling fields`)
         await fillStep()
         await jitter(350, 600)
       }
 
-      // If there are validation errors, retry up to 3 times with force-fill
-      // (force=true re-fills every field, even ones that already have a value)
+      // If there are validation errors, retry up to 3 times with force-fill,
+      // then escalate to AI deep-analysis as a final attempt.
       if (hasErrors()) {
         let fixed = false
         for (let attempt = 1; attempt <= 3; attempt++) {
           log(`Step ${stepCount + 1}: fixing errors (attempt ${attempt}/3)`)
-          await fillStep(true)   // force-fill all fields
+          await fillStep(true)
           await jitter(400, 700)
           if (!hasErrors()) { fixed = true; break }
         }
+
+        // ── AI deep-analysis fallback ────────────────────────────
         if (!fixed) {
-          log('⚠ Could not fix required fields after 3 attempts — skipping')
+          log(`Step ${stepCount + 1}: escalating to AI deep analysis…`)
+          const stepPane   = getFormPane()
+          const stepFields = describeFormStep(stepPane)
+          const errorFields = stepFields.filter(f => f.hasError).map(f => f.label)
+          const res = await sendMsg('AI_ANALYZE_STEP', {
+            jobTitle:    currentJob?.jobTitle,
+            company:     currentJob?.company,
+            stepFields,
+            errorFields,
+          })
+          if (res.answers?.length) {
+            // Merge AI's deep answers over the existing aiAnswers
+            for (const a of res.answers) {
+              const idx = aiAnswers.findIndex(x =>
+                x.label?.toLowerCase() === a.label?.toLowerCase()
+              )
+              if (idx >= 0) aiAnswers[idx] = a
+              else aiAnswers.push(a)
+            }
+            log(`AI suggested ${res.answers.length} answers — re-filling…`)
+            await fillStep(true)
+            await jitter(500, 800)
+            if (!hasErrors()) { fixed = true }
+          }
+        }
+        // ────────────────────────────────────────────────────────
+
+        if (!fixed) {
+          log('⚠ Could not fix required fields even with AI analysis — skipping')
           await closeModal()
           return 'skipped'
         }
@@ -708,9 +1271,114 @@
   }
 
   /* ═══════════════════════════════════════════════════════════
+     PAGINATION & SIMILAR-TITLE SEARCH
+  ═══════════════════════════════════════════════════════════ */
+  const RESUME_KEY = 'reblet_autoresume'
+
+  // Click LinkedIn's "Next page" button and wait for fresh cards.
+  async function tryNextPage() {
+    const nextBtn =
+      document.querySelector('[aria-label="View next page"]') ||
+      document.querySelector('[aria-label="Next"]') ||
+      document.querySelector('.artdeco-pagination__button--next:not([disabled])') ||
+      [...document.querySelectorAll('[class*="pagination"] button, nav button')].find(b =>
+        !b.disabled && /next/i.test(b.getAttribute('aria-label') || b.textContent)
+      )
+
+    if (!nextBtn || nextBtn.disabled) return false
+
+    log('Moving to next page of results…')
+    nextBtn.scrollIntoView({ block: 'center' })
+    await jitter(700, 1100)
+    nextBtn.click()
+    await jitter(2500, 4000)
+
+    for (let i = 0; i < 16; i++) {
+      if (pendingCards().length > 0) return true
+      await sleep(500)
+    }
+    return false
+  }
+
+  // Return alternative titles to try when the current search runs dry.
+  function getSimilarTitles(keywords) {
+    if (!keywords) return []
+    const k = keywords.toLowerCase().trim()
+    const MAP = [
+      ['software engineer',        ['software developer', 'full stack engineer', 'backend engineer', 'frontend engineer', 'web developer']],
+      ['software developer',       ['software engineer', 'full stack developer', 'backend developer', 'web developer']],
+      ['backend engineer',         ['backend developer', 'server-side engineer', 'api developer', 'software engineer']],
+      ['backend developer',        ['backend engineer', 'server-side developer', 'software developer', 'software engineer']],
+      ['frontend engineer',        ['frontend developer', 'ui engineer', 'web developer', 'software engineer']],
+      ['frontend developer',       ['frontend engineer', 'ui developer', 'web developer', 'software developer']],
+      ['full stack engineer',      ['full stack developer', 'software engineer', 'web developer']],
+      ['full stack developer',     ['full stack engineer', 'software developer', 'web developer']],
+      ['web developer',            ['software developer', 'frontend developer', 'full stack developer', 'ui developer']],
+      ['data engineer',            ['analytics engineer', 'etl developer', 'data pipeline engineer', 'software engineer']],
+      ['data analyst',             ['business analyst', 'data scientist', 'analytics analyst', 'reporting analyst']],
+      ['data scientist',           ['machine learning engineer', 'data analyst', 'ml engineer', 'ai engineer']],
+      ['machine learning engineer',['ml engineer', 'ai engineer', 'data scientist', 'software engineer']],
+      ['ml engineer',              ['machine learning engineer', 'ai engineer', 'data scientist']],
+      ['devops engineer',          ['site reliability engineer', 'platform engineer', 'cloud engineer', 'infrastructure engineer']],
+      ['sre',                      ['devops engineer', 'platform engineer', 'reliability engineer', 'cloud engineer']],
+      ['platform engineer',        ['devops engineer', 'cloud engineer', 'infrastructure engineer', 'sre']],
+      ['cloud engineer',           ['devops engineer', 'platform engineer', 'infrastructure engineer']],
+      ['product manager',          ['technical product manager', 'product owner', 'program manager']],
+      ['mobile developer',         ['ios developer', 'android developer', 'react native developer', 'mobile engineer']],
+      ['mobile engineer',          ['mobile developer', 'ios developer', 'android developer', 'react native developer']],
+      ['ios developer',            ['mobile developer', 'swift developer', 'mobile engineer', 'android developer']],
+      ['android developer',        ['mobile developer', 'kotlin developer', 'mobile engineer', 'ios developer']],
+      ['ux designer',              ['ui designer', 'product designer', 'user experience designer', 'ux researcher']],
+      ['ui designer',              ['ux designer', 'product designer', 'visual designer', 'graphic designer']],
+      ['qa engineer',              ['test engineer', 'quality assurance engineer', 'software tester', 'automation engineer']],
+      ['security engineer',        ['cybersecurity engineer', 'information security engineer', 'security analyst']],
+    ]
+    for (const [pattern, alts] of MAP) {
+      if (k.includes(pattern) || k === pattern) return alts
+    }
+    // Generic fallback: strip/add seniority, swap Engineer ↔ Developer
+    const out = []
+    const stripped = k.replace(/\b(senior|sr\.?|junior|jr\.?|lead|principal|staff|associate)\s*/gi, '').trim()
+    if (stripped && stripped !== k) out.push(stripped)
+    if (!/senior|sr\./i.test(k)) out.push('Senior ' + keywords.trim())
+    if (/engineer/i.test(k)) out.push(keywords.trim().replace(/engineer/gi, 'Developer'))
+    if (/developer/i.test(k)) out.push(keywords.trim().replace(/developer/gi, 'Engineer'))
+    return [...new Set(out)].slice(0, 4)
+  }
+
+  // Persist bot counters so they survive same-domain navigation (title switch).
+  function saveResumeState(triedTitles) {
+    return new Promise(resolve => chrome.storage.local.set({
+      [RESUME_KEY]: {
+        autoResuming:    true,
+        applied,
+        skipped,
+        triedTitles:     [...triedTitles],
+        processedJobIds: [...processedJobIds],
+        savedAt:         Date.now(),
+      }
+    }, resolve))
+  }
+
+  function loadResumeState() {
+    return new Promise(resolve => chrome.storage.local.get(RESUME_KEY, result => {
+      const s = result[RESUME_KEY]
+      if (!s || !s.autoResuming) return resolve(null)
+      if (Date.now() - (s.savedAt || 0) > 45000) {
+        chrome.storage.local.remove(RESUME_KEY); return resolve(null)
+      }
+      resolve(s)
+    }))
+  }
+
+  function clearResumeState() {
+    return new Promise(resolve => chrome.storage.local.remove(RESUME_KEY, resolve))
+  }
+
+  /* ═══════════════════════════════════════════════════════════
      MAIN LOOP
   ═══════════════════════════════════════════════════════════ */
-  async function autoApplyLoop() {
+  async function autoApplyLoop(triedTitles = new Set()) {
     log('Loading profile…')
     const profileData = await sendMsg('GET_PROFILE')
     if (profileData.error || !profileData.profile) {
@@ -737,7 +1405,29 @@
           cards = pendingCards()
         }
         if (!cards.length) {
-          log(`All done — Applied: ${applied}  Skipped: ${skipped}`)
+          // ── 1. Try next page ──────────────────────────────────
+          const nextPageOk = await tryNextPage()
+          if (nextPageOk) { log('Next page loaded — continuing…'); continue }
+
+          // ── 2. Try a similar job title ─────────────────────────
+          const url = new URL(window.location.href)
+          const currentKeywords = url.searchParams.get('keywords') || ''
+          const alts = getSimilarTitles(currentKeywords)
+            .filter(t => !triedTitles.has(t.toLowerCase()))
+
+          if (alts.length) {
+            const nextTitle = alts[0]
+            triedTitles.add(nextTitle.toLowerCase())
+            log(`No more jobs for "${currentKeywords || 'this search'}" — trying "${nextTitle}"…`)
+            await saveResumeState(triedTitles)
+            url.searchParams.set('keywords', nextTitle)
+            url.searchParams.set('f_AL', 'true')
+            window.location.href = url.toString()
+            return   // page will reload; state is saved and will auto-resume
+          }
+
+          // ── 3. Truly exhausted ────────────────────────────────
+          log(`All searches exhausted — Applied: ${applied}  Skipped: ${skipped}`)
           isRunning = false; renderPanel(); return
         }
       }
@@ -782,12 +1472,27 @@
         isRunning = false; renderPanel(); return
       }
 
+      // Clear any post-apply overlays left over from the previous application
+      // (LinkedIn "Turn your resume into a profile" upsell, success banner, etc.)
+      // that would block the new Easy Apply modal from opening.
+      await clearPostApplyOverlays()
+
       log(`Clicking: "${easyApplyBtn.getAttribute('aria-label') || easyApplyBtn.textContent?.trim()}"`)
       simulateClick(easyApplyBtn)
 
       // Wait for modal to actually open BEFORE doing anything else
       log('Waiting for modal…')
-      const modalOpened = await waitFor(isModalOpen, 8000)
+      let modalOpened = await waitFor(isModalOpen, 7000)
+
+      // If modal didn't open, a lingering overlay may have swallowed the click.
+      // Clear overlays and retry once.
+      if (!modalOpened) {
+        await clearPostApplyOverlays()
+        await jitter(400, 700)
+        simulateClick(easyApplyBtn)
+        modalOpened = await waitFor(isModalOpen, 6000)
+      }
+
       if (!modalOpened) {
         // One more check — maybe the click revealed the rate-limit banner instead
         if (isRateLimited()) {
@@ -804,15 +1509,33 @@
       aiAnswers = []
       const questions = extractQuestions()
       if (questions.length) {
-        log(`${questions.length} screening questions — asking AI…`)
-        const res = await sendMsg('TAILOR', {
-          jobTitle: jobData.jobTitle,
-          company: jobData.company,
-          jobDescription: jobData.jobDescription,
-          questions,
-        })
-        aiAnswers = res.answers || []
-        log(`AI answered ${aiAnswers.length} questions`)
+        // First check shared question DB for known answers
+        const knownAnswers = []
+        const dbRes = await sendMsg('LOOKUP_QUESTIONS', { labels: questions.map(q => q.label) })
+        if (dbRes.answers?.length) {
+          knownAnswers.push(...dbRes.answers)
+          log(`DB: found ${dbRes.answers.length} known answer(s)`)
+        }
+
+        // Only ask AI for questions NOT already in DB (or low confidence)
+        const questionsForAI = questions.filter(q =>
+          !knownAnswers.some(a => normalizeLabel(a.label) === normalizeLabel(q.label) && a.confidence >= 5)
+        )
+
+        if (questionsForAI.length) {
+          log(`${questionsForAI.length} question(s) — asking AI…`)
+          const res = await sendMsg('TAILOR', {
+            jobTitle:       jobData.jobTitle,
+            company:        jobData.company,
+            jobDescription: jobData.jobDescription,
+            questions:      questionsForAI,
+          })
+          aiAnswers = [...knownAnswers.map(a => ({ label: a.label, answer: a.answer })), ...(res.answers || [])]
+          log(`AI answered ${res.answers?.length || 0} question(s)`)
+        } else {
+          aiAnswers = knownAnswers.map(a => ({ label: a.label, answer: a.answer }))
+          log(`All ${questions.length} question(s) answered from DB`)
+        }
       }
 
       const result = await processModal()
@@ -826,6 +1549,18 @@
           jobUrl: jobData.jobUrl,
           jobDescription: jobData.jobDescription,
         })
+        // Save questions+answers to shared DB for future users
+        if (aiAnswers.length) {
+          const toSave = aiAnswers
+            .filter(a => a.label && a.answer)
+            .map(a => ({
+              label:   a.label,
+              type:    questions.find(q => q.label === a.label)?.type || 'text',
+              options: questions.find(q => q.label === a.label)?.options || [],
+              answer:  a.answer,
+            }))
+          if (toSave.length) sendMsg('SAVE_QUESTIONS', { questions: toSave })
+        }
       } else if (result === 'skipped') {
         skipped++
       } else if (result === 'stopped') {
@@ -1028,10 +1763,28 @@
   /* ═══════════════════════════════════════════════════════════
      INIT
   ═══════════════════════════════════════════════════════════ */
-  function maybeShowPanel() {
-    if (location.pathname.startsWith('/jobs') && !panel) buildPanel()
+  async function maybeShowPanel() {
+    if (!location.pathname.startsWith('/jobs')) return
+    if (!panel) buildPanel()
+
+    // Auto-resume after a title-switch navigation
+    const saved = await loadResumeState()
+    if (saved) {
+      applied         = saved.applied  || 0
+      skipped         = saved.skipped  || 0
+      processedJobIds = new Set(saved.processedJobIds || [])
+      const triedTitles = new Set(saved.triedTitles   || [])
+      await clearResumeState()
+      logLines = []; currentJob = null
+      isRunning = true; isPaused = false
+      renderPanel()
+      log(`↩ Resumed — applied so far: ${applied}`)
+      autoApplyLoop(triedTitles)
+    }
   }
-  setTimeout(maybeShowPanel, 1200)
-  new MutationObserver(maybeShowPanel)
-    .observe(document.body, { childList: true, subtree: false })
+
+  setTimeout(maybeShowPanel, 1500)
+  new MutationObserver(() => {
+    if (location.pathname.startsWith('/jobs') && !panel) buildPanel()
+  }).observe(document.body, { childList: true, subtree: false })
 })()

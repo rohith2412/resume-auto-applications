@@ -93,6 +93,27 @@ export default function AutoApplyClient({ user }) {
   const [generatingKey, setGeneratingKey] = useState(false)
   const [copied, setCopied]               = useState(false)
 
+  // Resume upload state
+  const [hasResume, setHasResume]         = useState(!!user.resumeText)
+  const [resumeFile, setResumeFile]       = useState(null)
+  const [uploadingResume, setUploadingResume] = useState(false)
+
+  // On mount: fetch fresh settings from DB so the form always reflects what was last saved.
+  useEffect(() => {
+    fetch('/api/auto-apply/settings')
+      .then(r => r.ok ? r.json() : null)
+      .then(d => {
+        if (!d) return
+        setForm({
+          keywords:         d.keywords         ?? '',
+          searchLocation:   d.searchLocation   ?? '',
+          workType:         d.workType         ?? '',
+          linkedinExpLevel: d.linkedinExpLevel ?? '',
+        })
+      })
+      .catch(() => {})
+  }, [])
+
   useEffect(() => {
     fetch('/api/extension/generate-key')
       .then(r => r.json())
@@ -101,6 +122,19 @@ export default function AutoApplyClient({ user }) {
   }, [])
 
   function set(key) { return val => setForm(f => ({ ...f, [key]: val })) }
+
+  async function handleResumeUpload() {
+    if (!resumeFile) return
+    setUploadingResume(true)
+    const data = new FormData()
+    data.append('resume', resumeFile)
+    try {
+      const res = await fetch('/api/resume/upload', { method: 'POST', body: data })
+      if (res.ok) { setHasResume(true); setResumeFile(null) }
+    } finally {
+      setUploadingResume(false)
+    }
+  }
 
   async function generateKey() {
     setGeneratingKey(true)
@@ -124,6 +158,10 @@ export default function AutoApplyClient({ user }) {
     e.preventDefault()
     if (!form.keywords || !form.searchLocation) {
       setError('Please fill in Job Title to Search and Search Location.')
+      return
+    }
+    if (!hasResume) {
+      setError('Please upload your resume PDF before saving — it\'s required for AI to answer screening questions.')
       return
     }
     setError(''); setSaving(true); setSaved(false)
@@ -197,6 +235,48 @@ export default function AutoApplyClient({ user }) {
                 <option value="4">Mid-Senior</option>
               </Select>
             </Field>
+          </div>
+        </Section>
+
+        {/* Resume upload — mandatory */}
+        <Section title="Resume *">
+          <div style={{ border: `1.5px solid ${hasResume ? '#bbf7d0' : '#e8e8e8'}`, borderRadius: 10, padding: '14px 16px', background: hasResume ? '#f0fdf4' : '#fff' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+              <div style={{ width: 36, height: 36, background: hasResume ? '#dcfce7' : '#f3f4f6', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem', flexShrink: 0 }}>
+                {hasResume ? '✓' : '📄'}
+              </div>
+              <div>
+                <p style={{ fontWeight: 600, fontSize: 13, color: '#0a0a0a' }}>Base resume (PDF)</p>
+                <p style={{ fontSize: 12, color: hasResume ? '#15803d' : '#9ca3af', marginTop: 1 }}>
+                  {hasResume ? 'Uploaded — AI uses this to answer screening questions' : 'Required — upload your resume so AI can answer screening questions'}
+                </p>
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <label style={{ flex: 1, cursor: 'pointer' }}>
+                <div style={{ border: '1.5px solid #e8e8e8', borderRadius: 7, padding: '8px 12px', fontSize: 13, color: resumeFile ? '#0a0a0a' : '#9ca3af', display: 'flex', alignItems: 'center', gap: 6, background: '#fff' }}>
+                  <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M7 1.5v7M4.5 4L7 1.5 9.5 4M2 11.5h10" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  {resumeFile ? resumeFile.name : hasResume ? 'Replace PDF…' : 'Choose PDF file…'}
+                </div>
+                <input type="file" accept=".pdf" style={{ display: 'none' }} onChange={e => setResumeFile(e.target.files[0] || null)} />
+              </label>
+              <button
+                type="button"
+                onClick={handleResumeUpload}
+                disabled={!resumeFile || uploadingResume}
+                style={{
+                  padding: '8px 14px', background: '#0a0a0a', color: '#fff',
+                  border: 'none', borderRadius: 7, fontSize: 13, fontWeight: 600,
+                  cursor: (!resumeFile || uploadingResume) ? 'not-allowed' : 'pointer',
+                  opacity: (!resumeFile || uploadingResume) ? 0.45 : 1,
+                  fontFamily: 'inherit', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6,
+                }}
+              >
+                {uploadingResume
+                  ? <><span style={{ width: 12, height: 12, border: '2px solid #ffffff44', borderTopColor: '#fff', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.7s linear infinite' }} /> Uploading…</>
+                  : 'Upload'}
+              </button>
+            </div>
           </div>
         </Section>
 

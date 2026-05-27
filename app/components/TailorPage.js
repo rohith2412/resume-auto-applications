@@ -129,7 +129,7 @@ function AppShell({ user }) {
       <main style={{ marginLeft: '224px', flex: 1, minHeight: '100vh' }}>
         {view === 'dashboard'    && <DashboardView user={user} toast={toast} onOpenResume={openResume} />}
         {view === 'applications' && <ApplicationsView toast={toast} />}
-        {view === 'auto-apply'   && <AutoApplyClient user={user} />}
+        <div style={{ display: view === 'auto-apply' ? '' : 'none' }}><AutoApplyClient user={user} /></div>
         {view === 'profile'      && <ProfileView user={user} toast={toast} />}
       </main>
     </div>
@@ -594,11 +594,8 @@ function ProfileView({ user, toast }) {
     summary: user.profile?.summary || '',
   })
   const [saving, setSaving] = useState(false)
-  const [resumeFile, setResumeFile] = useState(null)
-  const [uploadingResume, setUploadingResume] = useState(false)
   const [cancelingSub, setCancelingSub] = useState(false)
   const [subCanceled, setSubCanceled] = useState(false)
-  const hasResume = !!user.resumeText
 
   function update(key, value) { setForm(p => ({ ...p, [key]: value })) }
 
@@ -611,19 +608,6 @@ function ProfileView({ user, toast }) {
       else toast('Failed to save', 'error')
     } catch { toast('Something went wrong', 'error') }
     setSaving(false)
-  }
-
-  async function handleResumeUpload() {
-    if (!resumeFile) return
-    setUploadingResume(true)
-    const data = new FormData()
-    data.append('resume', resumeFile)
-    try {
-      const res = await fetch('/api/resume/upload', { method: 'POST', body: data })
-      if (res.ok) { toast('Resume updated!'); setResumeFile(null) }
-      else toast('Failed to upload', 'error')
-    } catch { toast('Something went wrong', 'error') }
-    setUploadingResume(false)
   }
 
   async function handleCancelSub() {
@@ -642,29 +626,6 @@ function ProfileView({ user, toast }) {
       <div style={{ marginBottom: '2rem' }}>
         <h1 style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: '1.5rem', fontWeight: 800, letterSpacing: '-0.03em', marginBottom: '0.375rem' }}>Profile</h1>
         <p style={{ fontSize: '0.875rem', color: '#888', fontWeight: 300 }}>Your profile info is used as the default for new resumes.</p>
-      </div>
-
-      {/* Resume upload card */}
-      <div style={{ border: `1px solid ${hasResume ? '#bbf7d0' : '#e0e0e0'}`, borderRadius: '10px', padding: '1.25rem', marginBottom: '2rem', background: hasResume ? '#f0fdf4' : '#fff' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.875rem' }}>
-          <div style={{ width: '38px', height: '38px', background: hasResume ? '#dcfce7' : '#f3f4f6', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', flexShrink: 0 }}>{hasResume ? '✓' : '📄'}</div>
-          <div>
-            <p style={{ fontWeight: 600, fontSize: '0.9375rem' }}>Base resume (PDF)</p>
-            <p style={{ fontSize: '0.8125rem', color: hasResume ? '#15803d' : '#9ca3af' }}>{hasResume ? 'Uploaded — used as context for AI suggestions' : 'No resume uploaded yet'}</p>
-          </div>
-        </div>
-        <div style={{ display: 'flex', gap: '0.625rem', alignItems: 'center' }}>
-          <label style={{ flex: 1, cursor: 'pointer' }}>
-            <div style={{ border: '1px solid #e5e7eb', borderRadius: '6px', padding: '0.5rem 0.875rem', fontSize: '0.875rem', color: resumeFile ? '#000' : '#9ca3af', display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#fff' }}>
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1.5v7M4.5 4L7 1.5 9.5 4M2 11.5h10" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
-              {resumeFile ? resumeFile.name : hasResume ? 'Replace PDF...' : 'Choose PDF file...'}
-            </div>
-            <input type="file" accept=".pdf" style={{ display: 'none' }} onChange={e => setResumeFile(e.target.files[0])} />
-          </label>
-          <button className="btn btn-secondary btn-sm" onClick={handleResumeUpload} disabled={!resumeFile || uploadingResume} style={{ flexShrink: 0 }}>
-            {uploadingResume ? <span className="spinner spinner-dark" style={{ width: '14px', height: '14px' }} /> : 'Upload'}
-          </button>
-        </div>
       </div>
 
       <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
