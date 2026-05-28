@@ -32,7 +32,7 @@ const S = {
   },
   brandName: {
     fontSize: "12px", fontWeight: 500,
-    color: "#555", letterSpacing: "0.04em",
+    color: "#fff", letterSpacing: "0.04em",
   },
   closeBtn: {
     marginLeft: "auto", background: "none", border: "none",
@@ -184,18 +184,7 @@ export default function AuthModal({ onClose, initialMode = "login", onSuccess })
 
           <div style={S.cardTop}>
             <div style={S.brandRow}>
-              <svg width="26" height="26" viewBox="100 85 200 230" xmlns="http://www.w3.org/2000/svg" style={{ flexShrink: 0 }}>
-                <g transform="translate(200,200)">
-                  <rect x="-100" y="-115" width="200" height="230" rx="38" fill="#1a1a1a"/>
-                  <rect x="-22" y="-98" width="44" height="18" rx="6" fill="#666"/>
-                  <rect x="-22" y="-80" width="44" height="9" rx="2" fill="#999"/>
-                  <rect x="-22" y="-71" width="44" height="82" rx="4" fill="#ffffff"/>
-                  <rect x="-22" y="11" width="44" height="14" rx="2" fill="#e8c99a"/>
-                  <polygon points="-22,25 22,25 0,78" fill="#e8c99a"/>
-                  <polygon points="-7,64 7,64 0,78" fill="#555"/>
-                  <line x1="0" y1="76" x2="0" y2="84" stroke="#333" strokeWidth="3" strokeLinecap="round"/>
-                </g>
-              </svg>
+              <img src="/shamrock.svg" width="22" height="22" alt="reblet" style={{ flexShrink: 0, filter: 'invert(1)' }} />
               <span style={S.brandName}>reblet</span>
               <button style={S.closeBtn} onClick={onClose} aria-label="Close">&times;</button>
             </div>

@@ -12,7 +12,7 @@ function drawRebletIcon(size) {
   const ctx    = canvas.getContext('2d')
   const p      = size / 128   // scale factor
 
-  // Dark rounded-rect background
+  // ── Dark rounded-rect background ──────────────────────────────────────
   const r = Math.round(18 * p)
   ctx.fillStyle = '#1a1a1a'
   ctx.beginPath()
@@ -24,35 +24,50 @@ function drawRebletIcon(size) {
   ctx.closePath()
   ctx.fill()
 
-  // White document body
-  const dx = Math.round(39 * p), dy = Math.round(18 * p)
-  const dw = Math.round(50 * p), dh = Math.round(68 * p)
+  // ── Pencil pointing DOWN ───────────────────────────────────────────────
+  const px  = Math.round(44 * p)    // left edge of pencil
+  const pw  = Math.round(40 * p)    // pencil width
+  const prx = px + pw               // right edge
+  const cx  = px + pw / 2           // horizontal centre
+
+  // Eraser cap (dark grey) — top
+  const capT = Math.round(14 * p), capB = Math.round(22 * p)
+  ctx.fillStyle = '#555555'
+  ctx.fillRect(px, capT, pw, capB - capT)
+
+  // Ferrule (silver ring)
+  const ferB = capB + Math.round(6 * p)
+  ctx.fillStyle = '#aaaaaa'
+  ctx.fillRect(px, capB, pw, ferB - capB)
+
+  // White pencil body
+  const bodyB = Math.round(80 * p)
   ctx.fillStyle = '#ffffff'
-  ctx.fillRect(dx, dy, dw, dh)
+  ctx.fillRect(px, ferB, pw, bodyB - ferB)
 
-  // Cream/gold bottom block
-  const bx = dx, by = dy + dh
-  const bw = dw, bh = Math.round(12 * p)
+  // Wood section (cream)
+  const woodB = Math.round(94 * p)
   ctx.fillStyle = '#e8c99a'
-  ctx.fillRect(bx, by, bw, bh)
+  ctx.fillRect(px, bodyB, pw, woodB - bodyB)
 
-  // Gold triangle (pencil tip)
+  // Tapered wood triangle — tip pointing DOWN
+  const tipY = Math.round(116 * p)
   ctx.fillStyle = '#e8c99a'
   ctx.beginPath()
-  ctx.moveTo(bx,      by + bh)
-  ctx.lineTo(bx + bw, by + bh)
-  ctx.lineTo(bx + bw / 2, by + bh + Math.round(22 * p))
+  ctx.moveTo(px,  woodB)
+  ctx.lineTo(prx, woodB)
+  ctx.lineTo(cx,  tipY)
   ctx.closePath()
   ctx.fill()
 
-  // Dark triangle cap
-  ctx.fillStyle = '#555'
-  const tx = bx + bw / 2
-  const ty = by + bh + Math.round(22 * p)
+  // Graphite inner tip
+  const gW    = Math.round(8 * p)
+  const gTopY = tipY - Math.round(18 * p)
+  ctx.fillStyle = '#444444'
   ctx.beginPath()
-  ctx.moveTo(tx - Math.round(7 * p), ty - Math.round(8 * p))
-  ctx.lineTo(tx + Math.round(7 * p), ty - Math.round(8 * p))
-  ctx.lineTo(tx, ty)
+  ctx.moveTo(cx - gW, gTopY)
+  ctx.lineTo(cx + gW, gTopY)
+  ctx.lineTo(cx,      tipY)
   ctx.closePath()
   ctx.fill()
 

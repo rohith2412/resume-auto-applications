@@ -245,16 +245,7 @@ export default function AdminPage() {
         {/* Top bar */}
         <div style={{ background: '#fff', borderBottom: '1px solid #f0f0f0', padding: '0 20px', height: 56, display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 10 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <svg width="22" height="22" viewBox="100 85 200 230" xmlns="http://www.w3.org/2000/svg">
-              <g transform="translate(200,200)">
-                <rect x="-100" y="-115" width="200" height="230" rx="38" fill="#1a1a1a"/>
-                <rect x="-22" y="-98" width="44" height="18" rx="6" fill="#666"/>
-                <rect x="-22" y="-80" width="44" height="9" rx="2" fill="#999"/>
-                <rect x="-22" y="-71" width="44" height="82" rx="4" fill="#ffffff"/>
-                <rect x="-22" y="11" width="44" height="14" rx="2" fill="#e8c99a"/>
-                <polygon points="-22,25 22,25 0,78" fill="#e8c99a"/>
-              </g>
-            </svg>
+            <img src="/shamrock.svg" width="22" height="22" alt="reblet" style={{ flexShrink: 0 }} />
             <span style={{ fontWeight: 600, fontSize: 14, letterSpacing: '-0.02em' }}>reblet</span>
             <span style={{ background: '#0a0a0a', color: '#fff', fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '2px 8px', borderRadius: 6 }}>Admin</span>
           </div>

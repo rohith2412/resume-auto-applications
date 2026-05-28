@@ -16,6 +16,11 @@
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+/* Prevent iOS Safari from auto-zooming on input focus (requires font-size >= 16px on mobile) */
+@media (max-width: 768px) {
+  input, select, textarea { font-size: 16px !important; }
+}
+
 body {
   background: #fff;
   color: #000;
@@ -125,20 +130,27 @@ body {
 
 /* ── Mobile nav ── */
 @media (max-width: 768px) {
-  .sidebar { display: none; }
-  .sidebar-main { margin-left: 0; padding-bottom: 4.5rem; }
+  .sidebar { display: none !important; }
+  .sidebar-main { margin-left: 0 !important; padding-bottom: 5rem; }
+  .auto-apply-layout { grid-template-columns: 1fr !important; padding: 1.25rem !important; }
+  .field-grid-2 { grid-template-columns: 1fr !important; }
+  .page-content { padding: 1.25rem !important; }
+  .stats-grid-4 { grid-template-columns: repeat(2, 1fr) !important; }
   .mobile-nav {
     display: flex; position: fixed; bottom: 0; left: 0; right: 0;
-    background: #fff; border-top: 1px solid var(--gray-200); z-index: 40;
-    padding: 0.5rem; gap: 0.25rem;
-    padding-bottom: calc(0.5rem + env(safe-area-inset-bottom));
+    background: #fff; border-top: 1px solid var(--gray-200); z-index: 50;
+    padding: 0.4rem 0.5rem;
+    padding-bottom: calc(0.4rem + env(safe-area-inset-bottom));
+    gap: 0;
   }
   .mobile-nav-btn {
     flex: 1; display: flex; flex-direction: column; align-items: center;
-    gap: 0.2rem; padding: 0.5rem 0.25rem; font-size: 0.6875rem; font-weight: 500;
-    color: var(--gray-400); cursor: pointer; border-radius: 6px; border: none;
+    gap: 0.2rem; padding: 0.45rem 0.25rem; font-size: 0.65rem; font-weight: 500;
+    color: #aaa; cursor: pointer; border-radius: 6px; border: none;
     background: none; font-family: inherit; transition: color 0.12s;
+    text-decoration: none;
   }
-  .mobile-nav-btn.active { color: var(--blue); }
+  .mobile-nav-btn.active { color: #0a0a0a; }
+  .mobile-nav-btn svg { width: 18px; height: 18px; }
 }
-@media (min-width: 769px) { .mobile-nav { display: none; } }
+@media (min-width: 769px) { .mobile-nav { display: none !important; } }

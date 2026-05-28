@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "reblet",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Auto-fill LinkedIn Easy Apply forms with your AI-tailored resume.",
 
   "permissions": ["storage", "activeTab", "tabs"],

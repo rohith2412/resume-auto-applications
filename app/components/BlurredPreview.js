@@ -153,19 +153,8 @@ function AuthModal({ onClose, initialMode }) {
 
           <div style={{ padding:"2rem 2rem 1.5rem", borderBottom:"1px solid #1e1e1e" }}>
             <div style={{ display:"flex", alignItems:"center", gap:"8px", marginBottom:"1.75rem" }}>
-              <svg width="26" height="26" viewBox="100 85 200 230" xmlns="http://www.w3.org/2000/svg" style={{ flexShrink:0 }}>
-                <g transform="translate(200,200)">
-                  <rect x="-100" y="-115" width="200" height="230" rx="38" fill="#1a1a1a"/>
-                  <rect x="-22" y="-98" width="44" height="18" rx="6" fill="#666"/>
-                  <rect x="-22" y="-80" width="44" height="9" rx="2" fill="#999"/>
-                  <rect x="-22" y="-71" width="44" height="82" rx="4" fill="#ffffff"/>
-                  <rect x="-22" y="11" width="44" height="14" rx="2" fill="#e8c99a"/>
-                  <polygon points="-22,25 22,25 0,78" fill="#e8c99a"/>
-                  <polygon points="-7,64 7,64 0,78" fill="#555"/>
-                  <line x1="0" y1="76" x2="0" y2="84" stroke="#333" strokeWidth="3" strokeLinecap="round"/>
-                </g>
-              </svg>
-              <span style={{ fontSize:12, fontWeight:500, color:"#555", letterSpacing:"0.04em" }}>reblet</span>
+              <img src="/shamrock.svg" width="22" height="22" alt="reblet" style={{ flexShrink: 0, filter: 'invert(1)' }} />
+              <span style={{ fontSize:12, fontWeight:500, color:"#fff", letterSpacing:"0.04em" }}>reblet</span>
               <button onClick={onClose} aria-label="Close" style={{ marginLeft:"auto", background:"none", border:"none", cursor:"pointer", color:"#555", fontSize:22, lineHeight:1, display:"flex", alignItems:"center", padding:2 }}>&times;</button>
             </div>
             <h2 style={{ fontFamily:"'Playfair Display',Georgia,serif", fontSize:"1.6rem", fontWeight:800, color:"#f5f5f0", letterSpacing:"-0.03em", lineHeight:1.15, margin:"0 0 6px" }}>
@@ -296,18 +285,7 @@ export default function BlurredPreview() {
         {/* Nav */}
         <nav className="lp-nav" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 2.5rem', height: 60, borderBottom: '1px solid #f0f0f0', flexShrink: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
-            <svg width="24" height="24" viewBox="100 85 200 230" xmlns="http://www.w3.org/2000/svg" style={{ flexShrink: 0 }}>
-              <g transform="translate(200,200)">
-                <rect x="-100" y="-115" width="200" height="230" rx="38" fill="#1a1a1a"/>
-                <rect x="-22" y="-98" width="44" height="18" rx="6" fill="#666"/>
-                <rect x="-22" y="-80" width="44" height="9" rx="2" fill="#999"/>
-                <rect x="-22" y="-71" width="44" height="82" rx="4" fill="#ffffff"/>
-                <rect x="-22" y="11" width="44" height="14" rx="2" fill="#e8c99a"/>
-                <polygon points="-22,25 22,25 0,78" fill="#e8c99a"/>
-                <polygon points="-7,64 7,64 0,78" fill="#555"/>
-                <line x1="0" y1="76" x2="0" y2="84" stroke="#333" strokeWidth="3" strokeLinecap="round"/>
-              </g>
-            </svg>
+            <img src="/shamrock.svg" width="24" height="24" alt="reblet" style={{ flexShrink: 0 }} />
             <span style={{ fontWeight: 500, fontSize: 15, letterSpacing: '-0.02em' }}>reblet</span>
           </div>
           <div style={{ display: 'flex', gap: 8 }}>

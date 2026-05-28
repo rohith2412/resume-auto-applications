@@ -78,6 +78,13 @@ function Select({ value, onChange, children, ...props }) {
 // ─────────────────────────────────────────────────────────────
 export default function AutoApplyClient({ user }) {
   const jp = user.jobPreferences || {}
+  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 640)
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 640)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
 
   const [form, setForm] = useState({
     keywords:         jp.keywords         || '',
@@ -197,7 +204,15 @@ export default function AutoApplyClient({ user }) {
   const elLabel = { '': 'Any', '1': 'Internship', '2': 'Entry Level', '3': 'Associate', '4': 'Mid-Senior' }
 
   return (
-    <div style={{ maxWidth: 860, margin: '0 auto', padding: '2.5rem', display: 'grid', gridTemplateColumns: '1fr 320px', gap: 32, alignItems: 'start' }}>
+    <>
+    <style>{`
+      @media (max-width: 768px) {
+        .auto-apply-layout { grid-template-columns: 1fr !important; padding: 1rem !important; }
+        .field-grid-2 { grid-template-columns: 1fr !important; }
+        .auto-apply-sidebar { position: static !important; }
+      }
+    `}</style>
+    <div style={{ maxWidth: 860, margin: '0 auto', padding: isMobile ? '1rem' : '2.5rem', display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 320px', gap: isMobile ? 24 : 32, alignItems: 'start' }}>
 
       {/* ── Left: Job Search Form ── */}
       <form onSubmit={handleSave}>
@@ -209,7 +224,7 @@ export default function AutoApplyClient({ user }) {
         </p>
 
         <Section title="LinkedIn Job Search">
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12 }}>
             <Field label="Job Title to Search *" hint="e.g. Software Engineer Intern">
               <Input value={form.keywords} onChange={set('keywords')} placeholder="Software Engineer Intern" required />
             </Field>
@@ -217,7 +232,7 @@ export default function AutoApplyClient({ user }) {
               <Input value={form.searchLocation} onChange={set('searchLocation')} placeholder="Canada" required />
             </Field>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12 }}>
             <Field label="Work Type">
               <Select value={form.workType} onChange={set('workType')}>
                 <option value="">Any</option>
@@ -303,7 +318,7 @@ export default function AutoApplyClient({ user }) {
       </form>
 
       {/* ── Right: Extension Card ── */}
-      <div style={{ position: 'sticky', top: 24 }}>
+      <div style={{ position: isMobile ? 'static' : 'sticky', top: 24 }}>
 
         {/* Search preview */}
         {(form.keywords || form.searchLocation) && (
@@ -395,34 +410,66 @@ export default function AutoApplyClient({ user }) {
         </div>
 
         {/* How to Start */}
-        <div style={{ background: '#fff', border: '1px solid #e8e8e8', borderRadius: 12, padding: '16px' }}>
-          <div style={{ fontSize: '10px', fontWeight: 700, color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>
-            How to Start
-          </div>
-          {[
-            ['1', 'Set your search',      'Fill in job title + location and click "Save Settings".'],
-            ['2', 'Get your API key',      'Click "Generate API Key" and copy it.'],
-            ['3', 'Open the extension',    'Click the reblet icon in Chrome.'],
-            ['4', 'Paste your API key',    'Paste it in the extension popup and click Connect.'],
-            ['5', 'Go to LinkedIn Jobs',   'Click "Open on LinkedIn" — jobs are pre-filtered for Easy Apply.'],
-            ['6', 'Hit Start Auto Apply',  'The extension handles everything from here.'],
-          ].map(([n, title, desc]) => (
-            <div key={n} style={{ display: 'flex', gap: 10, marginBottom: 12 }}>
-              <div style={{
-                width: 20, height: 20, borderRadius: '50%',
-                background: '#0a0a0a', color: '#fff',
-                fontSize: 10, fontWeight: 700, flexShrink: 0,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-              }}>{n}</div>
-              <div>
-                <div style={{ fontSize: 12.5, fontWeight: 600, color: '#0a0a0a', marginBottom: 2 }}>{title}</div>
-                <div style={{ fontSize: 11.5, color: '#888', lineHeight: 1.5 }}>{desc}</div>
-              </div>
+        <div style={{ background: '#fff', border: '1px solid #e8e8e8', borderRadius: 12, overflow: 'hidden' }}>
+
+          {/* Chrome Extension pill */}
+          <a
+            href="https://chromewebstore.google.com/detail/pncleeecacohjhfkcgebaiepnjahbhip?utm_source=item-share-cb"
+            target="_blank"
+            rel="noreferrer"
+            style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              gap: 8, padding: '10px 14px',
+              background: 'linear-gradient(135deg, #0f0f0f 0%, #1a1a2e 100%)',
+              textDecoration: 'none',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <img src="/Chrome.png" width="18" height="18" alt="Chrome" style={{ display: 'block' }} />
+              <span style={{ color: '#fff', fontWeight: 600, fontSize: 12 }}>Get the reblet Chrome Extension</span>
             </div>
-          ))}
+            <span style={{
+              display: 'inline-flex', alignItems: 'center', gap: 4,
+              background: '#fff', color: '#0f0f0f',
+              padding: '4px 10px', borderRadius: 6,
+              fontSize: 11, fontWeight: 700, whiteSpace: 'nowrap',
+            }}>
+              Add to Chrome
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </span>
+          </a>
+
+          {/* Steps */}
+          <div style={{ padding: '14px 16px' }}>
+            <div style={{ fontSize: '10px', fontWeight: 700, color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>
+              How to Start
+            </div>
+            {[
+              ['1', 'Set your search',      'Fill in job title + location and click "Save Settings".'],
+              ['2', 'Get your API key',      'Click "Generate API Key" and copy it.'],
+              ['3', 'Open the extension',    'Click the reblet icon in Chrome.'],
+              ['4', 'Paste your API key',    'Paste it in the extension popup and click Connect.'],
+              ['5', 'Go to LinkedIn Jobs',   'Click "Open on LinkedIn" — jobs are pre-filtered for Easy Apply.'],
+              ['6', 'Hit Start Auto Apply',  'The extension handles everything from here.'],
+            ].map(([n, title, desc]) => (
+              <div key={n} style={{ display: 'flex', gap: 10, marginBottom: 12 }}>
+                <div style={{
+                  width: 20, height: 20, borderRadius: '50%',
+                  background: '#0a0a0a', color: '#fff',
+                  fontSize: 10, fontWeight: 700, flexShrink: 0,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>{n}</div>
+                <div>
+                  <div style={{ fontSize: 12.5, fontWeight: 600, color: '#0a0a0a', marginBottom: 2 }}>{title}</div>
+                  <div style={{ fontSize: 11.5, color: '#888', lineHeight: 1.5 }}>{desc}</div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
     </div>
+    </>
   )
 }

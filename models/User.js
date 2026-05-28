@@ -66,6 +66,7 @@ const UserSchema = new mongoose.Schema({
   history: [HistorySchema],
   apiKey: { type: String, index: true },
   captchaApiKey: String,          // 2captcha.com API key for auto-solving reCAPTCHA
+
 }, { timestamps: true })
 
 export default mongoose.models.User || mongoose.model('User', UserSchema)
