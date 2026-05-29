@@ -122,7 +122,7 @@ function PaywallContent() {
           body: JSON.stringify({ sessionId }),
         })
       }
-      router.push('/my-resumes')
+      router.push('/applications')
     }
     activate()
   }, [success, sessionId, router])

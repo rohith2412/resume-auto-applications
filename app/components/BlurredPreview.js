@@ -130,7 +130,7 @@ function AuthModal({ onClose, initialMode }) {
       if (!res.ok) { setError(data.error || "Something went wrong"); setLoading(false); return }
       if (mode === "login") {
         if (!data.subscriptionActive) window.location.href = "/paywall"
-        else window.location.href = "/my-resumes"
+        else window.location.href = "/applications"
       } else {
         window.location.href = "/paywall"
       }
