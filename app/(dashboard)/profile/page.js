@@ -77,36 +77,36 @@ function AutocompleteInput({ value, onChange, placeholder }) {
 }
 
 // ─── profile sub-components ───────────────────────────────────
-function ProfileSection({ title, desc, children }) {
+function SectionHead({ title, desc }) {
   return (
-    <div style={{ border: '1px solid #e0e0e0', borderRadius: 10, padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '.875rem' }}>
-      <div>
-        <p style={{ fontWeight: 600, fontSize: '.9375rem', letterSpacing: '-.01em' }}>{title}</p>
-        {desc && <p style={{ fontSize: '.8125rem', color: '#888', fontWeight: 300, marginTop: '.125rem' }}>{desc}</p>}
-      </div>
-      {children}
+    <div style={{ marginBottom: '1.25rem' }}>
+      <p style={{ fontSize: '.8125rem', fontWeight: 700, color: '#aaa', letterSpacing: '.08em', textTransform: 'uppercase' }}>{title}</p>
+      {desc && <p style={{ fontSize: '.8125rem', color: '#bbb', fontWeight: 300, marginTop: 2 }}>{desc}</p>}
     </div>
   )
 }
 
 function TwoCol({ children }) {
-  return <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: '.875rem' }}>{children}</div>
+  return <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(190px,1fr))', gap: '1rem' }}>{children}</div>
 }
 
-function PRow({ label, children }) {
+function Field({ label, children }) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '.375rem' }}>
-      <label style={{ fontSize: 11, fontWeight: 500, color: '#888', letterSpacing: '.06em', textTransform: 'uppercase' }}>{label}</label>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+      <label style={{ fontSize: 11, fontWeight: 600, color: '#999', letterSpacing: '.06em', textTransform: 'uppercase' }}>{label}</label>
       {children}
     </div>
   )
 }
 
+function Divider() {
+  return <div style={{ height: 1, background: '#f0f0f0', margin: '2rem 0' }} />
+}
+
 // ─── shell ────────────────────────────────────────────────────
-function Shell({ user, toasts, children }) {
+function Shell({ user, toasts, showLogout, setShowLogout, showCancelModal, setShowCancelModal, onConfirmCancel, children }) {
   const pathname = usePathname()
   const router = useRouter()
-  const [showLogout, setShowLogout] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
 
   useEffect(() => {
@@ -183,6 +183,33 @@ function Shell({ user, toasts, children }) {
         </div>
       )}
 
+      {/* Cancel subscription modal */}
+      {showCancelModal && (
+        <div onClick={() => setShowCancelModal(false)} style={{ position: 'fixed', inset: 0, zIndex: 210, background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 16, border: '1px solid #e0e0e0', padding: '2rem', width: '100%', maxWidth: 360, boxShadow: '0 20px 60px rgba(0,0,0,.12)' }}>
+            <div style={{ width: 44, height: 44, background: '#fff1f2', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1.25rem' }}>
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 6v4M10 14h.01" stroke="#e11d48" strokeWidth="1.8" strokeLinecap="round"/><circle cx="10" cy="10" r="8.25" stroke="#e11d48" strokeWidth="1.5"/></svg>
+            </div>
+            <h3 style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: '1.2rem', fontWeight: 800, letterSpacing: '-.02em', marginBottom: 8 }}>Cancel subscription?</h3>
+            <p style={{ fontSize: 13, color: '#666', fontWeight: 300, lineHeight: 1.65, marginBottom: '1.75rem' }}>
+              You&apos;ll keep full access until the end of your current billing period. After that your account will be downgraded.
+            </p>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button onClick={() => setShowCancelModal(false)}
+                style={{ flex: 1, padding: '10px', background: 'transparent', color: '#0a0a0a', border: '1px solid #e0e0e0', borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}
+                onMouseEnter={e => e.currentTarget.style.borderColor = '#0a0a0a'}
+                onMouseLeave={e => e.currentTarget.style.borderColor = '#e0e0e0'}
+              >Keep plan</button>
+              <button onClick={onConfirmCancel}
+                style={{ flex: 1, padding: '10px', background: '#e11d48', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+                onMouseEnter={e => e.currentTarget.style.background = '#be123c'}
+                onMouseLeave={e => e.currentTarget.style.background = '#e11d48'}
+              >Yes, cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Toasts */}
       {toasts.length > 0 && (
         <div className="toast-wrap">
@@ -194,7 +221,7 @@ function Shell({ user, toasts, children }) {
 }
 
 // ─── profile view ─────────────────────────────────────────────
-function Profile({ user, toast }) {
+function Profile({ user, toast, onLogout, onRequestCancel, cancelingSub }) {
   const [isMobile, setIsMobile] = useState(false)
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 640)
@@ -212,109 +239,189 @@ function Profile({ user, toast }) {
     portfolio: user.profile?.portfolio || '',
     summary:   user.profile?.summary   || '',
   })
-  const [saving, setSaving]           = useState(false)
-  const [cancelingSub, setCancelingSub] = useState(false)
-  const [subCanceled, setSubCanceled] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved]   = useState(false)
 
   const update = (key, value) => setForm(p => ({ ...p, [key]: value }))
+
+  // Initials avatar
+  const initials = (() => {
+    const name = form.fullName.trim() || user.email || ''
+    const parts = name.split(/\s+/)
+    return parts.length >= 2
+      ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+      : name.slice(0, 2).toUpperCase()
+  })()
 
   async function handleSave(e) {
     e.preventDefault()
     setSaving(true)
     try {
       const res = await fetch('/api/profile', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) })
-      if (res.ok) toast('Profile saved!')
+      if (res.ok) { setSaved(true); toast('Profile saved!'); setTimeout(() => setSaved(false), 2500) }
       else toast('Failed to save', 'error')
     } catch { toast('Something went wrong', 'error') }
     setSaving(false)
   }
 
-  async function handleCancelSub() {
-    if (!window.confirm("Cancel your subscription? You'll keep access until the end of your billing period.")) return
-    setCancelingSub(true)
-    try {
-      const res = await fetch('/api/stripe/cancel', { method: 'POST' })
-      if (res.ok) { setSubCanceled(true); toast('Subscription canceled.') }
-      else toast('Failed to cancel — try again.', 'error')
-    } catch { toast('Something went wrong', 'error') }
-    setCancelingSub(false)
-  }
+  const pad = isMobile ? '1.25rem' : '2.5rem'
 
   return (
-    <div style={{ padding: isMobile ? '1rem' : '2.5rem', maxWidth: 640, margin: '0 auto', paddingBottom: '4rem' }} className="animate-fade">
-      <div style={{ marginBottom: '2rem' }}>
-        <h1 style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: '1.5rem', fontWeight: 800, letterSpacing: '-.03em', marginBottom: '.375rem' }}>Profile</h1>
-        <p style={{ fontSize: '.875rem', color: '#888', fontWeight: 300 }}>Your profile info is used as the default for new resumes.</p>
+    <div style={{ padding: pad, maxWidth: 620, margin: '0 auto', paddingBottom: '5rem' }} className="animate-fade">
+
+      {/* ── Avatar card ── */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', marginBottom: '2.5rem' }}>
+        <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#0a0a0a', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 700, letterSpacing: '-.02em', flexShrink: 0, fontFamily: "'DM Sans',sans-serif" }}>
+          {initials}
+        </div>
+        <div style={{ minWidth: 0 }}>
+          <p style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: '1.375rem', fontWeight: 800, letterSpacing: '-.03em', lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {form.fullName || 'Your Profile'}
+          </p>
+          <p style={{ fontSize: 13, color: '#aaa', fontWeight: 300, marginTop: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.email}</p>
+        </div>
       </div>
 
-      <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-        <ProfileSection title="Personal details" desc="Shows in your resume header">
-          <TwoCol>
-            <PRow label="Full name"><input value={form.fullName} onChange={e => update('fullName', e.target.value)} placeholder="Jane Doe" className="input" /></PRow>
-            <PRow label="Phone"><input value={form.phone} onChange={e => update('phone', e.target.value)} placeholder="+1 (555) 000-0000" className="input" /></PRow>
-          </TwoCol>
-          <TwoCol>
-            <PRow label="Location"><AutocompleteInput value={form.location} onChange={v => update('location', v)} placeholder="San Francisco, CA" /></PRow>
-            <PRow label="Portfolio / Website"><input value={form.portfolio} onChange={e => update('portfolio', e.target.value)} placeholder="janedoe.dev" className="input" /></PRow>
-          </TwoCol>
-          <TwoCol>
-            <PRow label="LinkedIn URL"><input value={form.linkedin} onChange={e => update('linkedin', e.target.value)} placeholder="linkedin.com/in/janedoe" className="input" /></PRow>
-            <PRow label="GitHub URL"><input value={form.github} onChange={e => update('github', e.target.value)} placeholder="github.com/janedoe" className="input" /></PRow>
-          </TwoCol>
-          <PRow label="Professional summary">
-            <textarea value={form.summary} onChange={e => update('summary', e.target.value)} placeholder="2–3 sentences about who you are and what you're looking for." rows={3} className="input" style={{ resize: 'vertical', fontFamily: 'inherit' }} />
-          </PRow>
-        </ProfileSection>
+      {/* ── Personal details form ── */}
+      <form onSubmit={handleSave}>
+        <SectionHead title="Personal details" desc="Used in your resume header" />
 
-        <div>
-          <button type="submit" disabled={saving} className="btn btn-black" style={{ minWidth: 150, height: 42 }}>
-            {saving ? <span className="spinner" /> : 'Save all changes'}
-          </button>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <TwoCol>
+            <Field label="Full name">
+              <input value={form.fullName} onChange={e => update('fullName', e.target.value)} placeholder="Jane Doe" className="input" />
+            </Field>
+            <Field label="Phone">
+              <input value={form.phone} onChange={e => update('phone', e.target.value)} placeholder="+1 (555) 000-0000" className="input" />
+            </Field>
+          </TwoCol>
+          <TwoCol>
+            <Field label="Location">
+              <AutocompleteInput value={form.location} onChange={v => update('location', v)} placeholder="San Francisco, CA" />
+            </Field>
+            <Field label="Portfolio / Website">
+              <input value={form.portfolio} onChange={e => update('portfolio', e.target.value)} placeholder="janedoe.dev" className="input" />
+            </Field>
+          </TwoCol>
+          <TwoCol>
+            <Field label="LinkedIn">
+              <input value={form.linkedin} onChange={e => update('linkedin', e.target.value)} placeholder="linkedin.com/in/janedoe" className="input" />
+            </Field>
+            <Field label="GitHub">
+              <input value={form.github} onChange={e => update('github', e.target.value)} placeholder="github.com/janedoe" className="input" />
+            </Field>
+          </TwoCol>
+          <Field label="Professional summary">
+            <textarea value={form.summary} onChange={e => update('summary', e.target.value)} placeholder="2–3 sentences about who you are and what you're looking for." rows={3} className="input" style={{ resize: 'vertical', fontFamily: 'inherit' }} />
+          </Field>
         </div>
+
+        <button type="submit" disabled={saving}
+          style={{ marginTop: '1.5rem', display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 22px', background: saved ? '#16a34a' : '#0a0a0a', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'inherit', opacity: saving ? 0.7 : 1, transition: 'background .2s' }}>
+          {saving
+            ? <><span style={{ width: 13, height: 13, border: '2px solid rgba(255,255,255,.3)', borderTopColor: '#fff', borderRadius: '50%', display: 'inline-block', animation: 'spin .7s linear infinite' }} /> Saving…</>
+            : saved ? '✓ Saved!' : 'Save changes'
+          }
+        </button>
       </form>
 
-      {/* Membership */}
-      <div style={{ marginTop: '2.5rem', border: '1px solid #e5e7eb', borderRadius: 12, overflow: 'hidden' }}>
-        <div style={{ padding: '1.1rem 1.25rem', borderBottom: '1px solid #f0f0f0', background: '#fafafa', display: 'flex', alignItems: 'center', gap: 8 }}>
-          <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><rect x="2" y="5" width="12" height="9" rx="1.5" stroke="#888" strokeWidth="1.3"/><path d="M5 5V4a3 3 0 0 1 6 0v1" stroke="#888" strokeWidth="1.3" strokeLinecap="round"/></svg>
-          <span style={{ fontSize: '.9rem', fontWeight: 600, color: '#333' }}>Membership</span>
-        </div>
-        <div style={{ padding: '1.25rem' }}>
-          {subCanceled || !user.subscriptionActive ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '.875rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#d1d5db', flexShrink: 0 }} />
-                <span style={{ fontSize: '.875rem', color: '#888' }}>No active subscription</span>
+      <Divider />
+
+      {/* ── Membership ── */}
+      <SectionHead title="Membership" />
+
+      {(() => {
+        const cancelAt = user.subscriptionCancelAt ? new Date(user.subscriptionCancelAt) : null
+        const isCanceling = user.subscriptionActive && cancelAt
+
+        // ── State 1: no subscription ──────────────────────────────
+        if (!user.subscriptionActive) return (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, padding: '1rem 1.25rem', border: '1px solid #e5e7eb', borderRadius: 12, background: '#fafafa' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{ width: 36, height: 36, borderRadius: 10, background: '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="5" width="12" height="9" rx="1.5" stroke="#9ca3af" strokeWidth="1.3"/><path d="M5 5V4a3 3 0 0 1 6 0v1" stroke="#9ca3af" strokeWidth="1.3" strokeLinecap="round"/></svg>
               </div>
-              <a href="/paywall" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '9px 20px', background: '#0a0a0a', color: '#fff', borderRadius: 8, fontSize: '.875rem', fontWeight: 500, textDecoration: 'none', width: 'fit-content' }}>Upgrade to Pro →</a>
+              <div>
+                <p style={{ fontSize: 13, fontWeight: 600, color: '#555' }}>No active plan</p>
+                <p style={{ fontSize: 12, color: '#aaa', marginTop: 1 }}>Upgrade to unlock all features</p>
+              </div>
             </div>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                    <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#16a34a', flexShrink: 0 }} />
-                    <span style={{ fontSize: '.875rem', fontWeight: 600, color: '#0a0a0a' }}>Pro — Active</span>
-                  </div>
-                  <span style={{ fontSize: '.8125rem', color: '#888' }}>$20 / month · 700 auto-applications</span>
+            <a href="/paywall" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '8px 16px', background: '#0a0a0a', color: '#fff', borderRadius: 8, fontSize: 13, fontWeight: 600, textDecoration: 'none', whiteSpace: 'nowrap' }}>
+              Upgrade to Pro →
+            </a>
+          </div>
+        )
+
+        // ── State 2: active but scheduled to cancel ───────────────
+        if (isCanceling) return (
+          <div style={{ border: '1px solid #fde68a', borderRadius: 12, background: '#fffbeb', overflow: 'hidden' }}>
+            <div style={{ padding: '1rem 1.25rem', display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ width: 36, height: 36, borderRadius: 10, background: '#fef3c7', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 5v4M8 11h.01" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round"/><circle cx="8" cy="8" r="6.25" stroke="#d97706" strokeWidth="1.3"/></svg>
+              </div>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>
+                  <p style={{ fontSize: 13, fontWeight: 700, color: '#92400e' }}>Pro — Cancels soon</p>
+                  <span style={{ background: '#d97706', color: '#fff', borderRadius: 99, fontSize: 10, fontWeight: 700, padding: '2px 8px', letterSpacing: '.04em' }}>CANCELING</span>
                 </div>
-                <span style={{ background: '#f0fdf4', color: '#16a34a', border: '1px solid #bbf7d0', borderRadius: 99, fontSize: 11, fontWeight: 600, padding: '3px 10px' }}>Active</span>
+                <p style={{ fontSize: 12, color: '#b45309', fontWeight: 400 }}>
+                  Your subscription ends on{' '}
+                  <strong>
+                    {cancelAt.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                  </strong>
+                  . You have full access until then.
+                </p>
               </div>
-              <button onClick={handleCancelSub} disabled={cancelingSub}
-                style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 16px', background: '#fff', border: '1px solid #fecdd3', color: '#e11d48', borderRadius: 8, fontSize: '.8125rem', fontWeight: 500, cursor: cancelingSub ? 'not-allowed' : 'pointer', width: 'fit-content', fontFamily: 'inherit', opacity: cancelingSub ? 0.6 : 1 }}>
-                {cancelingSub
-                  ? <span className="spinner" style={{ width: 13, height: 13, borderColor: '#e11d48', borderTopColor: 'transparent' }} />
-                  : <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5.5" stroke="currentColor" strokeWidth="1.3"/><path d="M5 5l4 4M9 5l-4 4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/></svg>
-                }
-                Cancel subscription
-              </button>
-              <p style={{ fontSize: '.75rem', color: '#bbb', lineHeight: 1.5 }}>
-                You&apos;ll keep access until the end of your current billing period. No refunds for partial months.
-              </p>
             </div>
-          )}
+          </div>
+        )
+
+        // ── State 3: fully active ─────────────────────────────────
+        return (
+          <div style={{ border: '1px solid #bbf7d0', borderRadius: 12, background: '#f0fdf4', overflow: 'hidden' }}>
+            <div style={{ padding: '1rem 1.25rem', display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ width: 36, height: 36, borderRadius: 10, background: '#dcfce7', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 4.5" stroke="#16a34a" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              </div>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>
+                  <p style={{ fontSize: 13, fontWeight: 700, color: '#15803d' }}>Pro — Active</p>
+                  <span style={{ background: '#16a34a', color: '#fff', borderRadius: 99, fontSize: 10, fontWeight: 700, padding: '2px 8px', letterSpacing: '.04em' }}>ACTIVE</span>
+                </div>
+                <p style={{ fontSize: 12, color: '#4ade80', fontWeight: 400 }}>$20 / month · 700 auto-applications included</p>
+              </div>
+            </div>
+            <div style={{ padding: '.75rem 1.25rem', borderTop: '1px solid #bbf7d0', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
+              <p style={{ fontSize: 12, color: '#bbb', lineHeight: 1.5 }}>You keep access until the end of the billing period if you cancel.</p>
+              <button onClick={onRequestCancel} disabled={cancelingSub}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '6px 14px', background: 'transparent', border: '1px solid #fecdd3', color: '#e11d48', borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: cancelingSub ? 'not-allowed' : 'pointer', fontFamily: 'inherit', opacity: cancelingSub ? 0.6 : 1, whiteSpace: 'nowrap' }}>
+                {cancelingSub && <span style={{ width: 11, height: 11, border: '1.5px solid #e11d4844', borderTopColor: '#e11d48', borderRadius: '50%', display: 'inline-block', animation: 'spin .7s linear infinite' }} />}
+                {cancelingSub ? 'Canceling…' : 'Cancel subscription'}
+              </button>
+            </div>
+          </div>
+        )
+      })()}
+
+      <Divider />
+
+      {/* ── Account ── */}
+      <SectionHead title="Account" />
+
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem 1.25rem', border: '1px solid #e5e7eb', borderRadius: 12 }}>
+        <div>
+          <p style={{ fontSize: 13, fontWeight: 600, color: '#0a0a0a' }}>Sign out</p>
+          <p style={{ fontSize: 12, color: '#aaa', marginTop: 2 }}>Sign out of your account on this device.</p>
         </div>
+        <button onClick={onLogout}
+          style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 16px', background: '#fff', border: '1px solid #e5e7eb', color: '#555', borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', transition: 'all .12s', whiteSpace: 'nowrap' }}
+          onMouseEnter={e => { e.currentTarget.style.borderColor = '#0a0a0a'; e.currentTarget.style.color = '#0a0a0a' }}
+          onMouseLeave={e => { e.currentTarget.style.borderColor = '#e5e7eb'; e.currentTarget.style.color = '#555' }}
+        >
+          <LogoutIcon /> Log out
+        </button>
       </div>
+
     </div>
   )
 }
@@ -324,6 +431,9 @@ function App() {
   const router = useRouter()
   const [user, setUser] = useState(null)
   const [toasts, setToasts] = useState([])
+  const [showLogout, setShowLogout]           = useState(false)
+  const [showCancelModal, setShowCancelModal] = useState(false)
+  const [cancelingSub, setCancelingSub]       = useState(false)
 
   const toast = useCallback((msg, type = 'success') => {
     const id = Date.now()
@@ -338,11 +448,38 @@ function App() {
     }).catch(() => router.push('/'))
   }, [router])
 
+  async function handleCancelSub() {
+    setShowCancelModal(false)
+    setCancelingSub(true)
+    try {
+      const res = await fetch('/api/stripe/cancel', { method: 'POST' })
+      const data = await res.json()
+      if (res.ok) {
+        // Update user in-place so the cancellation date shows immediately
+        setUser(prev => ({ ...prev, subscriptionCancelAt: data.cancelAt }))
+        toast('Subscription canceled.')
+      } else {
+        toast('Failed to cancel — try again.', 'error')
+      }
+    } catch { toast('Something went wrong', 'error') }
+    setCancelingSub(false)
+  }
+
   if (!user) return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}><div className="loading-dots"><span /><span /><span /></div></div>
 
   return (
-    <Shell user={user} toasts={toasts}>
-      <Profile user={user} toast={toast} />
+    <Shell
+      user={user} toasts={toasts}
+      showLogout={showLogout} setShowLogout={setShowLogout}
+      showCancelModal={showCancelModal} setShowCancelModal={setShowCancelModal}
+      onConfirmCancel={handleCancelSub}
+    >
+      <Profile
+        user={user} toast={toast}
+        onLogout={() => setShowLogout(true)}
+        onRequestCancel={() => setShowCancelModal(true)}
+        cancelingSub={cancelingSub}
+      />
     </Shell>
   )
 }

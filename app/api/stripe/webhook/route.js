@@ -31,7 +31,7 @@ export async function POST(request) {
     const subscription = event.data.object
     await User.findOneAndUpdate(
       { stripeSubscriptionId: subscription.id },
-      { subscriptionActive: false }
+      { subscriptionActive: false, subscriptionCancelAt: null }
     )
   }
 

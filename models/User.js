@@ -11,6 +11,7 @@ const UserSchema = new mongoose.Schema({
   password: { type: String, required: true },
   onboardingComplete: { type: Boolean, default: false },
   subscriptionActive: { type: Boolean, default: false },
+  subscriptionCancelAt: { type: Date, default: null }, // set when cancel_at_period_end=true
   stripeCustomerId: { type: String },
   stripeSubscriptionId: { type: String },
 

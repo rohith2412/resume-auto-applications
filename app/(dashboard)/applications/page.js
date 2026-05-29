@@ -301,7 +301,7 @@ function Applications({ toast }) {
       {/* Stats — always 4 cols, shrink on mobile */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
+        gridTemplateColumns: isMobile ? 'repeat(2, minmax(0, 1fr))' : 'repeat(4, minmax(0, 1fr))',
         gap: isMobile ? 6 : 10,
         marginBottom: '1.75rem',
       }}>
@@ -388,7 +388,7 @@ function Applications({ toast }) {
                         onMouseEnter={e => e.currentTarget.style.textDecoration = 'underline'}
                         onMouseLeave={e => e.currentTarget.style.textDecoration = 'none'}
                       >
-                        View job ↗
+                        View job 
                       </a>
                     )}
                   </div>

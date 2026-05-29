@@ -18,14 +18,18 @@ export async function POST() {
 
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 
-    // Cancel at period end so user keeps access until billing cycle ends
-    await stripe.subscriptions.update(user.stripeSubscriptionId, {
+    // Cancel at period end — user keeps access until billing cycle ends.
+    // subscriptionActive stays true; the webhook (customer.subscription.deleted)
+    // flips it to false when Stripe actually terminates the subscription.
+    const subscription = await stripe.subscriptions.update(user.stripeSubscriptionId, {
       cancel_at_period_end: true,
     })
 
-    await User.findByIdAndUpdate(session.userId, { subscriptionActive: false })
+    // Store the exact date the subscription will end so the UI can display it.
+    const cancelAt = new Date(subscription.current_period_end * 1000)
+    await User.findByIdAndUpdate(session.userId, { subscriptionCancelAt: cancelAt })
 
-    return Response.json({ success: true })
+    return Response.json({ success: true, cancelAt: cancelAt.toISOString() })
   } catch (err) {
     console.error('[stripe/cancel]', err?.message ?? err)
     return Response.json({ error: 'Failed to cancel subscription' }, { status: 500 })
