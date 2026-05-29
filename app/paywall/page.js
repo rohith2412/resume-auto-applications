@@ -172,7 +172,14 @@ function PaywallContent() {
             <LogoMark />
             <span style={{ fontWeight: 500, fontSize: 14, letterSpacing: '-0.02em' }}>reblet</span>
           </div>
-          <span style={{ fontSize: 12, color: '#bbb', letterSpacing: '0.03em' }}>UPGRADE</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <span style={{ fontSize: 12, color: '#bbb', letterSpacing: '0.03em' }}>UPGRADE</span>
+            <button onClick={async () => { await fetch('/api/auth/logout', { method: 'POST' }); window.location.href = '/' }}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 12, color: '#bbb', fontWeight: 500, letterSpacing: '0.03em', padding: 0 }}
+              onMouseEnter={e => e.currentTarget.style.color = '#0a0a0a'}
+              onMouseLeave={e => e.currentTarget.style.color = '#bbb'}
+            >Log out</button>
+          </div>
         </nav>
 
         {/* Body */}

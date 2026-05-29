@@ -4,6 +4,6 @@ import BlurredPreview from './components/BlurredPreview'
 
 export default async function Home() {
   const session = await getSession()
-  if (session) redirect('/my-resumes')
+  if (session) redirect('/applications')
   return <BlurredPreview />
 }

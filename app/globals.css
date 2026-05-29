@@ -27,6 +27,7 @@ body {
   font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   -webkit-font-smoothing: antialiased;
   line-height: 1.6;
+  overflow-x: hidden;
 }
 
 ::selection { background: var(--blue); color: #fff; }
@@ -130,12 +131,8 @@ body {
 
 /* ── Mobile nav ── */
 @media (max-width: 768px) {
+  /* JS handles sidebar/main layout — these are SSR-flash fallbacks only */
   .sidebar { display: none !important; }
-  .sidebar-main { margin-left: 0 !important; padding-bottom: 5rem; }
-  .auto-apply-layout { grid-template-columns: 1fr !important; padding: 1.25rem !important; }
-  .field-grid-2 { grid-template-columns: 1fr !important; }
-  .page-content { padding: 1.25rem !important; }
-  .stats-grid-4 { grid-template-columns: repeat(2, 1fr) !important; }
   .mobile-nav {
     display: flex; position: fixed; bottom: 0; left: 0; right: 0;
     background: #fff; border-top: 1px solid var(--gray-200); z-index: 50;
@@ -145,12 +142,15 @@ body {
   }
   .mobile-nav-btn {
     flex: 1; display: flex; flex-direction: column; align-items: center;
-    gap: 0.2rem; padding: 0.45rem 0.25rem; font-size: 0.65rem; font-weight: 500;
-    color: #aaa; cursor: pointer; border-radius: 6px; border: none;
-    background: none; font-family: inherit; transition: color 0.12s;
+    gap: 0.2rem; padding: 0.5rem 0.25rem; font-size: 0.65rem; font-weight: 500;
+    color: #aaa; cursor: pointer; border-radius: 8px; border: none;
+    background: none; font-family: inherit; transition: color 0.12s, background 0.12s;
     text-decoration: none;
   }
-  .mobile-nav-btn.active { color: #0a0a0a; }
+  .mobile-nav-btn.active { color: #0a0a0a; background: #f2f2f0; }
   .mobile-nav-btn svg { width: 18px; height: 18px; }
+  /* Toast: float above the mobile nav */
+  .toast-wrap { bottom: 5.5rem !important; right: 1rem; left: 1rem; align-items: stretch; }
+  .toast { max-width: 100%; }
 }
 @media (min-width: 769px) { .mobile-nav { display: none !important; } }
