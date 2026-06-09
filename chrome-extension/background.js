@@ -1,8 +1,7 @@
 // Background service worker — handles all API calls so content script
 // doesn't need to worry about CORS or storage.
 
-// Change to 'https://reblet.com' for production
-const DEFAULT_BASE = 'http://localhost:3000'
+const DEFAULT_BASE = 'https://www.reblet.com'
 
 // ── Toolbar icon ──────────────────────────────────────────────
 // Draws the reblet logo with pure canvas calls (no SVG blob —

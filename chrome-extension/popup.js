@@ -1,7 +1,7 @@
 const $ = id => document.getElementById(id)
 
 // Keep in sync with background.js DEFAULT_BASE
-const DASHBOARD_URL = 'http://localhost:3000'
+const DASHBOARD_URL = 'https://www.reblet.com'
 
 async function send(type, payload = {}) {
   return new Promise((resolve, reject) => {
