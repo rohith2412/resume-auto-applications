@@ -31,8 +31,11 @@
   // We keep sleep() unscaled so polling loops (waitFor / waitForSuccess)
   // still tick at their original cadence. Only the "human-like" jitter()
   // delays between form actions get compressed.
-  const SPEED = 1.0                  // 1.0 = human-like (safe from bot detection)
-  const MIN_JITTER = 30              // never go below 30ms or LinkedIn glitches
+  // SAFETY MODE — slower than original to stay below LinkedIn's bot detector.
+  // After getting the "applying at a fast pace" warning, we run at 1.8x speed
+  // (i.e. slower) plus the human-emulation layer in stealth.js.
+  const SPEED = 1.8                  // higher = slower (was 1.0)
+  const MIN_JITTER = 80              // longer floor on every jitter (was 30)
 
   const sleep = ms => new Promise(r => setTimeout(r, ms))
   const jitter = (lo, hi) => {
@@ -90,6 +93,15 @@
 
   async function fillField(el, value) {
     if (!el || value == null || value === '') return
+
+    // SAFETY: subtly reword long-form text so identical answers don't appear
+    // across all our applications (LinkedIn's bot detector looks for this).
+    try {
+      if (globalThis.REBLET_STEALTH?.diversifyAnswer && typeof value === 'string' && value.length > 40) {
+        value = globalThis.REBLET_STEALTH.diversifyAnswer(value)
+      }
+    } catch (e) { /* fall through with original value */ }
+
     try {
       el.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
       await jitter(60, 120)
@@ -1797,6 +1809,22 @@
       )
       if (!link) { skipped++; renderPanel(); continue }
 
+      // ── SAFETY: enforce session/hourly/daily caps before opening job ──
+      try {
+        if (globalThis.REBLET_STEALTH?.sessionGuard) {
+          const guard = globalThis.REBLET_STEALTH.sessionGuard()
+          if (!guard.ok) {
+            log(`⛔ Session cap: ${guard.reason}. Stopping.`)
+            isRunning = false; renderPanel(); return
+          }
+        }
+        // Refuse to run between midnight and 7am (looks too bot-like)
+        if (globalThis.REBLET_STEALTH?.isSafeTime && !globalThis.REBLET_STEALTH.isSafeTime()) {
+          log('⛔ Outside safe hours (7am–midnight). Stopping to avoid bot detection.')
+          isRunning = false; renderPanel(); return
+        }
+      } catch (e) { /* stealth optional */ }
+
       log(`Opening job #${applied + skipped + 1}`)
       link.click()
       await jitter(2000, 3000)
@@ -1924,7 +1952,38 @@
       }
 
       renderPanel()
-      await jitter(3000, 5000)
+
+      // ── SAFETY: record this application & pace based on stealth module ──
+      try {
+        if (globalThis.REBLET_STEALTH) {
+          if (result === 'applied') {
+            await globalThis.REBLET_STEALTH.recordApplication()
+          }
+
+          // Maybe take a forced break (mimics getting coffee, replying to messages)
+          const brk = await globalThis.REBLET_STEALTH.maybeForcedBreak()
+          if (brk.taken) {
+            const sec = Math.round(brk.durationMs / 1000)
+            log(`☕ ${brk.type} break — ${sec}s (anti-detection)`)
+            await globalThis.REBLET_STEALTH.sleep(brk.durationMs)
+          }
+
+          // Run a random "browse" action to look human between applies
+          if (Math.random() < 0.55) {
+            try { await globalThis.REBLET_STEALTH.randomBrowseAction() } catch (e) {}
+          }
+
+          // Inter-application gap — heavy-tailed, time-of-day aware
+          const gap = globalThis.REBLET_STEALTH.getApplicationGap()
+          const gapSec = Math.round(gap / 1000)
+          log(`⏱ Next job in ${gapSec}s`)
+          await globalThis.REBLET_STEALTH.sleep(gap)
+        } else {
+          await jitter(3000, 5000)
+        }
+      } catch (e) {
+        await jitter(3000, 5000)
+      }
     }
 
     if (isRunning) {
