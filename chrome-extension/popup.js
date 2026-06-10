@@ -3,6 +3,39 @@ const $ = id => document.getElementById(id)
 // Keep in sync with background.js DEFAULT_BASE
 const DASHBOARD_URL = 'https://www.reblet.com'
 
+// ── Companion meme quotes (rotates every ~3.5s) ──────────────
+const MEME_QUOTES = [
+  'getting that bag 💰',
+  'no thoughts. just apply 🧠',
+  'ghosted again? same 👻',
+  'we apply we vibe ✨',
+  'recruiter pls notice me 🥺',
+  '420 rejections strong 💪',
+  'manifest the offer 🔮',
+  'one more app… last one 🤥',
+  'tailoring intensifies 🪡',
+  'speedrun: hired any%',
+  'unemployment? in this economy?? 📉',
+  'CEO of trying 👑',
+  'resume? ✓ vibes? ✓ luck? 🤞',
+  'touch grass after this 🌱',
+  'h1b szn loading… ⏳',
+]
+function startCompanion() {
+  const el = document.getElementById('speech')
+  if (!el) return
+  let i = 0
+  setInterval(() => {
+    i = (i + 1) % MEME_QUOTES.length
+    el.style.animation = 'none'
+    // force reflow so the animation restarts
+    void el.offsetWidth
+    el.style.animation = 'bubblePop 0.35s ease-out'
+    el.textContent = MEME_QUOTES[i]
+  }, 3500)
+}
+document.addEventListener('DOMContentLoaded', startCompanion)
+
 async function send(type, payload = {}) {
   return new Promise((resolve, reject) => {
     try {

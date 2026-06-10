@@ -26,8 +26,19 @@
     return label.toLowerCase().replace(/[^\w\s]/g, ' ').replace(/\s+/g, ' ').trim()
   }
 
+  // ── GLOBAL SPEED ──────────────────────────────────────────
+  // Lower = faster bot. 1.0 = original speed, 0.2 = 5x faster.
+  // We keep sleep() unscaled so polling loops (waitFor / waitForSuccess)
+  // still tick at their original cadence. Only the "human-like" jitter()
+  // delays between form actions get compressed.
+  const SPEED = 1.0                  // 1.0 = human-like (safe from bot detection)
+  const MIN_JITTER = 30              // never go below 30ms or LinkedIn glitches
+
   const sleep = ms => new Promise(r => setTimeout(r, ms))
-  const jitter = (lo, hi) => sleep(lo + Math.random() * (hi - lo))
+  const jitter = (lo, hi) => {
+    const base = lo + Math.random() * (hi - lo)
+    return sleep(Math.max(MIN_JITTER, base * SPEED))
+  }
 
   function sendMsg(type, payload = {}) {
     return new Promise(resolve =>
@@ -193,6 +204,24 @@
       modal.querySelector('form')                      ||
       modal
     )
+  }
+
+  // Best-effort label of the current form section, e.g.
+  // "Contact info", "Education", "Voluntary self-identification".
+  // Used in skip logs so the user can see which step failed.
+  function getStepHeading() {
+    const pane = getFormPane()
+    if (!pane) return ''
+    const h =
+      pane.querySelector('h3.t-16, h3.t-20, h3.t-24') ||
+      pane.querySelector('h3, h2, h4') ||
+      pane.querySelector('[class*="modal__header"], [class*="form-section__title"], [class*="heading"]')
+    const t = h?.innerText?.trim().split('\n')[0]
+    return t ? t.slice(0, 60) : ''
+  }
+  function pageLabel(stepCount) {
+    const h = getStepHeading()
+    return h ? `Step ${stepCount + 1} (${h})` : `Step ${stepCount + 1}`
   }
 
   // Find Easy Apply button ONLY in the job details panel.
@@ -461,6 +490,24 @@
      common ATS (Greenhouse, Lever, Workday) custom fields.
   ═══════════════════════════════════════════════════════════ */
   function smartDefault(label = '', options = []) {
+    // ── 0a. Consult the massive 1,200+ Q&A BANK first ──
+    // Pre-seeded answers for essay/behavioral/tech questions — zero AI cost.
+    try {
+      if (globalThis.REBLET_QA_BANK?.lookup) {
+        const qa = globalThis.REBLET_QA_BANK.lookup(label, options, profile, currentJob)
+        if (qa !== null && qa !== '' && qa !== undefined) return qa
+      }
+    } catch (e) { /* fall through */ }
+
+    // ── 0b. Consult the REBLET_KB knowledge base ──
+    // Covers 700+ structured patterns across identity, visa, EEO, education, etc.
+    try {
+      if (globalThis.REBLET_KB?.lookup) {
+        const kb = globalThis.REBLET_KB.lookup(label, options, profile, currentJob)
+        if (kb !== null && kb !== '' && kb !== undefined) return kb
+      }
+    } catch (e) { /* fall through to inline rules */ }
+
     const l = label.toLowerCase()
     const p  = profile?.profile       || {}
     const ed = profile?.education      || {}
@@ -607,12 +654,134 @@
     // ── "Please specify" follow-up text fields ────────────────────
     if (/please specify|specify.*below|please.*provide/i.test(l)) return ''
 
+    // ═══════════════════════════════════════════════════════════════
+    //  EXTRA CONDITIONS — handle MANY more common LinkedIn questions
+    // ═══════════════════════════════════════════════════════════════
+
+    // ── Age / minimum-age confirmation ────────────────────────────
+    if (/\bage\b|18.*older|21.*older|of legal age|minimum.*age|over.*18|over.*21/i.test(l))
+      return opt(/yes|over|above|i am/i) || 'Yes'
+
+    // ── Criminal / convictions / felony ───────────────────────────
+    if (/conviction|felony|misdemeanor|criminal|convicted|arrested/i.test(l))
+      return opt(/\bno\b|none|never/i) || 'No'
+
+    // ── Non-compete / NDA / restrictive covenant ──────────────────
+    if (/non.?compete|non.?disclosure|restrictive.*covenant|nda\b|garden.*leave/i.test(l))
+      return opt(/\bno\b|none/i) || 'No'
+
+    // ── Drug screening / clearances ───────────────────────────────
+    if (/drug.?screen|drug.?free|cannabis|marijuana|substance/i.test(l))
+      return opt(/yes|pass|willing|agree/i) || 'Yes'
+    if (/security.?clearance|clearance|secret|top.?secret/i.test(l))
+      return opt(/\bno\b|none|not.*have/i) || 'No'
+
+    // ── Equipment / home office / setup ───────────────────────────
+    if (/equipment|home.?office|workspace|reliable.*internet|high.?speed.*internet|laptop|computer.*setup/i.test(l))
+      return opt(/yes|have|reliable/i) || 'Yes'
+
+    // ── Remote tool familiarity ───────────────────────────────────
+    if (/slack|zoom|teams|google.*meet|jira|confluence|asana|notion|trello/i.test(l)) {
+      if (options.length) return opt(/yes|comfortable|familiar|advanced|proficient/i) || options[0]
+      return 'Yes'
+    }
+
+    // ── Programming languages (yes/no or years) ───────────────────
+    if (/python|javascript|typescript|java\b|c\+\+|c#|golang|\bgo\b|ruby|rust|kotlin|swift|php|sql|node|react|angular|vue|django|flask|spring|\.net/i.test(l)) {
+      // Numeric input → years
+      if (!options.length) return String(jp.yearsExp || '2')
+      // Yes/No
+      if (options.length === 2 && /yes/i.test(options[0])) return 'Yes'
+      // Level dropdown
+      return opt(/intermediate|advanced|proficient|comfortable/i) || options[Math.floor(options.length / 2)] || options[0]
+    }
+
+    // ── Cloud / DevOps ────────────────────────────────────────────
+    if (/aws|azure|gcp|google.*cloud|kubernetes|docker|terraform|ci.?cd|jenkins|github.*action/i.test(l)) {
+      if (!options.length) return String(jp.yearsExp || '2')
+      return opt(/yes|familiar|some experience|intermediate/i) || options[0]
+    }
+
+    // ── Pronouns ──────────────────────────────────────────────────
+    if (/pronoun/i.test(l))
+      return opt(/prefer not|decline/i) || options[0] || 'Prefer not to say'
+
+    // ── Marital status / dependents ───────────────────────────────
+    if (/marital.*status|married|dependents|spouse/i.test(l))
+      return opt(/prefer not|decline/i) || options[0] || 'Prefer not to say'
+
+    // ── Hispanic / Latino question ────────────────────────────────
+    if (/hispanic|latino|latinx/i.test(l))
+      return opt(/prefer not|decline|not wish|no/i) || 'Prefer not to say'
+
+    // ── LGBTQ / sexual orientation ────────────────────────────────
+    if (/orientation|lgbtq|sexual/i.test(l))
+      return opt(/prefer not|decline/i) || 'Prefer not to say'
+
+    // ── Address sub-fields ────────────────────────────────────────
+    if (/\bstreet\b|address.*line|line.*1|line.*2/i.test(l)) return p.location || ''
+    if (/postal|\bzip\b|pincode/i.test(l))                    return p.zip || p.postalCode || ''
+    if (/\bstate\b|province|region/i.test(l))                 return p.state || p.location || ''
+    if (/\bcity\b|town/i.test(l))                             return p.city || p.location?.split(',')[0] || ''
+    if (/\bcountry\b/i.test(l))                               return p.country || opt(/canada|united states|usa/i) || options[0] || ''
+
+    // ── Name sub-fields ───────────────────────────────────────────
+    if (/first.*name|given.*name/i.test(l))    return p.fullName?.split(' ')[0] || ''
+    if (/last.*name|surname|family.*name/i.test(l)) return p.fullName?.split(' ').slice(-1)[0] || ''
+    if (/middle.*name|middle.*initial/i.test(l)) return ''
+    if (/full.*name|legal.*name|your.*name/i.test(l)) return p.fullName || ''
+    if (/preferred.*name|nickname/i.test(l)) return p.fullName?.split(' ')[0] || ''
+
+    // ── Date of birth ─────────────────────────────────────────────
+    if (/date.*birth|dob|birthday|birth.*date/i.test(l))
+      return opt(/prefer not|decline/i) || ''
+
+    // ── Employment type preference ────────────────────────────────
+    if (/full.?time|part.?time|contract|permanent|temporary|employment.*type/i.test(l))
+      return opt(/full.?time|permanent/i) || options[0] || 'Full-time'
+
+    // ── Shift / schedule / hours ──────────────────────────────────
+    if (/\bshift\b|schedule|hours|overnight|weekend|night/i.test(l))
+      return opt(/flexible|day|standard|any/i) || opt(/yes|willing|open/i) || options[0] || 'Flexible'
+
+    // ── Notice / weeks ────────────────────────────────────────────
+    if (/how soon|immediately|two.?week|2.?week/i.test(l))
+      return opt(/immediately|now|2.?week|two.?week/i) || options[0] || '2 weeks'
+
+    // ── Salary specifics ──────────────────────────────────────────
+    if (/desired.*salary|minimum.*salary|target.*salary|expected.*compensation|annual.*salary/i.test(l))
+      return String(jp.expectedSalary || '85000').replace(/[^0-9]/g, '') || '85000'
+    if (/hourly.*rate|rate.*hour|per.?hour/i.test(l))
+      return '45'
+
+    // ── Email confirm ─────────────────────────────────────────────
+    if (/confirm.*email|verify.*email|email.*again/i.test(l))
+      return p.email || ''
+    if (/^email/i.test(l) || /email.*address/i.test(l))
+      return p.email || ''
+
+    // ── Phone confirm ─────────────────────────────────────────────
+    if (/^phone/i.test(l) || /mobile.*number|cell.*number|contact.*number/i.test(l))
+      return p.phone || ''
+
+    // ── Misc agreement / consent (catch-all) ──────────────────────
+    if (/\bagree\b|\bconfirm\b|\bcertify\b|\backnowledge\b|\bunderstand\b|\baccept\b/i.test(l))
+      return opt(/yes|agree|i agree|i confirm|i certify|i acknowledge/i) || 'Yes'
+
+    // ── Generic "do you have" / "are you" ─────────────────────────
+    if (/^do you have|^are you|^have you|^can you|^will you|^would you/i.test(l)) {
+      if (options.length === 2) return opt(/yes/i) || 'Yes'
+      return opt(/yes/i) || options[0] || 'Yes'
+    }
+
     // ── Dropdown/radio fallback — pick first sensible option ──────
     if (options.length === 2 && /yes/i.test(options[0])) return 'Yes'
+    if (options.length === 2 && /yes/i.test(options[1])) return 'Yes'
+    if (options.length && /select|choose|pick/i.test(options[0])) return options[1] || options[0]
     if (options.length) return options[0]
 
     // ── Numeric fallback ──────────────────────────────────────────
-    if (/year|count|how many|number/i.test(l)) return String(jp.yearsExp || '2')
+    if (/year|count|how many|number|quantity|amount/i.test(l)) return String(jp.yearsExp || '2')
 
     // ── Plain text: return empty rather than garbage ───────────────
     return ''
@@ -658,6 +827,107 @@
     if (matchCount >= 3) return true
 
     return false
+  }
+
+  // Detect Education step (similar shape to work experience)
+  function isEducationStep(pane) {
+    if (!pane) return false
+    const heading = pane.querySelector('h3, h2, [class*="title"], [class*="heading"]')
+    if (heading && /^education$|education.{0,5}history|academic.{0,5}background/i.test(heading.textContent)) {
+      return true
+    }
+    if (pane.querySelector('[class*="education"]')) return true
+    const fieldLabels = [...pane.querySelectorAll('label, legend')]
+      .map(l => l.innerText?.trim().toLowerCase()).join(' ')
+    const eduFields = ['school', 'degree', 'major', 'field of study', 'dates attended']
+    return eduFields.filter(f => fieldLabels.includes(f)).length >= 3
+  }
+
+  // Education step handler. Two cases:
+  //  A) Existing entry shown with Edit/Remove buttons + required sub-fields
+  //     empty → click Edit, let fillStep fill Major/City, click Save.
+  //  B) Inline "Add education" form open → click Cancel (same trick as WE).
+  async function fillEducationForm(pane) {
+    if (!pane) return
+    const buttons = [...pane.querySelectorAll('button')]
+
+    // Case B first: inline form open with Save/Cancel
+    const inlineCancel = buttons.find(b => {
+      const t = (b.textContent || '').trim().toLowerCase()
+      return t === 'cancel' && !b.disabled
+    })
+    const inlineSave = buttons.find(b => {
+      const t = (b.textContent || '').trim().toLowerCase()
+      return t === 'save' && !b.disabled
+    })
+
+    if (inlineCancel && inlineSave) {
+      // Inline add form is open — try to fill it then save; cancel as fallback
+      log('Education: inline form open — filling and saving')
+      await fillStep()
+      await jitter(200, 400)
+      inlineSave.click()
+      await jitter(500, 800)
+      return
+    }
+
+    // Case A: existing entry — click Edit, fill, Save
+    const editBtn = buttons.find(b => {
+      const t = (b.textContent || '').trim().toLowerCase()
+      return t === 'edit' && !b.disabled
+    })
+    if (editBtn) {
+      log('Education: editing existing entry to fill blanks')
+      editBtn.click()
+      await jitter(500, 800)
+
+      // Now fill any blank fields (Major, City, etc.)
+      try { await fillStep() } catch (e) { log(`fillStep err: ${e.message}`) }
+      await jitter(300, 500)
+
+      // Click Save on the now-open edit form
+      const saveBtn = [...(getFormPane()?.querySelectorAll('button') || [])].find(b => {
+        const t = (b.textContent || '').trim().toLowerCase()
+        return t === 'save' && !b.disabled
+      })
+      if (saveBtn) {
+        log('Education: saving edited entry')
+        saveBtn.click()
+        await jitter(500, 800)
+      }
+    }
+  }
+
+  // Work-experience step trick: LinkedIn opens an inline "Add work experience"
+  // form by default with empty required fields. If we click "Cancel" on that
+  // inline form, it collapses to just "+ Add more" and the outer step has no
+  // required fields — so Next works immediately. Way better than fake data.
+  async function fillWorkExperienceForm(pane) {
+    if (!pane) return
+
+    // Find Cancel on the inline form (not the modal's main Back/Next).
+    // It's a button whose text is exactly "Cancel" and lives next to a Save button.
+    const buttons = [...pane.querySelectorAll('button')]
+    const cancelBtn = buttons.find(b => {
+      const t = (b.textContent || '').trim().toLowerCase()
+      return t === 'cancel' && !b.disabled
+    })
+
+    if (cancelBtn) {
+      log('Work experience: clicking Cancel to skip inline form')
+      cancelBtn.click()
+      await jitter(500, 800)
+
+      // LinkedIn may pop a "Discard changes?" confirm — if so, confirm discard
+      const discardConfirm = [...document.querySelectorAll('button')].find(b => {
+        const t = (b.textContent || '').trim().toLowerCase()
+        return (t === 'discard' || t === 'yes' || t === 'confirm') && !b.disabled
+      })
+      if (discardConfirm) {
+        discardConfirm.click()
+        await jitter(400, 600)
+      }
+    }
   }
 
   // force=true → re-fill even fields that already have a value (used on error retry)
@@ -985,13 +1255,45 @@
         /^(×|✕|close)$/i.test(b.textContent?.trim()) ||
         b.getAttribute('aria-label')?.toLowerCase() === 'dismiss'
       )
-    if (x) { x.click(); await jitter(500, 800) }
+    if (x) { x.click(); await sleep(200) }
 
-    // If a "Discard" confirm appears, click it
-    await jitter(300, 500)
-    const confirmDiscard = [...document.querySelectorAll('button')]
-      .find(b => /discard/i.test(b.textContent?.trim()))
-    if (confirmDiscard) { confirmDiscard.click(); await jitter(400, 600) }
+    // The "Save this application?" confirm can take a moment to render.
+    // Poll for the Discard button up to ~3s instead of a fixed delay.
+    const discard = await waitFor(
+      () => [...document.querySelectorAll('button')].find(b => {
+        const t = (b.textContent || '').trim().toLowerCase()
+        const a = (b.getAttribute('aria-label') || '').toLowerCase()
+        return t === 'discard' || a === 'discard' ||
+               t === 'discard application' || a === 'discard application'
+      }),
+      3000
+    )
+    if (discard) {
+      log('Discarding draft to close')
+      discard.click()
+      await sleep(400)
+    }
+  }
+
+  // Detect & dismiss the "Save this application?" modal if it appears
+  // mid-flow (LinkedIn pops it whenever any close attempt is made).
+  async function handleSaveDialog() {
+    const dialogs = document.querySelectorAll('[role=dialog], [role=alertdialog]')
+    for (const d of dialogs) {
+      const txt = (d.textContent || '').toLowerCase()
+      if (txt.includes('save this application')) {
+        const discard = [...d.querySelectorAll('button')].find(b =>
+          /^discard$/i.test((b.textContent || '').trim())
+        )
+        if (discard) {
+          log('Save dialog detected — discarding')
+          discard.click()
+          await sleep(500)
+          return true
+        }
+      }
+    }
+    return false
   }
 
   /* ═══════════════════════════════════════════════════════════
@@ -1093,9 +1395,17 @@
       if (!isRunning) return 'stopped'
       while (isPaused) { await sleep(400); if (!isRunning) return 'stopped' }
 
+      // If LinkedIn popped a "Save this application?" dialog mid-flow,
+      // dismiss it (Discard) and bail out — this job is not recoverable.
+      if (await handleSaveDialog()) {
+        log(`⚠ SKIPPED on ${pageLabel(stepCount)} — Save dialog appeared`)
+        return 'skipped'
+      }
+
       // Modal disappeared?
       if (!isModalOpen()) {
         const ok = await waitForSuccess(2000)
+        if (!ok) log(`⚠ SKIPPED on Step ${stepCount + 1} — modal closed before success`)
         return ok ? 'applied' : 'skipped'
       }
 
@@ -1105,7 +1415,7 @@
 
       // Video-prompt step — we can't answer these, skip the whole job
       if (isVideoPromptStep(pane)) {
-        log('⚠ Video prompt detected — skipping this job')
+        log(`⚠ SKIPPED on ${pageLabel(stepCount)} — video prompt detected`)
         await closeModal()
         return 'skipped'
       }
@@ -1114,8 +1424,16 @@
         log(`Step ${stepCount + 1}: resume — using existing`)
         await jitter(500, 800)
       } else if (isWorkExperienceStep(pane)) {
-        log(`Step ${stepCount + 1}: work experience — passing through (LinkedIn pre-fills)`)
-        await jitter(500, 800)
+        log(`Step ${stepCount + 1}: work experience — filling any blanks`)
+        try { await fillWorkExperienceForm(pane) } catch (e) { log(`WE form err: ${e.message}`) }
+        // DOM may have changed after Save — refetch pane
+        try { await fillStep() } catch (e) { log(`fillStep err: ${e.message}`) }
+        await jitter(400, 700)
+      } else if (isEducationStep(pane)) {
+        log(`Step ${stepCount + 1}: education — filling any blanks`)
+        try { await fillEducationForm(pane) } catch (e) { log(`Edu form err: ${e.message}`) }
+        try { await fillStep() } catch (e) { log(`fillStep err: ${e.message}`) }
+        await jitter(400, 700)
       } else {
         // ── Per-step AI: get answers for any questions not yet covered ──
         const stepQs = extractQuestions()
@@ -1185,7 +1503,13 @@
         // ────────────────────────────────────────────────────────
 
         if (!fixed) {
-          log('⚠ Could not fix required fields even with AI analysis — skipping')
+          // List which required fields couldn't be satisfied
+          const stillBad = describeFormStep(getFormPane())
+            .filter(f => f.hasError)
+            .map(f => f.label?.slice(0, 40))
+            .filter(Boolean)
+          const fieldsStr = stillBad.length ? ` — bad fields: [${stillBad.join(' | ')}]` : ''
+          log(`⚠ SKIPPED on ${pageLabel(stepCount)} — required fields unfilled${fieldsStr}`)
           await closeModal()
           return 'skipped'
         }
@@ -1206,8 +1530,40 @@
       // Stuck detection (same button 3 times)
       if (label === prevLabel) {
         stuckCount++
+
+        // On 2nd stuck: try AI deep-analysis on whatever is on the page,
+        // even if no visible error markers — silent validation is common.
+        if (stuckCount === 2) {
+          log(`Stuck on ${pageLabel(stepCount)} — escalating to AI deep analysis`)
+          const stepPane   = getFormPane()
+          const stepFields = describeFormStep(stepPane)
+          const res = await sendMsg('AI_ANALYZE_STEP', {
+            jobTitle:    currentJob?.jobTitle,
+            company:     currentJob?.company,
+            stepFields,
+            errorFields: stepFields.map(f => f.label),  // treat all as candidates
+          })
+          if (res.answers?.length) {
+            for (const a of res.answers) {
+              const idx = aiAnswers.findIndex(x =>
+                x.label?.toLowerCase() === a.label?.toLowerCase()
+              )
+              if (idx >= 0) aiAnswers[idx] = a
+              else aiAnswers.push(a)
+            }
+            log(`AI suggested ${res.answers.length} answers — re-filling…`)
+            await fillStep(true)
+            await jitter(500, 800)
+          }
+        }
+
         if (stuckCount >= 3) {
-          log('⚠ Stuck on same button — skipping')
+          const visibleFields = describeFormStep(getFormPane())
+            .map(f => f.label?.slice(0, 30))
+            .filter(Boolean)
+            .slice(0, 5)
+          const fieldsStr = visibleFields.length ? ` — fields: [${visibleFields.join(' | ')}]` : ''
+          log(`⚠ SKIPPED on ${pageLabel(stepCount)} — stuck on button "${label.slice(0, 30)}"${fieldsStr}`)
           await closeModal()
           return 'skipped'
         }
@@ -1225,7 +1581,7 @@
           await dismissSuccess()
           return 'applied'
         }
-        log('⚠ Submit clicked — no success screen detected')
+        log(`⚠ SKIPPED on ${pageLabel(stepCount)} — submit clicked but no success screen`)
         return 'skipped'
       }
 
@@ -1236,7 +1592,7 @@
       stepCount++
     }
 
-    log('Max steps reached — skipping')
+    log(`⚠ SKIPPED on ${pageLabel(stepCount)} — max steps (${MAX_STEPS}) reached`)
     await closeModal()
     return 'skipped'
   }
@@ -1587,21 +1943,35 @@
     panel.innerHTML = `
       <div class="qr-header">
         <div class="qr-logo-row">
-          <svg width="18" height="18" viewBox="100 85 200 230" xmlns="http://www.w3.org/2000/svg">
-            <g transform="translate(200,200)">
-              <rect x="-100" y="-115" width="200" height="230" rx="38" fill="#1a1a1a"/>
-              <rect x="-22" y="-98" width="44" height="18" rx="6" fill="#555"/>
-              <rect x="-22" y="-80" width="44" height="9" rx="2" fill="#888"/>
-              <rect x="-22" y="-71" width="44" height="82" rx="4" fill="#fff"/>
-              <rect x="-22" y="11" width="44" height="14" rx="2" fill="#e8c99a"/>
-              <polygon points="-22,25 22,25 0,78" fill="#e8c99a"/>
-              <polygon points="-7,64 7,64 0,78" fill="#444"/>
-              <line x1="0" y1="76" x2="0" y2="84" stroke="#222" stroke-width="3" stroke-linecap="round"/>
-            </g>
-          </svg>
+          <img src="${chrome.runtime.getURL('icons/icon128.png')}" width="22" height="22" alt="" style="flex-shrink:0;border-radius:5px"/>
           <span class="qr-brand">reblet</span>
         </div>
         <button class="qr-x" id="qr-x">×</button>
+      </div>
+
+      <!-- ── Mascot stage ── -->
+      <div class="qr-mascot-stage">
+        <div class="qr-floaties" aria-hidden="true">
+          <span class="qr-fl qr-fl1">📄</span>
+          <span class="qr-fl qr-fl2">💼</span>
+          <span class="qr-fl qr-fl3">✨</span>
+          <span class="qr-fl qr-fl4">🚀</span>
+          <span class="qr-fl qr-fl5">💰</span>
+          <span class="qr-fl qr-fl6">🔥</span>
+        </div>
+        <div class="qr-bubble" id="qr-bubble">applying… 🫡</div>
+        <div class="qr-mascot">
+          <div class="qr-mascot-body">
+            <div class="qr-eye qr-eye-l"><div class="qr-pupil"></div></div>
+            <div class="qr-eye qr-eye-r"><div class="qr-pupil"></div></div>
+            <div class="qr-mouth"></div>
+            <div class="qr-cheek qr-cheek-l"></div>
+            <div class="qr-cheek qr-cheek-r"></div>
+            <div class="qr-hand qr-hand-l">📝</div>
+            <div class="qr-hand qr-hand-r">💻</div>
+          </div>
+          <div class="qr-mascot-shadow"></div>
+        </div>
       </div>
 
       <div class="qr-stats">
@@ -1664,6 +2034,35 @@
       log('Stopped by user'); renderPanel()
     }
     document.getElementById('qr-diag').onclick = () => runDiagnostic()
+
+    // ── rotating mascot speech bubble ──
+    const QR_QUOTES = [
+      'applying… 🫡',
+      'getting that bag 💰',
+      'recruiter pls notice 🥺',
+      'ghosted again? same 👻',
+      'speedrun: hired any%',
+      'tailoring resume 🪡',
+      'no thoughts. apply 🧠',
+      '420 apps strong 💪',
+      'manifest the offer 🔮',
+      'we vibe we apply ✨',
+      'CEO of trying 👑',
+      'one more app… last one 🤥',
+      'h1b szn loaded ⏳',
+      'touch grass after this 🌱',
+    ]
+    const bubble = document.getElementById('qr-bubble')
+    let qi = 0
+    if (panel._quoteTimer) clearInterval(panel._quoteTimer)
+    panel._quoteTimer = setInterval(() => {
+      if (!document.getElementById('qr-bubble')) return
+      qi = (qi + 1) % QR_QUOTES.length
+      bubble.style.animation = 'none'
+      void bubble.offsetWidth
+      bubble.style.animation = 'qr-bubblePop .35s ease-out'
+      bubble.textContent = QR_QUOTES[qi]
+    }, 3200)
   }
 
   async function runDiagnostic() {

@@ -3,86 +3,8 @@
 
 const DEFAULT_BASE = 'https://www.reblet.com'
 
-// ── Toolbar icon ──────────────────────────────────────────────
-// Draws the reblet logo with pure canvas calls (no SVG blob —
-// those don't render in extension service workers).
-function drawRebletIcon(size) {
-  const canvas = new OffscreenCanvas(size, size)
-  const ctx    = canvas.getContext('2d')
-  const p      = size / 128   // scale factor
-
-  // ── Dark rounded-rect background ──────────────────────────────────────
-  const r = Math.round(18 * p)
-  ctx.fillStyle = '#1a1a1a'
-  ctx.beginPath()
-  ctx.moveTo(r, 0)
-  ctx.arcTo(size, 0,   size, size, r)
-  ctx.arcTo(size, size, 0,   size, r)
-  ctx.arcTo(0,   size, 0,   0,    r)
-  ctx.arcTo(0,   0,    size, 0,    r)
-  ctx.closePath()
-  ctx.fill()
-
-  // ── Pencil pointing DOWN ───────────────────────────────────────────────
-  const px  = Math.round(44 * p)    // left edge of pencil
-  const pw  = Math.round(40 * p)    // pencil width
-  const prx = px + pw               // right edge
-  const cx  = px + pw / 2           // horizontal centre
-
-  // Eraser cap (dark grey) — top
-  const capT = Math.round(14 * p), capB = Math.round(22 * p)
-  ctx.fillStyle = '#555555'
-  ctx.fillRect(px, capT, pw, capB - capT)
-
-  // Ferrule (silver ring)
-  const ferB = capB + Math.round(6 * p)
-  ctx.fillStyle = '#aaaaaa'
-  ctx.fillRect(px, capB, pw, ferB - capB)
-
-  // White pencil body
-  const bodyB = Math.round(80 * p)
-  ctx.fillStyle = '#ffffff'
-  ctx.fillRect(px, ferB, pw, bodyB - ferB)
-
-  // Wood section (cream)
-  const woodB = Math.round(94 * p)
-  ctx.fillStyle = '#e8c99a'
-  ctx.fillRect(px, bodyB, pw, woodB - bodyB)
-
-  // Tapered wood triangle — tip pointing DOWN
-  const tipY = Math.round(116 * p)
-  ctx.fillStyle = '#e8c99a'
-  ctx.beginPath()
-  ctx.moveTo(px,  woodB)
-  ctx.lineTo(prx, woodB)
-  ctx.lineTo(cx,  tipY)
-  ctx.closePath()
-  ctx.fill()
-
-  // Graphite inner tip
-  const gW    = Math.round(8 * p)
-  const gTopY = tipY - Math.round(18 * p)
-  ctx.fillStyle = '#444444'
-  ctx.beginPath()
-  ctx.moveTo(cx - gW, gTopY)
-  ctx.lineTo(cx + gW, gTopY)
-  ctx.lineTo(cx,      tipY)
-  ctx.closePath()
-  ctx.fill()
-
-  return ctx.getImageData(0, 0, size, size)
-}
-
-async function setRebletIcon() {
-  try {
-    const imageData = {}
-    for (const size of [16, 32, 48, 128]) imageData[size] = drawRebletIcon(size)
-    await chrome.action.setIcon({ imageData })
-  } catch { /* fall back to manifest PNG icons */ }
-}
-
-chrome.runtime.onInstalled.addListener(setRebletIcon)
-self.addEventListener('activate', setRebletIcon)
+// Toolbar icon: rendered directly from icons/icon128.png via the manifest
+// (no runtime canvas override).
 
 async function getConfig() {
   const { apiKey, baseUrl } = await chrome.storage.local.get(['apiKey', 'baseUrl'])
