@@ -1,0 +1,11 @@
+# reblet — LinkedIn Auto Apply Chrome Extension
+# https://www.reblet.com
+
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /admin/
+Disallow: /(dashboard)/
+
+# Sitemap
+Sitemap: https://www.reblet.com/sitemap.xml
