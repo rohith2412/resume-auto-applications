@@ -5,17 +5,16 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 
 const SITE_URL  = 'https://www.reblet.com'
 const SITE_NAME = 'reblet'
-const OG_IMAGE  = `${SITE_URL}/og-image.png`
 
 // ════════════════════════════════════════════════════════════════════════════
-//  SEO METADATA — keyword-optimized for LinkedIn auto-apply / AI job search
+//  SEO METADATA - keyword-optimized for LinkedIn auto-apply / AI job search
 // ════════════════════════════════════════════════════════════════════════════
 export const metadata = {
   metadataBase: new URL(SITE_URL),
 
   // ── Primary title & description ──
   title: {
-    default:  'reblet — LinkedIn Auto Apply Bot | AI Easy Apply Chrome Extension',
+    default:  'reblet - LinkedIn Auto Apply Bot | AI Easy Apply Chrome Extension',
     template: '%s | reblet',
   },
   description:
@@ -85,33 +84,23 @@ export const metadata = {
     locale: 'en_US',
     url: SITE_URL,
     siteName: SITE_NAME,
-    title: 'reblet — LinkedIn Auto Apply Bot | AI Easy Apply Chrome Extension',
+    title: 'reblet - LinkedIn Auto Apply Bot | AI Easy Apply Chrome Extension',
     description:
       'Auto apply to LinkedIn jobs with AI. The smart Chrome extension that fills Easy Apply forms, tailors your resume per job, and submits applications automatically. Apply to 40+ jobs a day on autopilot.',
-    images: [
-      {
-        url: OG_IMAGE,
-        width: 1200,
-        height: 630,
-        alt: 'reblet — LinkedIn Auto Apply Chrome Extension powered by AI',
-      },
-    ],
   },
 
   // ── Twitter / X card ──
   twitter: {
-    card: 'summary_large_image',
-    title: 'reblet — LinkedIn Auto Apply Bot | AI Easy Apply',
+    card: 'summary',
+    title: 'reblet - LinkedIn Auto Apply Bot | AI Easy Apply',
     description:
       'Auto apply to LinkedIn jobs with AI. Chrome extension fills Easy Apply forms, tailors your resume per job, and submits for you. 40+ jobs/day on autopilot.',
-    images: [OG_IMAGE],
     creator: '@reblet',
   },
 
   // ── Icons / manifest ──
   icons: {
     icon: '/icon.svg',
-    shortcut: '/favicon.ico',
     apple: '/icon.svg',
   },
 
@@ -137,7 +126,7 @@ export const metadata = {
 }
 
 // ════════════════════════════════════════════════════════════════════════════
-//  STRUCTURED DATA (JSON-LD) — for Google rich results
+//  STRUCTURED DATA (JSON-LD) - for Google rich results
 //  SoftwareApplication schema gets you a card in search results with
 //  ratings, price, install link, etc.
 // ════════════════════════════════════════════════════════════════════════════
@@ -148,7 +137,7 @@ const STRUCTURED_DATA = {
     {
       '@type':            'SoftwareApplication',
       '@id':              `${SITE_URL}/#software`,
-      name:               'reblet — LinkedIn Auto Apply Bot',
+      name:               'reblet - LinkedIn Auto Apply Bot',
       alternateName:      ['reblet', 'reblet auto apply', 'reblet extension'],
       applicationCategory:'BrowserExtension',
       operatingSystem:    'Chrome, Edge, Brave, Arc',
@@ -212,7 +201,7 @@ const STRUCTURED_DATA = {
       },
     },
 
-    // FAQ rich snippet — gets you the expandable Q&A in Google search
+    // FAQ rich snippet - gets you the expandable Q&A in Google search
     {
       '@type': 'FAQPage',
       '@id':   `${SITE_URL}/#faq`,
@@ -230,7 +219,7 @@ const STRUCTURED_DATA = {
           name:    'How does the LinkedIn auto-apply bot work?',
           acceptedAnswer: {
             '@type': 'Answer',
-            text: 'After you install the Chrome extension and connect your reblet account, you click "Start Auto Apply" on the LinkedIn jobs search page. The bot opens each job, reads the description, fills in the Easy Apply form with answers tailored to your profile, and submits the application — all automatically.',
+            text: 'After you install the Chrome extension and connect your reblet account, you click "Start Auto Apply" on the LinkedIn jobs search page. The bot opens each job, reads the description, fills in the Easy Apply form with answers tailored to your profile, and submits the application - all automatically.',
           },
         },
         {

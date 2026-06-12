@@ -1,13 +1,12 @@
 /* ════════════════════════════════════════════════════════════════════════════
    OPEN GRAPH IMAGE — auto-generated 1200x630 PNG for social sharing
    ──────────────────────────────────────────────────────────────────────────
-   Minimal: shamrock mascot + "LinkedIn Auto Apply with AI" headline.
-   No banner, no stats, no CTA.
+   Just the shamrock logo, centered, on white. No headline, no tagline.
    ════════════════════════════════════════════════════════════════════════════ */
 import { ImageResponse } from 'next/og'
 
 export const runtime = 'edge'
-export const alt     = 'reblet — LinkedIn Auto Apply with AI'
+export const alt     = 'reblet'
 export const size    = { width: 1200, height: 630 }
 export const contentType = 'image/png'
 
@@ -19,41 +18,25 @@ export default async function Image() {
           width:  '100%',
           height: '100%',
           display: 'flex',
-          flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
           background: '#ffffff',
-          fontFamily: 'system-ui, -apple-system, "Segoe UI", sans-serif',
-          gap: 48,
         }}
       >
-        {/* Shamrock mascot */}
+        {/* Shamrock mascot — black rounded square + green clover emoji */}
         <div style={{
-          width: 200,
-          height: 200,
-          borderRadius: 44,
+          width: 320,
+          height: 320,
+          borderRadius: 72,
           background: '#0a0a0a',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          fontSize: 140,
+          fontSize: 220,
           color: '#fff',
-          boxShadow: '0 12px 36px rgba(0,0,0,.18)',
+          boxShadow: '0 16px 48px rgba(0,0,0,.22)',
         }}>
           ☘
-        </div>
-
-        {/* Headline */}
-        <div style={{
-          fontSize: 92,
-          fontWeight: 800,
-          color: '#0a0a0a',
-          letterSpacing: '-0.045em',
-          lineHeight: 1.05,
-          textAlign: 'center',
-          maxWidth: 1000,
-        }}>
-          LinkedIn Auto Apply with AI
         </div>
       </div>
     ),
