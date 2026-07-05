@@ -71,7 +71,7 @@ function showConnected(userData) {
 
   // Dashboard edit link
   const editLink = $('setup-link')
-  if (editLink) editLink.href = getBaseUrl() + '/my-resumes'
+  if (editLink) editLink.href = getBaseUrl() + '/applications'
 
   // LinkedIn button
   $('apply-btn').onclick = () => {
@@ -93,7 +93,7 @@ function showSetup() {
   $('setup').style.display = 'block'
   // Point "Auto Apply dashboard" link to correct URL
   const dashLink = $('dashboard-link')
-  if (dashLink) dashLink.href = getBaseUrl() + '/my-resumes'
+  if (dashLink) dashLink.href = getBaseUrl() + '/applications'
   setTimeout(() => $('api-key-input')?.focus(), 60)
 }
 
