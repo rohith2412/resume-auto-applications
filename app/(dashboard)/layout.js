@@ -12,8 +12,7 @@ export default async function DashboardLayout({ children }) {
   await connectDB()
   const user = await User.findById(session.userId).select('-password')
   if (!user) redirect('/api/auth/logout')
-  // Paywall gate disabled for now
-  // if (!user.subscriptionActive && process.env.NODE_ENV === 'production') redirect('/paywall')
+  if (!user.subscriptionActive) redirect('/paywall')
   if (!user.onboardingComplete) redirect('/onboarding')
 
   return <>{children}</>
