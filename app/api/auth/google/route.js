@@ -34,9 +34,9 @@ export async function GET(request) {
     client_id:     clientId,
     redirect_uri:  redirectUri,
     response_type: 'code',
-    scope:         'openid email profile https://www.googleapis.com/auth/gmail.send',
-    access_type:   'offline',
-    prompt:        'consent',
+    scope:         'openid email profile',
+    access_type:   'online',
+    prompt:        'select_account',
     state,
   })
 
