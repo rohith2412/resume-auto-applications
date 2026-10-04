@@ -223,8 +223,15 @@ function Shell({ user, toasts, showLogout, setShowLogout, showCancelModal, setSh
 function ResumeSection({ user, toast }) {
   const [uploading, setUploading] = useState(false)
   const [filename, setFilename] = useState(user.resumeFilename || '')
-  const [url, setUrl] = useState(user.resumeUrl || '')
+  const [pdfDataUrl, setPdfDataUrl] = useState(null)
   const fileRef = useRef(null)
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('resume_pdf')
+      if (stored) setPdfDataUrl(stored)
+    } catch {}
+  }, [])
 
   async function handleUpload(file) {
     if (!file) return
@@ -238,7 +245,13 @@ function ResumeSection({ user, toast }) {
       const data = await res.json()
       if (!res.ok) { toast(data.error || 'Upload failed', 'error'); setUploading(false); return }
       setFilename(data.filename)
-      setUrl(data.url)
+      const reader = new FileReader()
+      reader.onload = () => {
+        const dataUrl = reader.result
+        try { localStorage.setItem('resume_pdf', dataUrl) } catch {}
+        setPdfDataUrl(dataUrl)
+      }
+      reader.readAsDataURL(file)
       toast('Resume uploaded!')
     } catch { toast('Upload failed', 'error') }
     setUploading(false)
@@ -249,22 +262,20 @@ function ResumeSection({ user, toast }) {
       <input ref={fileRef} type="file" accept=".pdf,application/pdf" style={{ display: 'none' }}
         onChange={e => { const f = e.target.files?.[0]; if (f) handleUpload(f) }} />
 
-      {url ? (
+      {pdfDataUrl ? (
         <div style={{ border: '1px solid #e5e7eb', borderRadius: 12, overflow: 'hidden' }}>
-          {/* PDF preview */}
           <div style={{ background: '#f9fafb', borderBottom: '1px solid #e5e7eb' }}>
-            <iframe src={url} style={{ width: '100%', height: 400, border: 'none', display: 'block' }} title="Resume preview" />
+            <iframe src={pdfDataUrl} style={{ width: '100%', height: 400, border: 'none', display: 'block' }} title="Resume preview" />
           </div>
-          {/* File info + actions */}
           <div style={{ padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
               <span style={{ fontSize: 18, flexShrink: 0 }}>📄</span>
               <span style={{ fontSize: 13, fontWeight: 500, color: '#333', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{filename}</span>
             </div>
             <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
-              <a href={url} target="_blank" rel="noopener noreferrer"
+              <a href={pdfDataUrl} download={filename || 'resume.pdf'}
                 style={{ padding: '6px 12px', fontSize: 12, fontWeight: 500, border: '1px solid #e5e5e5', borderRadius: 6, background: '#fff', color: '#555', textDecoration: 'none', cursor: 'pointer' }}>
-                View
+                Download
               </a>
               <button onClick={() => fileRef.current?.click()} disabled={uploading}
                 style={{ padding: '6px 12px', fontSize: 12, fontWeight: 600, border: 'none', borderRadius: 6, background: '#0a0a0a', color: '#fff', cursor: uploading ? 'not-allowed' : 'pointer', opacity: uploading ? 0.6 : 1 }}>

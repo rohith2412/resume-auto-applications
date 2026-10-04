@@ -1,7 +1,6 @@
 import { getSession } from '@/lib/auth'
 import { connectDB } from '@/lib/mongodb'
 import User from '@/models/User'
-import { uploadFile, deleteFile } from '@/lib/s3'
 import pdfParse from 'pdf-parse/lib/pdf-parse.js'
 
 const MAX_SIZE = 5 * 1024 * 1024 // 5 MB
@@ -35,23 +34,16 @@ export async function POST(request) {
     }
 
     await connectDB()
-    const user = await User.findById(session.userId).select('resumeKey')
+    const user = await User.findById(session.userId)
     if (!user) return Response.json({ error: 'User not found' }, { status: 404 })
 
-    if (user.resumeKey) {
-      try { await deleteFile(user.resumeKey) } catch {}
-    }
-
-    const key = `resumes/${session.userId}/${Date.now()}.pdf`
-    const url = await uploadFile(key, buffer, 'application/pdf')
-
     user.resumeText     = resumeText
-    user.resumeUrl      = url
-    user.resumeKey      = key
     user.resumeFilename = file.name
+    user.resumeUrl      = undefined
+    user.resumeKey      = undefined
     await user.save()
 
-    return Response.json({ success: true, url, filename: file.name })
+    return Response.json({ success: true, filename: file.name })
   } catch (err) {
     console.error('[resume/upload]', err?.message ?? err)
     return Response.json({ error: err.message || 'Upload failed' }, { status: 500 })

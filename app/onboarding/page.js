@@ -342,6 +342,11 @@ export default function OnboardingPage() {
                   const uploadRes = await fetch('/api/resume/upload', { method: 'POST', body: fd })
                   const uploadData = await uploadRes.json()
                   if (!uploadRes.ok) { setError(uploadData.error || 'Upload failed'); setUploading(false); return }
+                  try {
+                    const reader = new FileReader()
+                    reader.onload = () => { try { localStorage.setItem('resume_pdf', reader.result) } catch {} }
+                    reader.readAsDataURL(resumeFile)
+                  } catch {}
                 } catch {
                   setError('Upload failed. Try again.')
                   setUploading(false)
