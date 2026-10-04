@@ -2,8 +2,7 @@ import { getSession } from '@/lib/auth'
 import { connectDB } from '@/lib/mongodb'
 import User from '@/models/User'
 import { uploadFile, deleteFile } from '@/lib/s3'
-import { join } from 'path'
-import { createRequire } from 'module'
+import pdfParse from 'pdf-parse/lib/pdf-parse.js'
 
 const MAX_SIZE = 5 * 1024 * 1024 // 5 MB
 
@@ -27,25 +26,20 @@ export async function POST(request) {
 
     const buffer = Buffer.from(await file.arrayBuffer())
 
-    // Parse text from PDF for AI tailoring
-    const req = createRequire(join(process.cwd(), 'index.js'))
-    const parsePdf = req(join(process.cwd(), 'lib/parsePdf.cjs'))
-    const resumeText = await parsePdf(buffer)
+    const result = await pdfParse(buffer)
+    const resumeText = result.text.trim()
 
     await connectDB()
     const user = await User.findById(session.userId).select('resumeKey')
     if (!user) return Response.json({ error: 'User not found' }, { status: 404 })
 
-    // Delete old resume from R2 if replacing
     if (user.resumeKey) {
       try { await deleteFile(user.resumeKey) } catch {}
     }
 
-    // Upload to Cloudflare R2
     const key = `resumes/${session.userId}/${Date.now()}.pdf`
     const url = await uploadFile(key, buffer, 'application/pdf')
 
-    // Save everything to MongoDB
     user.resumeText     = resumeText
     user.resumeUrl      = url
     user.resumeKey      = key
