@@ -52,7 +52,6 @@ export async function PATCH(request) {
   if (body.keywords !== undefined) updates['jobPreferences.keywords'] = body.keywords
   if (body.searchLocation !== undefined) updates['jobPreferences.searchLocation'] = body.searchLocation
   if (body.targetRole !== undefined) updates['jobPreferences.targetRole'] = body.targetRole
-  if (body.gmailAppPassword !== undefined) updates.gmailAppPassword = body.gmailAppPassword
 
   if (Object.keys(updates).length === 0) return Response.json({ success: true })
 

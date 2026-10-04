@@ -14,7 +14,6 @@ const UserSchema = new mongoose.Schema({
   googleId: { type: String, default: null, index: true },
   googleAccessToken: { type: String, default: null },
   googleRefreshToken: { type: String, default: null },
-  gmailAppPassword: { type: String, default: null },
   avatarUrl: { type: String, default: null },
   authProvider: { type: String, enum: ['password', 'google'], default: 'password' },
   onboardingComplete: { type: Boolean, default: false },

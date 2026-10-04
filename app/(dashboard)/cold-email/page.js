@@ -183,7 +183,6 @@ function ColdEmail({ user }) {
     keywords: user?.jobPreferences?.keywords || user?.jobPreferences?.targetRole || '',
     location: user?.jobPreferences?.searchLocation || user?.profile?.location || '',
     coverLetter: '',
-    gmailAppPassword: user?.hasGmailAppPassword ? '••••••••••••••••' : '',
   })
   React.useEffect(() => {
     if (!user) return
@@ -194,7 +193,6 @@ function ColdEmail({ user }) {
       linkedin: user.profile?.linkedin || f.linkedin,
       keywords: user.jobPreferences?.keywords || user.jobPreferences?.targetRole || f.keywords,
       location: user.jobPreferences?.searchLocation || user.profile?.location || f.location,
-      gmailAppPassword: user.hasGmailAppPassword ? '••••••••••••••••' : f.gmailAppPassword,
     }))
     setHasResume(!!user.resumeText)
     setResumeFilename(user.resumeFilename || '')
@@ -350,8 +348,6 @@ function ColdEmail({ user }) {
     setRunning(false)
   }
 
-  const [sending, setSending] = useState(false)
-  const [sendStatus, setSendStatus] = useState('')
 
   function buildBody(result) {
     let body = result.body
@@ -363,51 +359,6 @@ function ColdEmail({ user }) {
   function markLocalSent(id) {
     setResults(prev => prev.map(r => r.id === id ? { ...r, status: 'sent' } : r))
     if (selectedEmail?.id === id) setSelectedEmail(s => ({ ...s, status: 'sent' }))
-  }
-
-  async function sendEmails(ids) {
-    setSending(true)
-    const est = ids.length > 1 ? ` (~${ids.length * 3}s)` : ''
-    setSendStatus(`Sending ${ids.length} email${ids.length > 1 ? 's' : ''}${est}...`)
-    try {
-      const res = await fetch('/api/cold-email/send', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ids, linkedin: form.linkedin }),
-      })
-      const data = await res.json()
-
-      if (!res.ok) {
-        setSendStatus(data.error || 'Send failed')
-        setSending(false)
-        return
-      }
-
-      for (const r of data.results) {
-        if (r.success) markLocalSent(r.id)
-      }
-
-      if (data.failed > 0) {
-        const errMsg = data.results.find(r => !r.success)?.error || 'Some emails failed'
-        setSendStatus(`Sent ${data.sent}, failed ${data.failed}: ${errMsg}`)
-      } else {
-        setSendStatus(`${data.sent} email${data.sent > 1 ? 's' : ''} sent successfully!`)
-      }
-    } catch (err) {
-      setSendStatus('Network error. Try again.')
-    }
-    setSending(false)
-    setTimeout(() => setSendStatus(''), 5000)
-  }
-
-  function sendAll() {
-    const unsent = results.filter(r => r.status !== 'sent')
-    if (unsent.length === 0) return
-    sendEmails(unsent.map(r => r.id))
-  }
-
-  function sendOne(result) {
-    sendEmails([result.id])
   }
 
   function copyEmail(result) {
@@ -535,22 +486,6 @@ function ColdEmail({ user }) {
               />
             </div>
 
-            {/* Gmail App Password */}
-            <div style={{ marginBottom: 16 }}>
-              <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#888', letterSpacing: '.07em', textTransform: 'uppercase', marginBottom: 4 }}>Gmail App Password *</label>
-              <input
-                type="password"
-                value={form.gmailAppPassword}
-                onChange={e => setForm(f => ({ ...f, gmailAppPassword: e.target.value }))}
-                placeholder="xxxx xxxx xxxx xxxx"
-                style={INP}
-                onFocus={e => { e.target.style.borderColor = '#0a0a0a'; if (form.gmailAppPassword.includes('•')) setForm(f => ({ ...f, gmailAppPassword: '' })) }}
-                onBlur={e => e.target.style.borderColor = '#e8e8e8'}
-              />
-              <div style={{ fontSize: 11, color: '#aaa', marginTop: 4, lineHeight: 1.5 }}>
-                Go to <a href="https://myaccount.google.com/apppasswords" target="_blank" rel="noreferrer" style={{ color: '#2563eb', textDecoration: 'underline' }}>Google App Passwords</a> → create one for "Mail" → paste the 16-char code here. Requires 2FA enabled.
-              </div>
-            </div>
 
             {formError && (
               <div style={{ background: '#fff5f5', border: '1px solid #fecaca', borderRadius: 8, padding: '10px 14px', fontSize: 13, color: '#dc2626', marginBottom: 12 }}>{formError}</div>
@@ -563,10 +498,6 @@ function ColdEmail({ user }) {
                   fullName: form.fullName, location: form.location, linkedin: form.linkedin,
                   keywords: form.keywords, searchLocation: form.location, targetRole: form.keywords,
                 }
-                if (form.gmailAppPassword && !form.gmailAppPassword.includes('•')) {
-                  patchData.gmailAppPassword = form.gmailAppPassword.replace(/\s/g, '')
-                }
-                console.log('[cold-email] patchData:', JSON.stringify(patchData), 'hasGmailPw:', !!patchData.gmailAppPassword)
                 try {
                   const res = await fetch('/api/profile', {
                     method: 'PATCH',
@@ -727,27 +658,6 @@ function ColdEmail({ user }) {
       {/* Results: list left, email preview right */}
       {results.length > 0 && (
         <>
-        {/* Send All bar */}
-        {results.some(r => r.status !== 'sent') && (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#fff', border: '1px solid #e8e8e8', borderRadius: 10, padding: '10px 16px', marginBottom: 14, flexWrap: 'wrap', gap: 8 }}>
-            <span style={{ fontSize: 13, color: '#555' }}>
-              {results.filter(r => r.status !== 'sent').length} email{results.filter(r => r.status !== 'sent').length > 1 ? 's' : ''} ready to send
-              {user?.resumeUrl && <span style={{ color: '#16a34a', marginLeft: 6, fontSize: 11 }}> - resume link included</span>}
-            </span>
-            <button onClick={sendAll} disabled={sending}
-              style={{ padding: '8px 20px', background: sending ? '#555' : '#0a0a0a', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: sending ? 'not-allowed' : 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6 }}
-            >
-              {sending ? (
-                <><span style={{ width: 12, height: 12, border: '2px solid #ffffff44', borderTopColor: '#fff', borderRadius: '50%', display: 'inline-block', animation: 'spin .7s linear infinite' }} /> Sending...</>
-              ) : (
-                <><MailIcon /> Send All</>
-              )}
-            </button>
-          </div>
-        )}
-        {sendStatus && (
-          <div style={{ background: sendStatus.includes('fail') || sendStatus.includes('error') || sendStatus.includes('expired') ? '#fff5f5' : '#f0fdf4', border: `1px solid ${sendStatus.includes('fail') || sendStatus.includes('error') || sendStatus.includes('expired') ? '#fecaca' : '#bbf7d0'}`, borderRadius: 8, padding: '10px 14px', fontSize: 13, color: sendStatus.includes('fail') || sendStatus.includes('error') || sendStatus.includes('expired') ? '#dc2626' : '#15803d', marginBottom: 14 }}>{sendStatus}</div>
-        )}
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 20, alignItems: 'start' }}>
 
           {/* Left: email list */}
@@ -820,11 +730,8 @@ function ColdEmail({ user }) {
                 </div>
 
                 <div style={{ padding: '12px 18px', borderTop: '1px solid #f0f0f0', display: 'flex', gap: 8 }}>
-                  <button onClick={() => sendOne(selectedEmail)} disabled={sending}
-                    style={{ flex: 1, padding: '10px 14px', background: sending ? '#555' : selectedEmail.status === 'sent' ? '#f3f4f6' : '#0a0a0a', color: selectedEmail.status === 'sent' ? '#888' : '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: sending ? 'not-allowed' : 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
-                  ><MailIcon /> {sending ? 'Sending...' : selectedEmail.status === 'sent' ? 'Resend' : 'Send'}</button>
                   <button onClick={() => copyEmail(selectedEmail)}
-                    style={{ padding: '10px 14px', background: '#fff', color: '#0a0a0a', border: '1px solid #e8e8e8', borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}
+                    style={{ flex: 1, padding: '10px 14px', background: '#0a0a0a', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
                   >Copy</button>
                 </div>
               </div>

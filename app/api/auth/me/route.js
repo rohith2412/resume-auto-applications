@@ -15,7 +15,6 @@ export async function GET() {
   }
 
   const obj = user.toObject()
-  obj.hasGmailAppPassword = !!obj.gmailAppPassword
   delete obj.gmailAppPassword
 
   return Response.json({ user: obj })
