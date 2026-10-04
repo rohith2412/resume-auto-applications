@@ -2,23 +2,31 @@ import OpenAI from 'openai'
 import { connectDB } from '@/lib/mongodb'
 import mongoose from 'mongoose'
 import { corsJson, corsOk } from '@/lib/extensionCors'
+import { rateLimit } from '@/lib/rateLimit'
 
-export async function OPTIONS() { return corsOk() }
+const limiter = rateLimit({ max: 30, windowMs: 60_000 })
+
+export async function OPTIONS(request) { return corsOk(request) }
 
 export async function POST(request) {
+  const limited = limiter(request)
+  if (limited) return limited
+
   const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
   const apiKey = (request.headers.get('Authorization') || '').replace('Bearer ', '').trim()
-  if (!apiKey) return corsJson({ error: 'Unauthorized' }, { status: 401 })
+  if (!apiKey) return corsJson(request, { error: 'Unauthorized' }, { status: 401 })
 
   await connectDB()
   const user = await mongoose.connection.collection('users').findOne(
     { apiKey },
     { projection: { profile: 1, education: 1, skills: 1, jobPreferences: 1, resumeText: 1 } }
   )
-  if (!user) return corsJson({ error: 'Invalid API key' }, { status: 401 })
+  if (!user) return corsJson(request, { error: 'Invalid API key' }, { status: 401 })
 
   const { jobTitle, company, jobDescription, questions = [] } = await request.json()
-  if (!questions.length) return corsJson({ answers: [] })
+  if (!questions.length) return corsJson(request, { answers: [] })
+  if (questions.length > 50) return corsJson(request, { error: 'Too many questions' }, { status: 400 })
+  if (jobDescription && jobDescription.length > 10_000) return corsJson(request, { error: 'Job description too long' }, { status: 400 })
 
   const p  = user.profile        || {}
   const ed = user.education       || {}
@@ -111,7 +119,6 @@ Return ONLY the JSON array. No markdown. No explanation.`
       response_format: { type: 'json_object' },
     })
     const raw = completion.choices[0].message.content?.trim() || '{}'
-    // response_format:json_object wraps in an object — extract the array
     let answers = []
     try {
       const parsed = JSON.parse(raw)
@@ -120,9 +127,9 @@ Return ONLY the JSON array. No markdown. No explanation.`
       const arrStr = raw.match(/\[[\s\S]*\]/)?.[0] || '[]'
       answers = JSON.parse(arrStr)
     }
-    return corsJson({ answers })
+    return corsJson(request, { answers })
   } catch (e) {
     console.error('extension/tailor error', e)
-    return corsJson({ answers: [] })
+    return corsJson(request, { answers: [] })
   }
 }

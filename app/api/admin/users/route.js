@@ -3,7 +3,11 @@ import { connectDB } from '@/lib/mongodb'
 import User from '@/models/User'
 import Application from '@/models/Application'
 
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'rohithra75@gmail.com'
+function getAdminEmail() {
+  const email = process.env.ADMIN_EMAIL
+  if (!email) throw new Error('ADMIN_EMAIL env var must be set')
+  return email
+}
 
 export async function GET() {
   try {
@@ -13,7 +17,7 @@ export async function GET() {
     await connectDB()
 
     const me = await User.findById(session.userId).select('email')
-    if (!me || me.email !== ADMIN_EMAIL) {
+    if (!me || me.email !== getAdminEmail()) {
       return Response.json({ error: 'Forbidden' }, { status: 403 })
     }
 

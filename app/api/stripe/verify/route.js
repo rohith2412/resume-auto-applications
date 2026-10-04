@@ -19,6 +19,13 @@ export async function POST(request) {
     }
 
     await connectDB()
+    const user = await User.findById(authSession.userId).select('stripeCustomerId')
+    if (!user) return Response.json({ error: 'User not found' }, { status: 404 })
+
+    if (user.stripeCustomerId && user.stripeCustomerId !== checkoutSession.customer) {
+      return Response.json({ error: 'Session does not belong to this account' }, { status: 403 })
+    }
+
     await User.findByIdAndUpdate(authSession.userId, {
       subscriptionActive: true,
       stripeSubscriptionId: checkoutSession.subscription,

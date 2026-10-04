@@ -3,19 +3,18 @@ import mongoose from 'mongoose'
 import Application from '@/models/Application'
 import { corsJson, corsOk } from '@/lib/extensionCors'
 
-export async function OPTIONS() { return corsOk() }
+export async function OPTIONS(request) { return corsOk(request) }
 
 export async function POST(request) {
   const apiKey = (request.headers.get('Authorization') || '').replace('Bearer ', '').trim()
-  if (!apiKey) return corsJson({ error: 'Unauthorized' }, { status: 401 })
+  if (!apiKey) return corsJson(request, { error: 'Unauthorized' }, { status: 401 })
 
   await connectDB()
-  // Use raw collection to bypass Mongoose strict-mode schema caching
   const user = await mongoose.connection.collection('users').findOne(
     { apiKey },
     { projection: { _id: 1 } }
   )
-  if (!user) return corsJson({ error: 'Invalid API key' }, { status: 401 })
+  if (!user) return corsJson(request, { error: 'Invalid API key' }, { status: 401 })
 
   const { jobTitle, company, jobUrl, jobDescription, status } = await request.json()
 
@@ -29,5 +28,5 @@ export async function POST(request) {
     appliedAt: new Date(),
   })
 
-  return corsJson({ ok: true, applicationId: app._id })
+  return corsJson(request, { ok: true, applicationId: app._id })
 }

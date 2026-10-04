@@ -2,9 +2,15 @@ import bcrypt from 'bcryptjs'
 import { connectDB } from '@/lib/mongodb'
 import User from '@/models/User'
 import { createSession } from '@/lib/auth'
+import { rateLimit } from '@/lib/rateLimit'
+
+const limiter = rateLimit({ max: 10, windowMs: 60_000 })
 
 export async function POST(request) {
   try {
+    const limited = limiter(request)
+    if (limited) return limited
+
     const { email, password } = await request.json()
 
     if (!email || !password) {

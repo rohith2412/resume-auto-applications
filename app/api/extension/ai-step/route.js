@@ -1,26 +1,30 @@
-// Deep AI analysis of a form step the bot couldn't fill with normal logic.
-// Called as a last resort when errors persist after 3 retries.
-// Receives a structured description of every field on the current step.
 import OpenAI from 'openai'
 import { connectDB } from '@/lib/mongodb'
 import mongoose from 'mongoose'
 import { corsJson, corsOk } from '@/lib/extensionCors'
+import { rateLimit } from '@/lib/rateLimit'
 
-export async function OPTIONS() { return corsOk() }
+const limiter = rateLimit({ max: 30, windowMs: 60_000 })
+
+export async function OPTIONS(request) { return corsOk(request) }
 
 export async function POST(request) {
+  const limited = limiter(request)
+  if (limited) return limited
+
   const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
   const apiKey = (request.headers.get('Authorization') || '').replace('Bearer ', '').trim()
-  if (!apiKey) return corsJson({ error: 'Unauthorized' }, { status: 401 })
+  if (!apiKey) return corsJson(request, { error: 'Unauthorized' }, { status: 401 })
 
   await connectDB()
   const user = await mongoose.connection.collection('users').findOne(
     { apiKey },
     { projection: { profile: 1, education: 1, skills: 1, jobPreferences: 1, resumeText: 1 } }
   )
-  if (!user) return corsJson({ error: 'Invalid API key' }, { status: 401 })
+  if (!user) return corsJson(request, { error: 'Invalid API key' }, { status: 401 })
 
   const { jobTitle, company, stepFields = [], errorFields = [] } = await request.json()
+  if (stepFields.length > 50) return corsJson(request, { error: 'Too many fields' }, { status: 400 })
 
   const p  = user.profile       || {}
   const ed = user.education      || {}
@@ -42,7 +46,6 @@ export async function POST(request) {
     user.resumeText  && `\nResume:\n${user.resumeText.slice(0, 2500)}`,
   ].filter(Boolean).join('\n')
 
-  // Describe every field currently on the form step
   const fieldBlock = stepFields.map((f, i) => {
     let line = `${i + 1}. [${f.type}] "${f.label}"`
     if (f.currentValue) line += ` — currently: "${f.currentValue}"`
@@ -95,9 +98,9 @@ Return ONLY the JSON array. No markdown, no explanation.`
     const raw = completion.choices[0].message.content?.trim() || '[]'
     const arrStr = raw.match(/\[[\s\S]*\]/)?.[0] || '[]'
     const answers = JSON.parse(arrStr)
-    return corsJson({ answers })
+    return corsJson(request, { answers })
   } catch (e) {
     console.error('extension/ai-step error', e)
-    return corsJson({ answers: [] })
+    return corsJson(request, { answers: [] })
   }
 }

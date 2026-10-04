@@ -25,6 +25,9 @@ export async function POST(request) {
   if (!jobDescription?.trim()) {
     return Response.json({ error: 'Job description is required' }, { status: 400 })
   }
+  if (jobDescription.length > 15_000) {
+    return Response.json({ error: 'Job description too long' }, { status: 400 })
+  }
 
   const p = user.profile || {}
   const edu = user.education || {}

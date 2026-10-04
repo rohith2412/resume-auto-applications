@@ -3,7 +3,7 @@ import mongoose from 'mongoose'
 import ScreeningQuestion from '@/models/ScreeningQuestion'
 import { corsJson, corsOk } from '@/lib/extensionCors'
 
-export async function OPTIONS() { return corsOk() }
+export async function OPTIONS(request) { return corsOk(request) }
 
 function normalizeLabel(label = '') {
   return label.toLowerCase().replace(/[^\w\s]/g, ' ').replace(/\s+/g, ' ').trim()
@@ -11,17 +11,17 @@ function normalizeLabel(label = '') {
 
 export async function POST(request) {
   const apiKey = (request.headers.get('Authorization') || '').replace('Bearer ', '').trim()
-  if (!apiKey) return corsJson({ error: 'Unauthorized' }, { status: 401 })
+  if (!apiKey) return corsJson(request, { error: 'Unauthorized' }, { status: 401 })
 
   await connectDB()
   const user = await mongoose.connection.collection('users').findOne(
     { apiKey },
     { projection: { _id: 1 } }
   )
-  if (!user) return corsJson({ error: 'Invalid API key' }, { status: 401 })
+  if (!user) return corsJson(request, { error: 'Invalid API key' }, { status: 401 })
 
   const { labels = [] } = await request.json()
-  if (!labels.length) return corsJson({ answers: [] })
+  if (!labels.length) return corsJson(request, { answers: [] })
 
   const normalizedLabels = labels.map(l => normalizeLabel(l))
 
@@ -38,5 +38,5 @@ export async function POST(request) {
       confidence: d.usedCount,
     }))
 
-  return corsJson({ answers })
+  return corsJson(request, { answers })
 }

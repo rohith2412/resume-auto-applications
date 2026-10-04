@@ -21,10 +21,15 @@ export async function PUT(request, { params }) {
   const { id } = await params
   await connectDB()
   const body = await request.json()
+  const allowed = ['title', 'jobTitle', 'company', 'jobDescription', 'resumeText', 'tailoredVersion']
+  const updates = {}
+  for (const key of allowed) {
+    if (body[key] !== undefined) updates[key] = body[key]
+  }
 
   const resume = await Resume.findOneAndUpdate(
     { _id: id, userId: session.userId },
-    { $set: body },
+    { $set: updates },
     { new: true, runValidators: true }
   )
   if (!resume) return Response.json({ error: 'Not found' }, { status: 404 })
