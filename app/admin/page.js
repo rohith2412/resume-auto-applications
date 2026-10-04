@@ -60,7 +60,7 @@ function AppBreakdown({ apps }) {
   )
 }
 
-function UserRow({ user, expanded, onToggle }) {
+function UserRow({ user, expanded, onToggle, onDelete }) {
   const color = hashColor(user.email)
   const name = user.profile?.fullName || '—'
 
@@ -162,6 +162,31 @@ function UserRow({ user, expanded, onToggle }) {
               </Section>
 
             </div>
+
+            {/* ── Danger zone ── */}
+            <div style={{
+              marginTop: 16, padding: '12px 14px',
+              background: '#fff5f5', border: '1px solid #fecaca', borderRadius: 10,
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
+            }}>
+              <div style={{ fontSize: 11.5, color: '#7f1d1d', lineHeight: 1.5 }}>
+                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#b91c1c', marginBottom: 2 }}>Danger zone</div>
+                Permanently delete this user and all their applications. Cancels their Stripe subscription. This cannot be undone.
+              </div>
+              <button
+                onClick={(e) => { e.stopPropagation(); onDelete?.(user) }}
+                style={{
+                  background: '#dc2626', color: '#fff', border: 'none',
+                  padding: '8px 14px', borderRadius: 8, fontSize: 12, fontWeight: 600,
+                  cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
+                }}
+                onMouseEnter={e => e.currentTarget.style.background = '#b91c1c'}
+                onMouseLeave={e => e.currentTarget.style.background = '#dc2626'}
+              >
+                Delete user
+              </button>
+            </div>
+
           </td>
         </tr>
       )}
@@ -202,6 +227,52 @@ export default function AdminPage() {
       .then(d => { if (d.error) setError(d.error); else setData(d) })
       .catch(() => setError('Failed to load'))
   }, [])
+
+  async function handleDelete(user) {
+    // Two-step confirm — first native confirm, then typed-email confirm for
+    // subscribed users (extra guard against a mis-click).
+    const first = window.confirm(
+      `Permanently delete ${user.email}?\n\n` +
+      `This will:\n` +
+      `• Delete their account\n` +
+      `• Delete all their applications\n` +
+      `• Cancel their Stripe subscription\n\n` +
+      `This cannot be undone.`
+    )
+    if (!first) return
+
+    if (user.subscriptionActive) {
+      const typed = window.prompt(`This user has an active subscription.\nType their email to confirm delete:\n\n${user.email}`)
+      if (typed?.trim().toLowerCase() !== user.email.toLowerCase()) {
+        window.alert('Email did not match — delete cancelled.')
+        return
+      }
+    }
+
+    try {
+      const res = await fetch(`/api/admin/users/${user._id}`, { method: 'DELETE' })
+      const body = await res.json()
+      if (!res.ok) {
+        window.alert(`Delete failed: ${body.error || res.status}`)
+        return
+      }
+      // Optimistically remove from local state
+      setData(prev => prev && {
+        ...prev,
+        users: prev.users.filter(u => u._id !== user._id),
+        stats: {
+          ...prev.stats,
+          totalUsers: prev.stats.totalUsers - 1,
+          activeSubscribers: prev.stats.activeSubscribers - (user.subscriptionActive ? 1 : 0),
+          totalApplications: prev.stats.totalApplications - (user.applications?.total || 0),
+          monthlyRevenue: prev.stats.monthlyRevenue - (user.subscriptionActive ? 20 : 0),
+        },
+      })
+      if (expanded === user._id) setExpanded(null)
+    } catch (e) {
+      window.alert(`Delete failed: ${e?.message || e}`)
+    }
+  }
 
   const filtered = (data?.users || []).filter(u => {
     const matchSearch = u.email.includes(search.toLowerCase()) ||
@@ -315,6 +386,7 @@ export default function AdminPage() {
                         user={u}
                         expanded={expanded === u._id}
                         onToggle={() => setExpanded(expanded === u._id ? null : u._id)}
+                        onDelete={handleDelete}
                       />
                     ))
                   )}

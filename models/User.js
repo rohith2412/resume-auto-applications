@@ -8,7 +8,15 @@ const HistorySchema = new mongoose.Schema({
 
 const UserSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true, lowercase: true },
-  password: { type: String, required: true },
+  // Password is optional now — Google-only users won't have one.
+  password: { type: String, default: null },
+  // Google OAuth linkage
+  googleId: { type: String, default: null, index: true },
+  googleAccessToken: { type: String, default: null },
+  googleRefreshToken: { type: String, default: null },
+  gmailAppPassword: { type: String, default: null },
+  avatarUrl: { type: String, default: null },
+  authProvider: { type: String, enum: ['password', 'google'], default: 'password' },
   onboardingComplete: { type: Boolean, default: false },
   subscriptionActive: { type: Boolean, default: false },
   subscriptionCancelAt: { type: Date, default: null }, // set when cancel_at_period_end=true
@@ -63,7 +71,21 @@ const UserSchema = new mongoose.Schema({
   // Extension field of study (not in base education schema)
   educationField: String,     // field of study / major
 
+  coldEmails: [{
+    jobUrl: String,
+    jobTitle: String,
+    recipientEmail: String,
+    subject: String,
+    body: String,
+    status: { type: String, enum: ['ready', 'sent', 'failed'], default: 'ready' },
+    sentAt: Date,
+    createdAt: { type: Date, default: Date.now },
+  }],
+
   resumeText: String,
+  resumeUrl: String,
+  resumeKey: String,
+  resumeFilename: String,
   history: [HistorySchema],
   apiKey: { type: String, index: true },
   captchaApiKey: String,          // 2captcha.com API key for auto-solving reCAPTCHA

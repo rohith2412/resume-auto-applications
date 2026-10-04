@@ -10,11 +10,12 @@ function BriefcaseIcon() { return <svg width="15" height="15" viewBox="0 0 15 15
 function BoltIcon() { return <svg xmlns="http://www.w3.org/2000/svg" height="15" viewBox="0 -960 960 960" width="15" fill="currentColor"><path d="M160-120v-200q0-33 23.5-56.5T240-400h480q33 0 56.5 23.5T800-320v200H160Zm200-320q-83 0-141.5-58.5T160-640q0-83 58.5-141.5T360-840h240q83 0 141.5 58.5T800-640q0 83-58.5 141.5T600-440H360ZM240-200h480v-120H240v120Zm120-320h240q50 0 85-35t35-85q0-50-35-85t-85-35H360q-50 0-85 35t-35 85q0 50 35 85t85 35Zm28.5-91.5Q400-623 400-640t-11.5-28.5Q377-680 360-680t-28.5 11.5Q320-657 320-640t11.5 28.5Q343-600 360-600t28.5-11.5Zm240 0Q640-623 640-640t-11.5-28.5Q617-680 600-680t-28.5 11.5Q560-657 560-640t11.5 28.5Q583-600 600-600t28.5-11.5ZM480-200Zm0-440Z"/></svg> }
 function UserIcon() { return <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><circle cx="7.5" cy="5.5" r="2.5" stroke="currentColor" strokeWidth="1.3"/><path d="M2.5 13c0-2.76 2.24-5 5-5s5 2.24 5 5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/></svg> }
 function LogoutIcon() { return <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5 2H2v10h3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/><path d="M9.5 9.5L12.5 7l-3-2.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/><path d="M6 7h6.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/></svg> }
+function MailIcon() { return <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><rect x="1.5" y="3" width="12" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.3"/><path d="M1.5 4.5L7.5 8.5L13.5 4.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg> }
 
 // ─── nav ──────────────────────────────────────────────────────
 const NAV = [
-  { id: 'applications', label: 'Applications', href: '/applications', icon: <BriefcaseIcon /> },
   { id: 'auto-apply',   label: 'Auto Apply',   href: '/auto-apply',   icon: <BoltIcon /> },
+  { id: 'cold-email',   label: 'Cold Email',   href: '/cold-email',   icon: <MailIcon /> },
   { id: 'profile',      label: 'Profile',      href: '/profile',      icon: <UserIcon /> },
 ]
 
@@ -220,6 +221,89 @@ function Shell({ user, toasts, showLogout, setShowLogout, showCancelModal, setSh
   )
 }
 
+// ─── resume section ───────────────────────────────────────────
+function ResumeSection({ user, toast }) {
+  const [uploading, setUploading] = useState(false)
+  const [filename, setFilename] = useState(user.resumeFilename || '')
+  const [url, setUrl] = useState(user.resumeUrl || '')
+  const fileRef = useRef(null)
+
+  async function handleUpload(file) {
+    if (!file) return
+    if (file.type !== 'application/pdf') { toast('Only PDF files are accepted', 'error'); return }
+    if (file.size > 5 * 1024 * 1024) { toast('File too large — max 5 MB', 'error'); return }
+    setUploading(true)
+    try {
+      const fd = new FormData()
+      fd.append('resume', file)
+      const res = await fetch('/api/resume/upload', { method: 'POST', body: fd })
+      const data = await res.json()
+      if (!res.ok) { toast(data.error || 'Upload failed', 'error'); setUploading(false); return }
+      setFilename(data.filename)
+      setUrl(data.url)
+      toast('Resume uploaded!')
+    } catch { toast('Upload failed', 'error') }
+    setUploading(false)
+  }
+
+  return (
+    <div>
+      <input ref={fileRef} type="file" accept=".pdf,application/pdf" style={{ display: 'none' }}
+        onChange={e => { const f = e.target.files?.[0]; if (f) handleUpload(f) }} />
+
+      {url ? (
+        <div style={{ border: '1px solid #e5e7eb', borderRadius: 12, overflow: 'hidden' }}>
+          {/* PDF preview */}
+          <div style={{ background: '#f9fafb', borderBottom: '1px solid #e5e7eb' }}>
+            <iframe src={url} style={{ width: '100%', height: 400, border: 'none', display: 'block' }} title="Resume preview" />
+          </div>
+          {/* File info + actions */}
+          <div style={{ padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+              <span style={{ fontSize: 18, flexShrink: 0 }}>📄</span>
+              <span style={{ fontSize: 13, fontWeight: 500, color: '#333', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{filename}</span>
+            </div>
+            <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+              <a href={url} target="_blank" rel="noopener noreferrer"
+                style={{ padding: '6px 12px', fontSize: 12, fontWeight: 500, border: '1px solid #e5e5e5', borderRadius: 6, background: '#fff', color: '#555', textDecoration: 'none', cursor: 'pointer' }}>
+                View
+              </a>
+              <button onClick={() => fileRef.current?.click()} disabled={uploading}
+                style={{ padding: '6px 12px', fontSize: 12, fontWeight: 600, border: 'none', borderRadius: 6, background: '#0a0a0a', color: '#fff', cursor: uploading ? 'not-allowed' : 'pointer', opacity: uploading ? 0.6 : 1 }}>
+                {uploading ? 'Uploading…' : 'Replace'}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : user.resumeText ? (
+        <div style={{ border: '1px solid #bbf7d0', borderRadius: 12, background: '#f0fdf4', padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: 18 }}>📄</span>
+            <span style={{ fontSize: 13, fontWeight: 500, color: '#15803d' }}>{filename || 'Resume on file'} - text extracted</span>
+          </div>
+          <button onClick={() => fileRef.current?.click()} disabled={uploading}
+            style={{ padding: '6px 12px', fontSize: 12, fontWeight: 600, border: 'none', borderRadius: 6, background: '#0a0a0a', color: '#fff', cursor: uploading ? 'not-allowed' : 'pointer', opacity: uploading ? 0.6 : 1 }}>
+            {uploading ? 'Uploading...' : 'Re-upload'}
+          </button>
+        </div>
+      ) : (
+        <div
+          onClick={() => fileRef.current?.click()}
+          style={{
+            border: '2px dashed #ddd', borderRadius: 12, padding: '2rem 1.5rem',
+            textAlign: 'center', cursor: 'pointer', background: '#fafafa',
+          }}>
+          <div style={{ fontSize: 28, marginBottom: 6 }}>📄</div>
+          <div style={{ fontSize: 14, fontWeight: 500, color: '#555' }}>
+            {uploading ? 'Uploading…' : <>Drop your resume here or <span style={{ color: '#0a0a0a', textDecoration: 'underline', textUnderlineOffset: 2 }}>browse</span></>}
+          </div>
+          <div style={{ fontSize: 12, color: '#aaa', marginTop: 4 }}>PDF only, max 5 MB</div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ─── profile view ─────────────────────────────────────────────
 function Profile({ user, toast, onLogout, onRequestCancel, cancelingSub }) {
   const [isMobile, setIsMobile] = useState(false)
@@ -311,9 +395,6 @@ function Profile({ user, toast, onLogout, onRequestCancel, cancelingSub }) {
               <input value={form.github} onChange={e => update('github', e.target.value)} placeholder="github.com/janedoe" className="input" />
             </Field>
           </TwoCol>
-          <Field label="Professional summary">
-            <textarea value={form.summary} onChange={e => update('summary', e.target.value)} placeholder="2–3 sentences about who you are and what you're looking for." rows={3} className="input" style={{ resize: 'vertical', fontFamily: 'inherit' }} />
-          </Field>
         </div>
 
         <button type="submit" disabled={saving}
@@ -324,6 +405,12 @@ function Profile({ user, toast, onLogout, onRequestCancel, cancelingSub }) {
           }
         </button>
       </form>
+
+      <Divider />
+
+      {/* ── Resume ── */}
+      <SectionHead title="Resume" desc="Your uploaded resume (PDF)" />
+      <ResumeSection user={user} toast={toast} />
 
       <Divider />
 

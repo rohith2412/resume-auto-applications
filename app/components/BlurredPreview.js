@@ -1,7 +1,7 @@
 "use client"
 import { useState, useEffect } from "react"
 
-// ── Live notification toasts ──────────────────────────────────
+// ── Live notification toasts reblet ──────────────────────────────────
 const NOTIFS = [
   { name: 'Thomas K.',  photo: 'https://i.pravatar.cc/150?img=12', msg: 'Interview call from Meta 🎉'         },
   { name: 'Sarah M.',   photo: 'https://i.pravatar.cc/150?img=5',  msg: 'Applied to 89 jobs overnight 🎊'    },
@@ -128,12 +128,8 @@ function AuthModal({ onClose, initialMode }) {
       })
       const data = await res.json()
       if (!res.ok) { setError(data.error || "Something went wrong"); setLoading(false); return }
-      if (mode === "login") {
-        if (!data.subscriptionActive) window.location.href = "/paywall"
-        else window.location.href = "/applications"
-      } else {
-        window.location.href = "/paywall"
-      }
+      // After login or signup, go to onboarding (it auto-skips if already done)
+      window.location.href = "/onboarding"
     } catch {
       setError("Something went wrong")
       setLoading(false)
@@ -192,6 +188,27 @@ function AuthModal({ onClose, initialMode }) {
               style={{ width:"100%", padding:13, background:"#f5f5f0", color:"#0a0a0a", border:"none", borderRadius:10, fontSize:13.5, fontWeight:500, fontFamily:"'DM Sans','Inter',sans-serif", cursor:loading ? "not-allowed" : "pointer", letterSpacing:"-0.01em", display:"flex", alignItems:"center", justifyContent:"center", opacity:loading ? 0.5 : 1 }}>
               {loading ? <span className="_qrspinner" /> : mode === "login" ? "Log in" : "Create account"}
             </button>
+
+            {/* ── Divider ── */}
+            <div style={{ display:"flex", alignItems:"center", gap:10, margin:"2px 0" }}>
+              <div style={{ flex:1, height:1, background:"#1e1e1e" }} />
+              <span style={{ fontSize:11, color:"#555", letterSpacing:"0.08em", textTransform:"uppercase" }}>or</span>
+              <div style={{ flex:1, height:1, background:"#1e1e1e" }} />
+            </div>
+
+            {/* ── Continue with Google ── */}
+            <a href="/api/auth/google"
+              style={{ width:"100%", padding:13, background:"#ffffff", color:"#0a0a0a", border:"1px solid #e5e5e5", borderRadius:10, fontSize:13.5, fontWeight:500, fontFamily:"'DM Sans','Inter',sans-serif", cursor:"pointer", letterSpacing:"-0.01em", display:"flex", alignItems:"center", justifyContent:"center", gap:10, textDecoration:"none", boxSizing:"border-box" }}
+              onMouseEnter={e => { e.currentTarget.style.background = '#f7f7f7' }}
+              onMouseLeave={e => { e.currentTarget.style.background = '#ffffff' }}>
+              <svg width="16" height="16" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" style={{ flexShrink:0 }}>
+                <path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 12.955 4 4 12.955 4 24s8.955 20 20 20 20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"/>
+                <path fill="#FF3D00" d="M6.306 14.691l6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 16.318 4 9.656 8.337 6.306 14.691z"/>
+                <path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238C29.211 35.091 26.715 36 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"/>
+                <path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303c-.792 2.237-2.231 4.166-4.087 5.571.001-.001.002-.001.003-.002l6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z"/>
+              </svg>
+              Continue with Google
+            </a>
 
             <div style={{ textAlign:"center", fontSize:12.5, color:"#444", paddingTop:"0.25rem" }}>
               <span>{mode === "login" ? "Don't have an account? " : "Already have an account? "}</span>

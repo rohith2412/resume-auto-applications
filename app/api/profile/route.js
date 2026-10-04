@@ -38,3 +38,29 @@ export async function PUT(request) {
 
   return Response.json({ success: true })
 }
+
+export async function PATCH(request) {
+  const session = await getSession()
+  if (!session) return Response.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const body = await request.json()
+  const updates = {}
+
+  if (body.fullName !== undefined) updates['profile.fullName'] = body.fullName
+  if (body.location !== undefined) updates['profile.location'] = body.location
+  if (body.linkedin !== undefined) updates['profile.linkedin'] = body.linkedin
+  if (body.keywords !== undefined) updates['jobPreferences.keywords'] = body.keywords
+  if (body.searchLocation !== undefined) updates['jobPreferences.searchLocation'] = body.searchLocation
+  if (body.targetRole !== undefined) updates['jobPreferences.targetRole'] = body.targetRole
+  if (body.gmailAppPassword !== undefined) updates.gmailAppPassword = body.gmailAppPassword
+
+  if (Object.keys(updates).length === 0) return Response.json({ success: true })
+
+  await connectDB()
+  const { default: mongoose } = await import('mongoose')
+  await mongoose.connection.db.collection('users').updateOne(
+    { _id: new mongoose.Types.ObjectId(session.userId) },
+    { $set: updates }
+  )
+  return Response.json({ success: true })
+}

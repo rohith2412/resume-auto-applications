@@ -9,10 +9,14 @@ export async function GET() {
   }
 
   await connectDB()
-  const user = await User.findById(session.userId).select('-password')
+  const user = await User.findById(session.userId).select('-password -googleAccessToken -googleRefreshToken')
   if (!user) {
     return Response.json({ user: null }, { status: 401 })
   }
 
-  return Response.json({ user })
+  const obj = user.toObject()
+  obj.hasGmailAppPassword = !!obj.gmailAppPassword
+  delete obj.gmailAppPassword
+
+  return Response.json({ user: obj })
 }

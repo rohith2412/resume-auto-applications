@@ -6,17 +6,30 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 
 // ─── icons ────────────────────────────────────────────────────
-function BriefcaseIcon() { return <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><rect x="1.5" y="5" width="12" height="8.5" rx="1.5" stroke="currentColor" strokeWidth="1.3"/><path d="M5 5V3.5A1.5 1.5 0 0 1 6.5 2h2A1.5 1.5 0 0 1 10 3.5V5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/><path d="M1.5 9h12" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/></svg> }
 function BoltIcon() { return <svg xmlns="http://www.w3.org/2000/svg" height="15" viewBox="0 -960 960 960" width="15" fill="currentColor"><path d="M160-120v-200q0-33 23.5-56.5T240-400h480q33 0 56.5 23.5T800-320v200H160Zm200-320q-83 0-141.5-58.5T160-640q0-83 58.5-141.5T360-840h240q83 0 141.5 58.5T800-640q0 83-58.5 141.5T600-440H360ZM240-200h480v-120H240v120Zm120-320h240q50 0 85-35t35-85q0-50-35-85t-85-35H360q-50 0-85 35t-35 85q0 50 35 85t85 35Zm28.5-91.5Q400-623 400-640t-11.5-28.5Q377-680 360-680t-28.5 11.5Q320-657 320-640t11.5 28.5Q343-600 360-600t28.5-11.5Zm240 0Q640-623 640-640t-11.5-28.5Q617-680 600-680t-28.5 11.5Q560-657 560-640t11.5 28.5Q583-600 600-600t28.5-11.5ZM480-200Zm0-440Z"/></svg> }
 function UserIcon() { return <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><circle cx="7.5" cy="5.5" r="2.5" stroke="currentColor" strokeWidth="1.3"/><path d="M2.5 13c0-2.76 2.24-5 5-5s5 2.24 5 5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/></svg> }
 function LogoutIcon() { return <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5 2H2v10h3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/><path d="M9.5 9.5L12.5 7l-3-2.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/><path d="M6 7h6.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/></svg> }
+function MailIcon() { return <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><rect x="1.5" y="3" width="12" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.3"/><path d="M1.5 4.5L7.5 8.5L13.5 4.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg> }
 
 // ─── nav ──────────────────────────────────────────────────────
 const NAV = [
-  { id: 'applications', label: 'Applications', href: '/applications', icon: <BriefcaseIcon /> },
   { id: 'auto-apply',   label: 'Auto Apply',   href: '/auto-apply',   icon: <BoltIcon /> },
+  { id: 'cold-email',   label: 'Cold Email',   href: '/cold-email',   icon: <MailIcon /> },
   { id: 'profile',      label: 'Profile',      href: '/profile',      icon: <UserIcon /> },
 ]
+
+// ─── applications config ─────────────────────────────────────
+const STATUS_LABELS = { applied: 'Applied', interview: 'Interview', offer: 'Offer', rejected: 'Rejected' }
+const STATUS_COLORS = {
+  applied:   { bg: '#eff6ff', color: '#2563eb', border: '#bfdbfe' },
+  interview: { bg: '#fef3c7', color: '#d97706', border: '#fde68a' },
+  offer:     { bg: '#f0fdf4', color: '#16a34a', border: '#bbf7d0' },
+  rejected:  { bg: '#fff1f2', color: '#e11d48', border: '#fecdd3' },
+}
+
+function TrashIcon() {
+  return <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1.5 3.5h10M4.5 3.5V2h4v1.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/><path d="M10 3.5l-.75 7.5h-5.5L3 3.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+}
 
 // ─── form sub-components ──────────────────────────────────────
 function Field({ label, hint, children }) {
@@ -371,6 +384,160 @@ function AutoApply({ user }) {
   )
 }
 
+// ─── applications view ────────────────────────────────────────
+function Applications({ toast }) {
+  const [apps, setApps] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [isMobile, setIsMobile] = useState(false)
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 640)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
+
+  const load = useCallback(async () => {
+    setLoading(true)
+    try {
+      const res = await fetch('/api/extension/applications')
+      const data = await res.json()
+      setApps(data.applications || [])
+    } catch { /* silent */ }
+    setLoading(false)
+  }, [])
+
+  useEffect(() => { load() }, [load])
+
+  async function updateStatus(id, status) {
+    setApps(prev => prev.map(a => a._id === id ? { ...a, status } : a))
+    await fetch('/api/extension/applications', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, status }),
+    })
+  }
+
+  async function deleteApp(id) {
+    setApps(prev => prev.filter(a => a._id !== id))
+    await fetch(`/api/extension/applications?id=${id}`, { method: 'DELETE' })
+    toast('Deleted')
+  }
+
+  const counts = { applied: 0, interview: 0, offer: 0, rejected: 0 }
+  apps.forEach(a => { if (counts[a.status] !== undefined) counts[a.status]++ })
+
+  return (
+    <div className="animate-fade" style={{ maxWidth: 900, margin: '0 auto', width: '100%', padding: isMobile ? '1.25rem 1rem' : '1rem 2.5rem 2.5rem' }}>
+
+      {/* Stats */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: isMobile ? 'repeat(2, minmax(0, 1fr))' : 'repeat(4, minmax(0, 1fr))',
+        gap: isMobile ? 6 : 10,
+        marginBottom: '1.5rem',
+      }}>
+        {Object.entries(STATUS_LABELS).map(([key, label]) => {
+          const c = STATUS_COLORS[key]
+          return (
+            <div key={key} style={{
+              border: `1px solid ${c.border}`, borderRadius: isMobile ? 10 : 12,
+              padding: isMobile ? '.625rem .5rem' : '.875rem',
+              background: c.bg, textAlign: 'center',
+            }}>
+              <div style={{
+                fontFamily: "'Playfair Display',Georgia,serif",
+                fontSize: isMobile ? '1.25rem' : '1.5rem',
+                fontWeight: 800, color: c.color, letterSpacing: '-.04em', lineHeight: 1,
+              }}>
+                {counts[key]}
+              </div>
+              <div style={{ fontSize: isMobile ? '10px' : '11px', color: c.color, fontWeight: 500, marginTop: 4, opacity: 0.8 }}>
+                {label}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+
+      {/* List */}
+      {loading ? (
+        <div style={{ display: 'flex', justifyContent: 'center', padding: '3rem' }}>
+          <div className="loading-dots" style={{ color: '#d1d5db' }}><span /><span /><span /></div>
+        </div>
+      ) : apps.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: isMobile ? '2.5rem 1rem' : '3.5rem 1.5rem', border: '2px dashed #e0e0e0', borderRadius: 16 }}>
+          <div style={{ fontSize: '2rem', marginBottom: '.75rem' }}>💼</div>
+          <h3 style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: '1.1rem', fontWeight: 800, letterSpacing: '-.02em', marginBottom: '.375rem' }}>
+            No applications yet
+          </h3>
+          <p style={{ fontSize: '.8125rem', color: '#888', fontWeight: 300, maxWidth: 300, margin: '0 auto', lineHeight: 1.6 }}>
+            Use the Chrome extension to auto-apply — applications will appear here.
+          </p>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {apps.map(app => {
+            const c = STATUS_COLORS[app.status] || STATUS_COLORS.applied
+            return (
+              <div
+                key={app._id}
+                style={{ border: '1px solid #e0e0e0', borderRadius: 12, padding: isMobile ? '.875rem 1rem' : '1rem 1.25rem', background: '#fff', transition: 'border-color .12s' }}
+                onMouseEnter={e => e.currentTarget.style.borderColor = '#bbb'}
+                onMouseLeave={e => e.currentTarget.style.borderColor = '#e0e0e0'}
+              >
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '.5rem', marginBottom: '.5rem' }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{ fontWeight: 600, fontSize: '.9375rem', letterSpacing: '-.01em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 2 }}>
+                      {app.jobTitle || 'Untitled role'}
+                    </p>
+                    {app.company && (
+                      <span style={{ fontSize: 13, color: '#888', fontWeight: 300 }}>@ {app.company}</span>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => deleteApp(app._id)}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ccc', padding: 4, borderRadius: 6, display: 'flex', flexShrink: 0, transition: 'color .12s' }}
+                    onMouseEnter={e => e.currentTarget.style.color = '#dc2626'}
+                    onMouseLeave={e => e.currentTarget.style.color = '#ccc'}
+                    aria-label="Delete"
+                  >
+                    <TrashIcon />
+                  </button>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '.5rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+                    <span style={{ fontSize: '11.5px', color: '#bbb', flexShrink: 0 }}>
+                      {new Date(app.appliedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                    </span>
+                    {app.jobUrl && (
+                      <a href={app.jobUrl} target="_blank" rel="noreferrer"
+                        style={{ fontSize: '11.5px', color: '#888', textDecoration: 'none', flexShrink: 0 }}
+                        onMouseEnter={e => e.currentTarget.style.textDecoration = 'underline'}
+                        onMouseLeave={e => e.currentTarget.style.textDecoration = 'none'}
+                      >View job ↗</a>
+                    )}
+                  </div>
+                  <select
+                    value={app.status}
+                    onChange={e => updateStatus(app._id, e.target.value)}
+                    style={{
+                      background: c.bg, color: c.color, border: `1px solid ${c.border}`,
+                      borderRadius: 999, padding: '4px 8px', fontSize: 12, fontWeight: 600,
+                      fontFamily: 'inherit', cursor: 'pointer', outline: 'none', flexShrink: 0,
+                    }}
+                  >
+                    {Object.entries(STATUS_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                  </select>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ─── root ─────────────────────────────────────────────────────
 function App() {
   const router = useRouter()
@@ -390,11 +557,28 @@ function App() {
     }).catch(() => router.push('/'))
   }, [router])
 
+  const [tab, setTab] = useState('auto-apply')
+
   if (!user) return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}><div className="loading-dots"><span /><span /><span /></div></div>
 
   return (
     <Shell user={user} toasts={toasts}>
-      <AutoApply user={user} toast={toast} />
+      <div style={{ maxWidth: 900, margin: '0 auto', padding: '2rem 2.5rem 0' }}>
+        <div style={{ display: 'inline-flex', background: '#f3f4f6', borderRadius: 10, padding: 3, marginBottom: 8 }}>
+          {[['auto-apply', 'Auto Apply'], ['applications', 'Applications']].map(([id, label]) => (
+            <button key={id} onClick={() => setTab(id)} style={{
+              padding: '8px 18px', fontSize: 13, fontWeight: 600, borderRadius: 8,
+              border: 'none', cursor: 'pointer', fontFamily: 'inherit',
+              background: tab === id ? '#fff' : 'transparent',
+              color: tab === id ? '#0a0a0a' : '#888',
+              boxShadow: tab === id ? '0 1px 3px rgba(0,0,0,.08)' : 'none',
+              transition: 'all .15s',
+            }}>{label}</button>
+          ))}
+        </div>
+      </div>
+      {tab === 'auto-apply' && <AutoApply user={user} toast={toast} />}
+      {tab === 'applications' && <Applications toast={toast} />}
     </Shell>
   )
 }
