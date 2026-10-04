@@ -26,8 +26,13 @@ export async function POST(request) {
 
     const buffer = Buffer.from(await file.arrayBuffer())
 
-    const result = await pdfParse(buffer)
-    const resumeText = result.text.trim()
+    let resumeText = ''
+    try {
+      const result = await pdfParse(buffer)
+      resumeText = result.text.trim()
+    } catch (parseErr) {
+      console.error('[resume/upload] PDF parse failed, uploading without text:', parseErr.message)
+    }
 
     await connectDB()
     const user = await User.findById(session.userId).select('resumeKey')
