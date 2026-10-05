@@ -1,4 +1,4 @@
-// Background service worker — handles all API calls so content script
+// Background service worker - handles all API calls so content script
 // doesn't need to worry about CORS or storage.
 
 const DEFAULT_BASE = 'https://www.reblet.com'
@@ -57,7 +57,7 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
         case 'GET_PROFILE': {
           const { apiKey } = await getConfig()
           if (!apiKey) {
-            sendResponse({ error: 'No API key — please connect the extension first.' })
+            sendResponse({ error: 'No API key - please connect the extension first.' })
             break
           }
           const data = await apiFetch('/api/extension/profile')
@@ -68,7 +68,7 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
         case 'TAILOR': {
           const { apiKey } = await getConfig()
           if (!apiKey) {
-            // No API key — return empty so content.js uses smartDefault fallbacks
+            // No API key - return empty so content.js uses smartDefault fallbacks
             sendResponse({ answers: [] })
             break
           }

@@ -131,7 +131,7 @@ body {
 
 /* ── Mobile nav ── */
 @media (max-width: 768px) {
-  /* JS handles sidebar/main layout — these are SSR-flash fallbacks only */
+  /* JS handles sidebar/main layout - these are SSR-flash fallbacks only */
   .sidebar { display: none !important; }
   .mobile-nav {
     display: flex; position: fixed; bottom: 0; left: 0; right: 0;

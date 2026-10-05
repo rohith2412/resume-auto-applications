@@ -34,7 +34,7 @@ export async function POST(request) {
   const skills = user.skills || {}
   const prefs = user.jobPreferences || {}
 
-  const prompt = `You are an expert resume writer. Your job is to tailor a resume for ANY industry and job type — not just tech. Adapt your language, section emphasis, and keywords to match the specific field and role in the job description.
+  const prompt = `You are an expert resume writer. Your job is to tailor a resume for ANY industry and job type - not just tech. Adapt your language, section emphasis, and keywords to match the specific field and role in the job description.
 
 CANDIDATE PROFILE:
 - Name: ${p.fullName || 'Candidate'}
@@ -75,7 +75,7 @@ Rewrite the resume to maximize alignment with the job description. Rules:
 2. Mirror the job description's exact keywords and industry-specific language in bullet points
 3. Lead each bullet with a strong action verb and quantify impact wherever possible
 4. Prioritize and reorder experiences most relevant to this specific role
-5. Adapt section names to fit the industry — e.g. use "Clinical Experience" for healthcare, "Case Experience" for consulting, "Teaching Experience" for education, "Technical Projects" for engineering, etc.
+5. Adapt section names to fit the industry - e.g. use "Clinical Experience" for healthcare, "Case Experience" for consulting, "Teaching Experience" for education, "Technical Projects" for engineering, etc.
 6. Output clean plain text, properly sectioned with clear section headers in ALL CAPS
 7. Sections to include (adapt as needed): Contact Info, Professional Summary, Experience, [Industry-relevant section if applicable], Education, Skills
 8. Summary: 2-3 sentences specifically tailored to this job and industry

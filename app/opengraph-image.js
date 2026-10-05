@@ -1,5 +1,5 @@
 /* ════════════════════════════════════════════════════════════════════════════
-   OPEN GRAPH IMAGE — auto-generated 1200x630 PNG for social sharing
+   OPEN GRAPH IMAGE - auto-generated 1200x630 PNG for social sharing
    ──────────────────────────────────────────────────────────────────────────
    Just the shamrock logo, centered, on white. No headline, no tagline.
    ════════════════════════════════════════════════════════════════════════════ */
@@ -23,7 +23,7 @@ export default async function Image() {
           background: '#ffffff',
         }}
       >
-        {/* Shamrock mascot — black rounded square + green clover emoji */}
+        {/* Shamrock mascot - black rounded square + green clover emoji */}
         <div style={{
           width: 320,
           height: 320,

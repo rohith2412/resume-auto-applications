@@ -64,8 +64,21 @@
         Apply on LinkedIn
       </button>
 
+      <!-- API Key inline edit -->
+      <div id="key-section" style="display:none; margin-bottom:10px">
+        <div class="field">
+          <label class="field-label">API Key</label>
+          <div style="display:flex;gap:6px">
+            <input id="edit-key-input" type="text" class="input" placeholder="Paste new API key…" autocomplete="off" style="flex:1" />
+            <button id="save-key-btn" class="btn-dark" style="width:auto;padding:8px 14px;font-size:12px;border-radius:7px">Save</button>
+          </div>
+        </div>
+        <div id="edit-key-error" class="error" style="display:none"></div>
+      </div>
+
       <div class="footer-row">
         <a class="footer-link" id="setup-link" href="#" target="_blank">Dashboard →</a>
+        <button class="btn-text-link" id="change-key-btn">Change Key</button>
         <button class="btn-disconnect" id="disconnect-btn">Disconnect</button>
       </div>
 

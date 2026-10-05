@@ -17,7 +17,7 @@ export async function POST(request) {
       return Response.json({ error: 'No file provided' }, { status: 400 })
     }
     if (file.size > MAX_SIZE) {
-      return Response.json({ error: 'File too large — max 5 MB' }, { status: 400 })
+      return Response.json({ error: 'File too large - max 5 MB' }, { status: 400 })
     }
     if (file.type !== 'application/pdf') {
       return Response.json({ error: 'Only PDF files are accepted' }, { status: 400 })

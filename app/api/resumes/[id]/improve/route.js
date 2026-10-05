@@ -20,7 +20,7 @@ export async function POST(request, { params }) {
   let systemPrompt, userPrompt
 
   if (type === 'bullet') {
-    systemPrompt = 'You are an expert resume writer. Improve the given experience bullet point to be stronger, more impactful, and ATS-friendly. Start with a strong action verb. Quantify impact when possible. Be concise (1-2 lines max). Output ONLY the improved bullet text — no bullet symbol, no commentary.'
+    systemPrompt = 'You are an expert resume writer. Improve the given experience bullet point to be stronger, more impactful, and ATS-friendly. Start with a strong action verb. Quantify impact when possible. Be concise (1-2 lines max). Output ONLY the improved bullet text - no bullet symbol, no commentary.'
     userPrompt = `Role: ${context?.title || 'Professional'} at ${context?.company || 'a company'}\n\nOriginal bullet: ${text}`
   } else if (type === 'summary') {
     systemPrompt = 'You are an expert resume writer. Rewrite this professional summary to be more compelling, specific, and results-oriented. Make it 2-3 concise sentences. Output ONLY the improved summary, no commentary.'

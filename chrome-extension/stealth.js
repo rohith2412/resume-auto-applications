@@ -1,22 +1,22 @@
 /* ════════════════════════════════════════════════════════════════════════════
-   REBLET STEALTH MODULE — Human-Emulation & Anti-Detection Layer
+   REBLET STEALTH MODULE - Human-Emulation & Anti-Detection Layer
    ──────────────────────────────────────────────────────────────────────────
    ONE BIG FILE consolidating every known technique to make the bot look like
    a real human user to LinkedIn's bot-detection systems.
 
    This module exposes:
      globalThis.REBLET_STEALTH = {
-       humanDelay(min, max)         — randomized + skewed delay
-       humanType(el, text)           — variable-speed typing with occasional "mistakes"
-       humanClick(el)                — move-cursor-first, jitter-pixel click
-       humanScroll(el)               — natural scroll with momentum
-       readPause(text)               — pause proportional to text length
-       sessionGuard()                — enforces daily caps + idle periods
-       diversifyAnswer(text)         — slightly rewords seeded answers per use
-       triggerHumanSignals()         — emits focus/blur/mousemove events periodically
-       isSafeTime()                  — checks current time is within normal hours
-       getApplicationGap()           — calculates how long to wait before next job
-       randomBrowseAction()          — performs a fake browse action (hover/scroll)
+       humanDelay(min, max)         - randomized + skewed delay
+       humanType(el, text)           - variable-speed typing with occasional "mistakes"
+       humanClick(el)                - move-cursor-first, jitter-pixel click
+       humanScroll(el)               - natural scroll with momentum
+       readPause(text)               - pause proportional to text length
+       sessionGuard()                - enforces daily caps + idle periods
+       diversifyAnswer(text)         - slightly rewords seeded answers per use
+       triggerHumanSignals()         - emits focus/blur/mousemove events periodically
+       isSafeTime()                  - checks current time is within normal hours
+       getApplicationGap()           - calculates how long to wait before next job
+       randomBrowseAction()          - performs a fake browse action (hover/scroll)
      }
 
    Load order in manifest: stealth.js BEFORE content.js so it's available.
@@ -68,7 +68,7 @@
   }
 
   function randSkewed(min, max, skew = 1.5) {
-    // Skewed toward min — humans pause briefly more often than they pause long
+    // Skewed toward min - humans pause briefly more often than they pause long
     const u = Math.random()
     return min + (max - min) * Math.pow(u, skew)
   }
@@ -93,11 +93,11 @@
   // ════════════════════════════════════════════════════════════════════════
   //  §2. HUMAN DELAY DISTRIBUTIONS
   //      Each "delay" call uses a different distribution depending on context
-  //      — clicking a button vs. reading a question vs. typing a word.
+  //      - clicking a button vs. reading a question vs. typing a word.
   // ════════════════════════════════════════════════════════════════════════
   const sleep = ms => new Promise(r => setTimeout(r, Math.max(0, ms)))
 
-  // Generic human delay — log-normal, peaks at ~1.2x the floor
+  // Generic human delay - log-normal, peaks at ~1.2x the floor
   async function humanDelay(minMs, maxMs) {
     const mean   = (Math.log(minMs) + Math.log(maxMs)) / 2
     const sigma  = (Math.log(maxMs) - Math.log(minMs)) / 4
@@ -105,17 +105,17 @@
     return sleep(value)
   }
 
-  // Quick reaction delay — like clicking a button you just identified
+  // Quick reaction delay - like clicking a button you just identified
   async function reactDelay() {
     return sleep(clamp(randGaussian(280, 90), 150, 600))
   }
 
-  // Decision delay — like picking a dropdown value
+  // Decision delay - like picking a dropdown value
   async function decisionDelay() {
     return sleep(clamp(randGaussian(900, 350), 400, 2200))
   }
 
-  // Reading delay — proportional to text length but bounded
+  // Reading delay - proportional to text length but bounded
   async function readingDelay(textLength) {
     // ~250 wpm = ~24 chars/sec when actively reading. Skim = ~50 chars/sec.
     const minMs = clamp(textLength * 18, 600, 9000)
@@ -123,7 +123,7 @@
     return humanDelay(minMs, maxMs)
   }
 
-  // Long pondering delay — happens occasionally for "hard" questions
+  // Long pondering delay - happens occasionally for "hard" questions
   async function ponderDelay() {
     return sleep(clamp(randGaussian(3500, 1100), 1800, 7500))
   }
@@ -155,7 +155,7 @@
       return
     }
 
-    // Control point for curve — offset perpendicular to the path
+    // Control point for curve - offset perpendicular to the path
     const midX = (startX + targetX) / 2
     const midY = (startY + targetY) / 2
     const perpX = -(targetY - startY) / distance
@@ -183,7 +183,7 @@
         })
         const el = document.elementFromPoint(x, y)
         if (el) el.dispatchEvent(evt)
-      } catch (e) { /* ignore — some pages block synthetic events */ }
+      } catch (e) { /* ignore - some pages block synthetic events */ }
 
       _cursorX = x
       _cursorY = y
@@ -211,7 +211,7 @@
       return
     }
 
-    // Pick a click point — not the exact center, slightly off
+    // Pick a click point - not the exact center, slightly off
     const jitterX = randGaussian(0, rect.width * 0.18)
     const jitterY = randGaussian(0, rect.height * 0.18)
     const clickX = clamp(rect.left + rect.width / 2 + jitterX, rect.left + 2, rect.right - 2)
@@ -399,7 +399,7 @@
 
   // ════════════════════════════════════════════════════════════════════════
   //  §6. SCROLL BEHAVIOR EMULATION
-  //      Real users scroll with momentum — fast at first, slowing down.
+  //      Real users scroll with momentum - fast at first, slowing down.
   //      Multiple small scrolls beat one big jump.
   // ════════════════════════════════════════════════════════════════════════
   async function humanScroll(targetElement, distanceY = null) {
@@ -409,7 +409,7 @@
     const totalAbs = Math.abs(total)
 
     for (let i = 0; i < steps; i++) {
-      // Ease-out — bigger scrolls at start, smaller at end
+      // Ease-out - bigger scrolls at start, smaller at end
       const t = i / steps
       const stepSize = (totalAbs / steps) * (1.6 - t * 1.2)
       const delta = direction * stepSize
@@ -524,7 +524,7 @@
       return { ok: false, reason: 'hourly cap reached', waitMs }
     }
     if (_sessionState.sessionCount >= CAPS.perSession) {
-      return { ok: false, reason: 'session cap reached — take a break', waitMs: CAPS.sessionGap }
+      return { ok: false, reason: 'session cap reached - take a break', waitMs: CAPS.sessionGap }
     }
     return { ok: true, reason: '', waitMs: 0 }
   }
@@ -541,12 +541,12 @@
   //      applications, to mimic a human getting up for water / a snack.
   // ════════════════════════════════════════════════════════════════════════
   async function maybeForcedBreak() {
-    // Random 5-10% chance per application — micro break
+    // Random 5-10% chance per application - micro break
     if (Math.random() < 0.06) {
       const breakMs = clamp(randGaussian(45000, 18000), 18000, 90000)
       return { taken: true, durationMs: breakMs, type: 'micro' }
     }
-    // After 10+ apps in this session — larger chance
+    // After 10+ apps in this session - larger chance
     if (_sessionState.sessionCount >= 10 && Math.random() < 0.18) {
       const breakMs = clamp(randGaussian(180000, 60000), 90000, 300000)
       return { taken: true, durationMs: breakMs, type: 'medium' }
@@ -676,7 +676,7 @@
   // ════════════════════════════════════════════════════════════════════════
   //  §13. APPLICATION PACING
   //       The headline anti-detection metric: time-gap between applications.
-  //       We model it with a heavy-tailed distribution — most are 30-90s,
+  //       We model it with a heavy-tailed distribution - most are 30-90s,
   //       but occasionally users spend 5+ minutes reading a job before applying.
   // ════════════════════════════════════════════════════════════════════════
   function getApplicationGap() {
@@ -686,12 +686,12 @@
     const baseSigma  = 0.55
     let gap = randLogNormal(baseMean, baseSigma) * mult
 
-    // 15% chance of "long browse" — reading job descriptions thoroughly
+    // 15% chance of "long browse" - reading job descriptions thoroughly
     if (Math.random() < 0.15) {
       gap += clamp(randGaussian(120000, 50000), 30000, 360000)
     }
 
-    // 3% chance of "stepped away" — answered an email, made coffee
+    // 3% chance of "stepped away" - answered an email, made coffee
     if (Math.random() < 0.03) {
       gap += clamp(randGaussian(380000, 180000), 120000, 900000)
     }
@@ -736,7 +736,7 @@
           await _doIdleHover()
           break
       }
-    } catch (e) { /* swallow — best effort */ }
+    } catch (e) { /* swallow - best effort */ }
   }
 
   async function _doHoverJobCard() {
@@ -798,7 +798,7 @@
       } catch (e) {}
     }
 
-    // Normalize navigator.webdriver — read-only, but worth attempting
+    // Normalize navigator.webdriver - read-only, but worth attempting
     try {
       if (navigator.webdriver) {
         Object.defineProperty(navigator, 'webdriver', { get: () => undefined, configurable: true })
@@ -896,6 +896,6 @@
   }
 
   try {
-    console.log('[reblet] stealth module loaded — human-emulation active')
+    console.log('[reblet] stealth module loaded - human-emulation active')
   } catch (e) {}
 })()

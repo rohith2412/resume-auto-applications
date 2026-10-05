@@ -10,7 +10,7 @@ export default function ResumePreview({ resume, template = 'classic' }) {
 
 /* ──────────────────────────────────────────────────────────────
    CLASSIC TEMPLATE
-   Traditional formal look — serif header, ruled sections
+   Traditional formal look - serif header, ruled sections
 ────────────────────────────────────────────────────────────── */
 function ClassicTemplate({ resume }) {
   const p = resume?.personalInfo || {}
@@ -59,7 +59,7 @@ function ClassicTemplate({ resume }) {
         <ClassicSection title="CERTIFICATIONS">
           {resume.certifications.filter(c => c.name).map((cert, i) => (
             <div key={i} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4pt' }}>
-              <div><strong>{cert.name}</strong>{cert.issuer ? ` — ${cert.issuer}` : ''}</div>
+              <div><strong>{cert.name}</strong>{cert.issuer ? ` - ${cert.issuer}` : ''}</div>
               <span style={{ color: '#555', fontSize: '8.5pt' }}>{cert.date}</span>
             </div>
           ))}
@@ -82,7 +82,7 @@ function ClassicSection({ title, children }) {
 
 /* ──────────────────────────────────────────────────────────────
    MODERN TEMPLATE
-   Clean with blue accent — good for tech/product roles
+   Clean with blue accent - good for tech/product roles
 ────────────────────────────────────────────────────────────── */
 function ModernTemplate({ resume }) {
   const p = resume?.personalInfo || {}
@@ -253,7 +253,7 @@ function ExperienceEntry({ exp, accent, fontFamily, minimal }) {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
         <div>
           <span style={{ fontWeight: 700 }}>{exp.title}</span>
-          {exp.company && <span style={{ color: accent || '#374151' }}>{accent ? ` · ${exp.company}` : ` — ${exp.company}`}</span>}
+          {exp.company && <span style={{ color: accent || '#374151' }}>{accent ? ` · ${exp.company}` : ` - ${exp.company}`}</span>}
           {exp.location && !minimal && <span style={{ color: '#9ca3af' }}>, {exp.location}</span>}
         </div>
         <span style={{ fontSize: '8.5pt', color: '#9ca3af', whiteSpace: 'nowrap', marginLeft: '8pt' }}>{dates}</span>
@@ -276,7 +276,7 @@ function EducationEntry({ edu, accent, minimal }) {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
         <div>
           <span style={{ fontWeight: 700 }}>{edu.degree}</span>
-          {edu.institution && <span style={{ color: accent || '#374151' }}>{accent ? ` · ${edu.institution}` : ` — ${edu.institution}`}</span>}
+          {edu.institution && <span style={{ color: accent || '#374151' }}>{accent ? ` · ${edu.institution}` : ` - ${edu.institution}`}</span>}
         </div>
         <span style={{ fontSize: '8.5pt', color: '#9ca3af' }}>{edu.graduationYear}</span>
       </div>
@@ -292,7 +292,7 @@ function ProjectEntry({ proj, accent, minimal }) {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
         <div>
           <span style={{ fontWeight: 700 }}>{proj.name}</span>
-          {proj.technologies && <span style={{ color: '#9ca3af', fontSize: '8.5pt' }}> — {proj.technologies}</span>}
+          {proj.technologies && <span style={{ color: '#9ca3af', fontSize: '8.5pt' }}> - {proj.technologies}</span>}
         </div>
         {proj.url && <span style={{ fontSize: '8pt', color: accent || '#6b7280' }}>{shortenUrl(proj.url)}</span>}
       </div>
@@ -401,7 +401,7 @@ function generatePrintHTML(resume, template) {
     const bullets = (exp.bullets || []).filter(b => b.trim()).map(b => `<li style="margin-bottom:2pt;line-height:1.5;">${b}</li>`).join('')
     return `<div style="margin-bottom:8pt;">
       <div style="display:flex;justify-content:space-between;">
-        <div><strong>${exp.title}</strong>${exp.company ? ` — ${exp.company}` : ''}${exp.location ? `, <em>${exp.location}</em>` : ''}</div>
+        <div><strong>${exp.title}</strong>${exp.company ? ` - ${exp.company}` : ''}${exp.location ? `, <em>${exp.location}</em>` : ''}</div>
         <span style="color:#888;font-size:8.5pt;">${dates}</span>
       </div>
       ${bullets ? `<ul style="margin:3pt 0 0 0;padding-left:13pt;">${bullets}</ul>` : ''}
@@ -411,7 +411,7 @@ function generatePrintHTML(resume, template) {
   const eduHtml = (resume?.education || []).map(edu => {
     return `<div style="margin-bottom:6pt;">
       <div style="display:flex;justify-content:space-between;">
-        <div><strong>${edu.degree}</strong>${edu.institution ? ` — ${edu.institution}` : ''}</div>
+        <div><strong>${edu.degree}</strong>${edu.institution ? ` - ${edu.institution}` : ''}</div>
         <span style="color:#888;font-size:8.5pt;">${edu.graduationYear || ''}</span>
       </div>
       ${edu.gpa ? `<div style="font-size:8.5pt;color:#888;">GPA: ${edu.gpa}</div>` : ''}
@@ -423,7 +423,7 @@ function generatePrintHTML(resume, template) {
     const bullets = (proj.bullets || []).filter(b => b.trim()).map(b => `<li style="margin-bottom:2pt;line-height:1.5;">${b}</li>`).join('')
     return `<div style="margin-bottom:7pt;">
       <div style="display:flex;justify-content:space-between;">
-        <div><strong>${proj.name}</strong>${proj.technologies ? ` — <span style="color:#888;">${proj.technologies}</span>` : ''}</div>
+        <div><strong>${proj.name}</strong>${proj.technologies ? ` - <span style="color:#888;">${proj.technologies}</span>` : ''}</div>
         ${proj.url ? `<span style="font-size:8pt;color:#888;">${proj.url}</span>` : ''}
       </div>
       ${bullets ? `<ul style="margin:3pt 0 0 0;padding-left:13pt;">${bullets}</ul>` : ''}
@@ -432,7 +432,7 @@ function generatePrintHTML(resume, template) {
 
   const certHtml = (resume?.certifications || []).filter(c => c.name).map(cert => {
     return `<div style="display:flex;justify-content:space-between;margin-bottom:4pt;">
-      <div><strong>${cert.name}</strong>${cert.issuer ? ` — ${cert.issuer}` : ''}</div>
+      <div><strong>${cert.name}</strong>${cert.issuer ? ` - ${cert.issuer}` : ''}</div>
       <span style="color:#888;font-size:8.5pt;">${cert.date || ''}</span>
     </div>`
   }).join('')

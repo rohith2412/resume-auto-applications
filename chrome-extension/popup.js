@@ -67,7 +67,7 @@ function showConnected(userData) {
 
   $('search-prefs-display').innerHTML = parts.length
     ? `Searching: ${parts.join(' · ')}`
-    : '<span style="color:#ccc">No search prefs — set them on the dashboard</span>'
+    : '<span style="color:#ccc">No search prefs - set them on the dashboard</span>'
 
   // Dashboard edit link
   const editLink = $('setup-link')
@@ -169,7 +169,7 @@ $('connect-btn').addEventListener('click', async () => {
       await send('SAVE_KEY', { apiKey: '', baseUrl: DASHBOARD_URL })
       errEl.textContent = data?.error === 'Network error'
         ? 'Cannot reach server. Check your internet connection.'
-        : 'Invalid API key — generate a fresh one from the dashboard.'
+        : 'Invalid API key - generate a fresh one from the dashboard.'
       errEl.style.display = 'block'
     }
   } catch {
@@ -179,6 +179,63 @@ $('connect-btn').addEventListener('click', async () => {
     $('connect-btn').disabled = false
     $('connect-btn').textContent = 'Connect'
   }
+})
+
+// ── Change Key toggle ─────────────────────────────────────────
+$('change-key-btn').addEventListener('click', () => {
+  const sec = $('key-section')
+  const visible = sec.style.display !== 'none'
+  sec.style.display = visible ? 'none' : 'block'
+  if (!visible) setTimeout(() => $('edit-key-input')?.focus(), 60)
+})
+
+// ── Save new key (inline) ────────────────────────────────────
+$('save-key-btn').addEventListener('click', async () => {
+  const apiKey = $('edit-key-input').value.trim()
+  const errEl = $('edit-key-error')
+  errEl.style.display = 'none'
+
+  if (!apiKey) {
+    errEl.textContent = 'Paste your API key first.'
+    errEl.style.display = 'block'
+    return
+  }
+
+  $('save-key-btn').disabled = true
+  $('save-key-btn').textContent = '…'
+
+  try {
+    await send('SAVE_KEY', { apiKey, baseUrl: DASHBOARD_URL })
+    const data = await send('VALIDATE_KEY')
+
+    if (data?.ok) {
+      const profileData = await send('GET_PROFILE')
+      showConnected({
+        profile:        profileData.profile        || {},
+        email:          data.user?.email           || '',
+        jobPreferences: profileData.jobPreferences || {},
+      })
+      $('key-section').style.display = 'none'
+      $('edit-key-input').value = ''
+    } else {
+      await send('SAVE_KEY', { apiKey: '', baseUrl: DASHBOARD_URL })
+      errEl.textContent = 'Invalid API key.'
+      errEl.style.display = 'block'
+    }
+  } catch {
+    errEl.textContent = 'Something went wrong.'
+    errEl.style.display = 'block'
+  } finally {
+    $('save-key-btn').disabled = false
+    $('save-key-btn').textContent = 'Save'
+  }
+})
+
+$('edit-key-input').addEventListener('input', () => {
+  $('edit-key-error').style.display = 'none'
+})
+$('edit-key-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') $('save-key-btn').click()
 })
 
 // ── Disconnect button ─────────────────────────────────────────

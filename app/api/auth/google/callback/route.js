@@ -121,7 +121,7 @@ export async function GET(request) {
 
     await createSession(user._id.toString())
 
-    // Always go to /onboarding — it auto-skips to /applications if already done
+    // Always go to /onboarding - it auto-skips to /applications if already done
     return Response.redirect(`${origin}/onboarding`, 302)
   } catch (e) {
     console.error('[google-callback] unexpected error', e?.message ?? e)

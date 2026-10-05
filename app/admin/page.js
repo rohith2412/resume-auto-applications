@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 
 // ── helpers ──────────────────────────────────────────────────────
 function fmt(date) {
-  if (!date) return '—'
+  if (!date) return '-'
   return new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 }
 function initials(email = '') {
@@ -62,7 +62,7 @@ function AppBreakdown({ apps }) {
 
 function UserRow({ user, expanded, onToggle, onDelete }) {
   const color = hashColor(user.email)
-  const name = user.profile?.fullName || '—'
+  const name = user.profile?.fullName || '-'
 
   return (
     <>
@@ -81,7 +81,7 @@ function UserRow({ user, expanded, onToggle, onDelete }) {
             </div>
             <div>
               <div style={{ fontSize: 13, fontWeight: 500, color: '#0a0a0a' }}>{user.email}</div>
-              {name !== '—' && <div style={{ fontSize: 11, color: '#aaa', marginTop: 1 }}>{name}</div>}
+              {name !== '-' && <div style={{ fontSize: 11, color: '#aaa', marginTop: 1 }}>{name}</div>}
             </div>
           </div>
         </td>
@@ -92,7 +92,7 @@ function UserRow({ user, expanded, onToggle, onDelete }) {
           <span style={{ fontSize: 15, fontWeight: 700, color: user.applications.total > 0 ? '#0a0a0a' : '#ddd' }}>{user.applications.total}</span>
         </td>
         {/* Location */}
-        <td className="hide-sm" style={{ padding: '13px 16px', fontSize: 12.5, color: '#888', whiteSpace: 'nowrap' }}>{user.profile?.location || '—'}</td>
+        <td className="hide-sm" style={{ padding: '13px 16px', fontSize: 12.5, color: '#888', whiteSpace: 'nowrap' }}>{user.profile?.location || '-'}</td>
         {/* Joined */}
         <td className="hide-sm" style={{ padding: '13px 16px', fontSize: 12, color: '#aaa', whiteSpace: 'nowrap' }}>{fmt(user.createdAt)}</td>
         {/* Chevron */}
@@ -229,7 +229,7 @@ export default function AdminPage() {
   }, [])
 
   async function handleDelete(user) {
-    // Two-step confirm — first native confirm, then typed-email confirm for
+    // Two-step confirm - first native confirm, then typed-email confirm for
     // subscribed users (extra guard against a mis-click).
     const first = window.confirm(
       `Permanently delete ${user.email}?\n\n` +
@@ -244,7 +244,7 @@ export default function AdminPage() {
     if (user.subscriptionActive) {
       const typed = window.prompt(`This user has an active subscription.\nType their email to confirm delete:\n\n${user.email}`)
       if (typed?.trim().toLowerCase() !== user.email.toLowerCase()) {
-        window.alert('Email did not match — delete cancelled.')
+        window.alert('Email did not match - delete cancelled.')
         return
       }
     }

@@ -48,7 +48,7 @@ export async function POST(request) {
 
   const fieldBlock = stepFields.map((f, i) => {
     let line = `${i + 1}. [${f.type}] "${f.label}"`
-    if (f.currentValue) line += ` — currently: "${f.currentValue}"`
+    if (f.currentValue) line += ` - currently: "${f.currentValue}"`
     if (f.hasError)     line += ' ⚠ HAS VALIDATION ERROR'
     if (f.options?.length) line += `\n   Options: ${f.options.join(' | ')}`
     if (f.placeholder) line += `\n   Placeholder: ${f.placeholder}`
@@ -62,7 +62,7 @@ JOB: ${jobTitle || 'Unknown'} at ${company || 'Unknown'}
 APPLICANT PROFILE
 ${profileSnap}
 
-CURRENT FORM STEP — ALL FIELDS
+CURRENT FORM STEP - ALL FIELDS
 ${fieldBlock}
 
 ${errorFields.length ? `FIELDS WITH VALIDATION ERRORS: ${errorFields.join(', ')}` : ''}

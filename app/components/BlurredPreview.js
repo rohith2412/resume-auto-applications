@@ -29,7 +29,7 @@ const NOTIFS = [
   { name: 'Arjun T.',   photo: 'https://i.pravatar.cc/150?img=61', msg: 'Offer from Salesforce signed 🦁'    },
 ]
 
-// Notification pill — fades in, holds, fades out slowly, then next person
+// Notification pill - fades in, holds, fades out slowly, then next person
 function StaticPill({ notifStart, delay }) {
   const [idx,   setIdx]   = useState(notifStart % NOTIFS.length)
   const [phase, setPhase] = useState('hidden')
@@ -95,13 +95,13 @@ function StaticPill({ notifStart, delay }) {
 function NotifFloat() {
   return (
     <>
-      {/* top-right — over "hundreds" */}
+      {/* top-right - over "hundreds" */}
       <StaticPill top="20%" right="5%"                               notifStart={0} delay={800}  />
-      {/* mid-left — peeks in beside "of jobs" */}
+      {/* mid-left - peeks in beside "of jobs" */}
       <StaticPill top="38%" left="-52px"                             notifStart={2} delay={1600} />
-      {/* mid-right — peeks in beside "overnight" */}
+      {/* mid-right - peeks in beside "overnight" */}
       <StaticPill top="44%" right="-52px"                            notifStart={4} delay={2400} />
-      {/* lower-center — over subtitle */}
+      {/* lower-center - over subtitle */}
       <StaticPill top="63%" left="50%" transform="translateX(-50%)"  notifStart={1} delay={1200} />
     </>
   )
@@ -261,14 +261,14 @@ export default function BlurredPreview() {
           /* Label */
           .lp-label { margin-bottom: 10px !important; font-size: 9px !important; }
 
-          /* Headline — give room above/below for pills */
+          /* Headline - give room above/below for pills */
           .lp-hero h1 { font-size: clamp(1.9rem, 9vw, 2.4rem) !important; margin-top: 52px !important; margin-bottom: 52px !important; position: relative !important; line-height: 1.08 !important; }
           .sp-word { position: static !important; }
 
           /* Subtitle */
           .lp-hero p { font-size: 12.5px !important; max-width: 100% !important; margin-bottom: 16px !important; line-height: 1.55 !important; }
 
-          /* Pricing pill — stay horizontal, compact */
+          /* Pricing pill - stay horizontal, compact */
           .lp-pill { margin-bottom: 16px !important; }
           .lp-pill > div:first-child { padding: 8px 14px !important; }
           .lp-pill > div:last-child  { padding: 8px 14px !important; }
@@ -289,7 +289,7 @@ export default function BlurredPreview() {
           .sp-pill > div > div:first-child { font-size: 8.5px !important; white-space: nowrap; }
           .sp-pill > div > div:last-child  { font-size: 7.5px !important; white-space: nowrap; }
 
-          /* Pill positions — scattered around headline */
+          /* Pill positions - scattered around headline */
           .sp-h-1 { position: absolute !important; top: -50px !important; left: 2px !important; bottom: auto !important; right: auto !important; transform: none !important; margin: 0 !important; }
           .sp-h-2 { position: absolute !important; top: -28px !important; right: 2px !important; left: auto !important; bottom: auto !important; transform: none !important; margin: 0 !important; }
           .sp-h-3 { position: absolute !important; bottom: -28px !important; left: 2px !important; top: auto !important; right: auto !important; transform: none !important; margin: 0 !important; }
@@ -321,7 +321,7 @@ export default function BlurredPreview() {
           </div>
         </nav>
 
-        {/* Hero — vertically centered position: 'absolute', top: '50%', right: '105%', transform: 'translateY(-50%)', marginRight: 6 */} 
+        {/* Hero - vertically centered position: 'absolute', top: '50%', right: '105%', transform: 'translateY(-50%)', marginRight: 6 */} 
         <div className="lp-hero" style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 1.5rem', textAlign: 'center' }}>
 
           {/* Label */}

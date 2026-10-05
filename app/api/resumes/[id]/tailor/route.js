@@ -25,7 +25,7 @@ function formatResumeForAI(resume) {
   if (resume.education?.length > 0) {
     parts.push('\nEDUCATION:')
     resume.education.forEach(edu => {
-      parts.push(`${edu.degree} — ${edu.institution} | ${edu.graduationYear}`)
+      parts.push(`${edu.degree} - ${edu.institution} | ${edu.graduationYear}`)
       if (edu.gpa) parts.push(`GPA: ${edu.gpa}`)
       if (edu.courses) parts.push(`Courses: ${edu.courses}`)
     })

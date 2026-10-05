@@ -143,12 +143,12 @@ export default function ResumeEditor({ resumeId, user, onBack, toast }) {
 }
 
 /* ──────────────────────────────────────────────────────────────
-   BUILD TAB — 2-panel editor + preview
+   BUILD TAB - 2-panel editor + preview
 ────────────────────────────────────────────────────────────── */
 function BuildTab({ resume, activeSection, onSectionChange, onChange, toast, resumeId }) {
   return (
     <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
-      {/* Left — section nav + editor */}
+      {/* Left - section nav + editor */}
       <div style={{ width: '44%', minWidth: '320px', display: 'flex', flexDirection: 'column', borderRight: '1px solid #e5e7eb', overflow: 'hidden' }}>
         {/* Section nav */}
         <div style={{ borderBottom: '1px solid #e5e7eb', padding: '0.5rem 0.75rem', display: 'flex', gap: '0.25rem', flexWrap: 'wrap' }}>
@@ -172,7 +172,7 @@ function BuildTab({ resume, activeSection, onSectionChange, onChange, toast, res
         </div>
       </div>
 
-      {/* Right — live preview */}
+      {/* Right - live preview */}
       <div style={{ flex: 1, overflow: 'auto', background: '#f1f5f9', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '1rem' }}>
         <TemplatePicker value={resume.template} onChange={t => onChange({ template: t })} />
         <PreviewScaler resume={resume} />
@@ -182,7 +182,7 @@ function BuildTab({ resume, activeSection, onSectionChange, onChange, toast, res
 }
 
 /* ──────────────────────────────────────────────────────────────
-   PREVIEW TAB — full preview + score
+   PREVIEW TAB - full preview + score
 ────────────────────────────────────────────────────────────── */
 function PreviewTab({ resume, onChange, toast, resumeId }) {
   const [scoring, setScoring] = useState(false)
@@ -502,7 +502,7 @@ function ExperienceCard({ exp, index, onUpdate, onRemove, resumeId, toast }) {
     <div style={{ border: '1px solid #e5e7eb', borderRadius: '8px', overflow: 'hidden' }}>
       <div style={{ display: 'flex', alignItems: 'center', padding: '0.75rem 1rem', cursor: 'pointer', background: open ? '#f9fafb' : '#fff', userSelect: 'none' }} onClick={() => setOpen(v => !v)}>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <p style={{ fontWeight: 600, fontSize: '0.875rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{exp.title || 'New Position'}{exp.company ? ` — ${exp.company}` : ''}</p>
+          <p style={{ fontWeight: 600, fontSize: '0.875rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{exp.title || 'New Position'}{exp.company ? ` - ${exp.company}` : ''}</p>
           <p style={{ fontSize: '0.75rem', color: '#9ca3af' }}>{[exp.startDate, exp.current ? 'Present' : exp.endDate].filter(Boolean).join(' – ') || 'No dates set'}</p>
         </div>
         <div style={{ display: 'flex', gap: '0.375rem', flexShrink: 0 }}>
@@ -622,7 +622,7 @@ function SkillsSection({ resume, onChange }) {
   const s = resume.skills || {}
   function upd(key, val) { onChange({ skills: { ...s, [key]: val } }) }
   return (
-    <SectionWrapper title="Skills" desc="Comma-separated — AI uses these for keyword optimization">
+    <SectionWrapper title="Skills" desc="Comma-separated - AI uses these for keyword optimization">
       <Field label="Specialized skills / Domain knowledge">
         <input value={s.technical || ''} onChange={e => upd('technical', e.target.value)} placeholder="Financial modeling, Machine learning, Patient care, UX research..." className="input" />
       </Field>
@@ -862,7 +862,7 @@ function ScoreCircle({ score }) {
         <span style={{ fontSize: '0.75rem', color: '#6b7280' }}>/ 100</span>
       </div>
       <p style={{ fontSize: '0.875rem', fontWeight: 600, color: color === '#16a34a' ? '#15803d' : color === '#d97706' ? '#b45309' : '#b91c1c' }}>
-        {score >= 80 ? 'Strong resume' : score >= 60 ? 'Good — could be better' : 'Needs improvement'}
+        {score >= 80 ? 'Strong resume' : score >= 60 ? 'Good - could be better' : 'Needs improvement'}
       </p>
     </div>
   )

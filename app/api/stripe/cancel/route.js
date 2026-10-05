@@ -18,7 +18,7 @@ export async function POST() {
 
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 
-    // Cancel at period end — user keeps access until billing cycle ends.
+    // Cancel at period end - user keeps access until billing cycle ends.
     // subscriptionActive stays true; the webhook (customer.subscription.deleted)
     // flips it to false when Stripe actually terminates the subscription.
     const subscription = await stripe.subscriptions.update(user.stripeSubscriptionId, {

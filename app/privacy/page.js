@@ -1,5 +1,5 @@
 export const metadata = {
-  title: 'Privacy Policy — reblet',
+  title: 'Privacy Policy - reblet',
 }
 
 export default function PrivacyPage() {
@@ -59,8 +59,8 @@ export default function PrivacyPage() {
             <P>We do not sell, rent, or share your personal information with third parties except:</P>
             <ul style={{ paddingLeft: 20, display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 }}>
               {[
-                'Stripe — to process subscription payments',
-                'MongoDB Atlas — to store your account and application data securely',
+                'Stripe - to process subscription payments',
+                'MongoDB Atlas - to store your account and application data securely',
                 'If required by law or to protect our legal rights',
               ].map((item, i) => <li key={i} style={{ fontSize: 15, color: '#444' }}>{item}</li>)}
             </ul>

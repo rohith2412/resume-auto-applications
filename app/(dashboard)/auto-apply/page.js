@@ -153,15 +153,49 @@ function Shell({ user, toasts, children }) {
 }
 
 // ─── auto apply view ──────────────────────────────────────────
+function ExtensionBanner({ dismissed, onDismiss }) {
+  if (dismissed) return null
+  return (
+    <div style={{ background: 'linear-gradient(135deg,#0f0f0f 0%,#1a1a2e 100%)', borderRadius: 14, padding: '16px 20px', marginBottom: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <span style={{ fontSize: 24 }}>🧩</span>
+        <div>
+          <p style={{ color: '#fff', fontWeight: 600, fontSize: 13, marginBottom: 2 }}>Install the reblet Chrome Extension</p>
+          <p style={{ color: '#999', fontSize: 11.5, fontWeight: 300 }}>Required to auto-apply on LinkedIn. Takes 10 seconds.</p>
+        </div>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <a href="https://chromewebstore.google.com/detail/pncleeecacohjhfkcgebaiepnjahbhip?utm_source=item-share-cb" target="_blank" rel="noreferrer"
+          style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: '#fff', color: '#0f0f0f', padding: '7px 14px', borderRadius: 8, fontSize: 12, fontWeight: 700, textDecoration: 'none', whiteSpace: 'nowrap' }}>
+          Add to Chrome <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+        <button onClick={onDismiss} style={{ background: 'none', border: 'none', color: '#666', fontSize: 16, cursor: 'pointer', padding: '4px 6px', lineHeight: 1 }} aria-label="Dismiss">&times;</button>
+      </div>
+    </div>
+  )
+}
+
 function AutoApply({ user }) {
   const jp = user?.jobPreferences || {}
 
   const [isMobile, setIsMobile] = useState(false)
+  const [extInstalled, setExtInstalled] = useState(true)
+  const [bannerDismissed, setBannerDismissed] = useState(false)
+
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 640)
     check()
     window.addEventListener('resize', check)
     return () => window.removeEventListener('resize', check)
+  }, [])
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (document.documentElement.dataset.rebletExtension !== '1') {
+        setExtInstalled(false)
+      }
+    }, 1500)
+    return () => clearTimeout(timer)
   }, [])
 
   const [form, setForm] = useState({
@@ -176,9 +210,6 @@ function AutoApply({ user }) {
   const [apiKey, setApiKey]               = useState(user?.apiKey || '')
   const [generatingKey, setGeneratingKey] = useState(false)
   const [copied, setCopied]               = useState(false)
-  const [hasResume, setHasResume]         = useState(!!user?.resumeText)
-  const [resumeFile, setResumeFile]       = useState(null)
-  const [uploadingResume, setUploadingResume] = useState(false)
 
   useEffect(() => {
     fetch('/api/auto-apply/settings').then(r => r.ok ? r.json() : null).then(d => {
@@ -192,17 +223,6 @@ function AutoApply({ user }) {
   }, [])
 
   const set = key => val => setForm(f => ({ ...f, [key]: val }))
-
-  async function handleResumeUpload() {
-    if (!resumeFile) return
-    setUploadingResume(true)
-    const data = new FormData()
-    data.append('resume', resumeFile)
-    try {
-      const res = await fetch('/api/resume/upload', { method: 'POST', body: data })
-      if (res.ok) { setHasResume(true); setResumeFile(null) }
-    } finally { setUploadingResume(false) }
-  }
 
   async function generateKey() {
     setGeneratingKey(true)
@@ -223,7 +243,6 @@ function AutoApply({ user }) {
   async function handleSave(e) {
     e.preventDefault()
     if (!form.keywords || !form.searchLocation) { setError('Please fill in Job Title to Search and Search Location.'); return }
-    if (!hasResume) { setError("Please upload your resume PDF before saving — it's required for AI to answer screening questions."); return }
     setError(''); setSaving(true); setSaved(false)
     try {
       const res = await fetch('/api/auto-apply', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ keywords: form.keywords, searchLocation: form.searchLocation, workType: form.workType, linkedinExpLevel: form.linkedinExpLevel }) })
@@ -246,6 +265,12 @@ function AutoApply({ user }) {
 
   return (
     <div style={{ maxWidth: 860, margin: '0 auto', padding: isMobile ? '1rem' : '2.5rem', display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 320px', gap: isMobile ? 24 : 32, alignItems: 'start' }}>
+
+      {!extInstalled && (
+        <div style={{ gridColumn: '1 / -1' }}>
+          <ExtensionBanner dismissed={bannerDismissed} onDismiss={() => setBannerDismissed(true)} />
+        </div>
+      )}
 
       {/* Left: search form */}
       <form onSubmit={handleSave}>
@@ -271,31 +296,6 @@ function AutoApply({ user }) {
           </div>
         </Section>
 
-        <Section title="Resume *">
-          <div style={{ border: `1.5px solid ${hasResume ? '#bbf7d0' : '#e8e8e8'}`, borderRadius: 10, padding: '14px 16px', background: hasResume ? '#f0fdf4' : '#fff' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-              <div style={{ width: 36, height: 36, background: hasResume ? '#dcfce7' : '#f3f4f6', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem', flexShrink: 0 }}>{hasResume ? '✓' : '📄'}</div>
-              <div>
-                <p style={{ fontWeight: 600, fontSize: 13, color: '#0a0a0a' }}>Base resume (PDF)</p>
-                <p style={{ fontSize: 12, color: hasResume ? '#15803d' : '#9ca3af', marginTop: 1 }}>{hasResume ? 'Uploaded — AI uses this to answer screening questions' : 'Required — upload your resume so AI can answer screening questions'}</p>
-              </div>
-            </div>
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-              <label style={{ flex: 1, cursor: 'pointer' }}>
-                <div style={{ border: '1.5px solid #e8e8e8', borderRadius: 7, padding: '8px 12px', fontSize: 13, color: resumeFile ? '#0a0a0a' : '#9ca3af', display: 'flex', alignItems: 'center', gap: 6, background: '#fff' }}>
-                  <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M7 1.5v7M4.5 4L7 1.5 9.5 4M2 11.5h10" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                  {resumeFile ? resumeFile.name : hasResume ? 'Replace PDF…' : 'Choose PDF file…'}
-                </div>
-                <input type="file" accept=".pdf" style={{ display: 'none' }} onChange={e => setResumeFile(e.target.files[0] || null)} />
-              </label>
-              <button type="button" onClick={handleResumeUpload} disabled={!resumeFile || uploadingResume}
-                style={{ padding: '8px 14px', background: '#0a0a0a', color: '#fff', border: 'none', borderRadius: 7, fontSize: 13, fontWeight: 600, cursor: (!resumeFile || uploadingResume) ? 'not-allowed' : 'pointer', opacity: (!resumeFile || uploadingResume) ? 0.45 : 1, fontFamily: 'inherit', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
-                {uploadingResume ? <><span style={{ width: 12, height: 12, border: '2px solid #ffffff44', borderTopColor: '#fff', borderRadius: '50%', display: 'inline-block', animation: 'spin .7s linear infinite' }} /> Uploading…</> : 'Upload'}
-              </button>
-            </div>
-          </div>
-        </Section>
-
         {error && <div style={{ background: '#fff5f5', border: '1px solid #fecaca', borderRadius: 8, padding: '10px 14px', fontSize: 13, color: '#dc2626', marginBottom: 12 }}>{error}</div>}
 
         <button type="submit" disabled={saving}
@@ -311,7 +311,7 @@ function AutoApply({ user }) {
           <div style={{ background: '#fff', border: '1px solid #e8e8e8', borderRadius: 12, padding: '14px 16px', marginBottom: 14 }}>
             <div style={{ fontSize: 10, fontWeight: 700, color: '#aaa', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 8 }}>Search Preview</div>
             <p style={{ fontSize: 12.5, color: '#555', marginBottom: 10, lineHeight: 1.5 }}>
-              <strong style={{ color: '#0a0a0a' }}>{form.keywords || '—'}</strong>
+              <strong style={{ color: '#0a0a0a' }}>{form.keywords || '-'}</strong>
               {form.searchLocation && <> in {form.searchLocation}</>}
               {(form.workType || form.linkedinExpLevel) && <span style={{ color: '#aaa' }}> · {[wtLabel[form.workType], elLabel[form.linkedinExpLevel]].filter(Boolean).join(' · ')}</span>}
             </p>
@@ -364,7 +364,7 @@ function AutoApply({ user }) {
               ['2','Get your API key','Click "Generate API Key" and copy it.'],
               ['3','Open the extension','Click the reblet icon in Chrome.'],
               ['4','Paste your API key','Paste it in the extension popup and click Connect.'],
-              ['5','Go to LinkedIn Jobs','Click "Open on LinkedIn" — jobs are pre-filtered for Easy Apply.'],
+              ['5','Go to LinkedIn Jobs','Click "Open on LinkedIn" - jobs are pre-filtered for Easy Apply.'],
               ['6','Hit Start Auto Apply','The extension handles everything from here.'],
             ].map(([n, title, desc]) => (
               <div key={n} style={{ display: 'flex', gap: 10, marginBottom: 12 }}>
@@ -469,7 +469,7 @@ function Applications({ toast }) {
             No applications yet
           </h3>
           <p style={{ fontSize: '.8125rem', color: '#888', fontWeight: 300, maxWidth: 300, margin: '0 auto', lineHeight: 1.6 }}>
-            Use the Chrome extension to auto-apply — applications will appear here.
+            Use the Chrome extension to auto-apply - applications will appear here.
           </p>
         </div>
       ) : (

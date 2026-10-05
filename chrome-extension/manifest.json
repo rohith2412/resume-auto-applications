@@ -1,10 +1,10 @@
 {
   "manifest_version": 3,
   "name": "reblet",
-  "version": "1.0.9",
+  "version": "1.1",
   "description": "Auto-fill LinkedIn Easy Apply forms with your AI-tailored resume.",
 
-  "permissions": ["storage", "activeTab", "tabs"],
+  "permissions": ["storage", "unlimitedStorage", "activeTab", "tabs"],
 
   "host_permissions": [
     "https://www.linkedin.com/*",
@@ -23,6 +23,11 @@
       "js": ["stealth.js", "qa-bank.js", "knowledge.js", "content.js"],
       "css": ["content.css"],
       "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://reblet.com/*", "https://www.reblet.com/*"],
+      "js": ["detect.js"],
+      "run_at": "document_start"
     }
   ],
 

@@ -41,7 +41,7 @@ export async function DELETE(request, { params }) {
         const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
         await stripe.subscriptions.cancel(target.stripeSubscriptionId)
       } catch (e) {
-        // Swallow — subscription may already be canceled or invalid.
+        // Swallow - subscription may already be canceled or invalid.
         console.warn('[admin delete] stripe cancel failed', e?.message ?? e)
       }
     }

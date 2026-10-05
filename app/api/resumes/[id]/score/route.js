@@ -73,8 +73,8 @@ Return ONLY valid JSON in this exact format:
 }
 
 Scoring criteria:
-- ats: ATS compatibility — standard section names, clean formatting, no graphics/tables
-- impact: Achievement strength — action verbs, quantified results, accomplishments not just duties
+- ats: ATS compatibility - standard section names, clean formatting, no graphics/tables
+- impact: Achievement strength - action verbs, quantified results, accomplishments not just duties
 - completeness: All important sections present with sufficient detail
 - keywords: Industry-relevant keywords and skills present
 - feedback: 3 specific, actionable improvement tips (reference actual content from the resume)`

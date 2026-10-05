@@ -22,7 +22,7 @@ Auto-fills LinkedIn Easy Apply forms using your profile from theQuickResume.
 
 1. Go to any LinkedIn job page
 2. If the job has Easy Apply, a **⚡ Quick Apply** button appears next to it
-3. Click it — the panel opens, AI generates answers to screening questions
+3. Click it - the panel opens, AI generates answers to screening questions
 4. Click **⚡ Fill this step** to auto-fill the current form step
 5. Review the filled fields, click **Next** yourself
 6. The application is automatically tracked in your dashboard → **Applications**

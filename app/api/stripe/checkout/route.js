@@ -30,7 +30,7 @@ export async function POST() {
     try {
       await stripe.customers.retrieve(customerId)
     } catch {
-      // Customer not found in this mode — create a fresh one
+      // Customer not found in this mode - create a fresh one
       customerId = null
     }
   }

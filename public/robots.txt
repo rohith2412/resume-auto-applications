@@ -1,4 +1,4 @@
-# reblet — LinkedIn Auto Apply Chrome Extension
+# reblet - LinkedIn Auto Apply Chrome Extension
 # https://www.reblet.com
 
 User-agent: *

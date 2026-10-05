@@ -236,7 +236,7 @@ function ResumeSection({ user, toast }) {
   async function handleUpload(file) {
     if (!file) return
     if (file.type !== 'application/pdf') { toast('Only PDF files are accepted', 'error'); return }
-    if (file.size > 5 * 1024 * 1024) { toast('File too large — max 5 MB', 'error'); return }
+    if (file.size > 5 * 1024 * 1024) { toast('File too large - max 5 MB', 'error'); return }
     setUploading(true)
     try {
       const fd = new FormData()
@@ -457,7 +457,7 @@ function Profile({ user, toast, onLogout, onRequestCancel, cancelingSub }) {
               </div>
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>
-                  <p style={{ fontSize: 13, fontWeight: 700, color: '#92400e' }}>Pro — Cancels soon</p>
+                  <p style={{ fontSize: 13, fontWeight: 700, color: '#92400e' }}>Pro - Cancels soon</p>
                   <span style={{ background: '#d97706', color: '#fff', borderRadius: 99, fontSize: 10, fontWeight: 700, padding: '2px 8px', letterSpacing: '.04em' }}>CANCELING</span>
                 </div>
                 <p style={{ fontSize: 12, color: '#b45309', fontWeight: 400 }}>
@@ -481,7 +481,7 @@ function Profile({ user, toast, onLogout, onRequestCancel, cancelingSub }) {
               </div>
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>
-                  <p style={{ fontSize: 13, fontWeight: 700, color: '#15803d' }}>Pro — Active</p>
+                  <p style={{ fontSize: 13, fontWeight: 700, color: '#15803d' }}>Pro - Active</p>
                   <span style={{ background: '#16a34a', color: '#fff', borderRadius: 99, fontSize: 10, fontWeight: 700, padding: '2px 8px', letterSpacing: '.04em' }}>ACTIVE</span>
                 </div>
                 <p style={{ fontSize: 12, color: '#4ade80', fontWeight: 400 }}>$20 / month · 700 auto-applications included</p>
@@ -555,7 +555,7 @@ function App() {
         setUser(prev => ({ ...prev, subscriptionCancelAt: data.cancelAt }))
         toast('Subscription canceled.')
       } else {
-        toast('Failed to cancel — try again.', 'error')
+        toast('Failed to cancel - try again.', 'error')
       }
     } catch { toast('Something went wrong', 'error') }
     setCancelingSub(false)

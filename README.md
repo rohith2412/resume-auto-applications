@@ -1,20 +1,20 @@
-# theQuickResume — AI-Powered Resume Builder
+# theQuickResume - AI-Powered Resume Builder
 
 A full-featured AI resume builder with real-time preview, scoring, and cover letter generation.
 
 ## Features
 
-- **Resume builder** — Step-by-step guided editor with sections for experience, education, skills, projects, and certifications
-- **Live preview** — See your resume update in real time as you type, in 3 professional templates (Classic, Modern, Minimal)
-- **AI bullet points** — Generate or improve bullet points with one click using GPT-4o
-- **Resume score** — AI rates your resume 0–100 across ATS compatibility, impact, completeness, and keywords
-- **Tailor to job** — Paste any job description; AI rewrites your resume to match it exactly
-- **Cover letter** — Generates a personalized cover letter from your resume + job description
-- **PDF export** — Download a clean PDF in your chosen template via the browser print dialog
-- **Multiple resumes** — Create, duplicate, and manage separate resumes for different applications
-- **History** — All previously tailored resumes are saved and downloadable
-- **Auth** — Email/password signup and login (JWT + MongoDB)
-- **Paywall** — Stripe subscription in production (bypassed in development)
+- **Resume builder** - Step-by-step guided editor with sections for experience, education, skills, projects, and certifications
+- **Live preview** - See your resume update in real time as you type, in 3 professional templates (Classic, Modern, Minimal)
+- **AI bullet points** - Generate or improve bullet points with one click using GPT-4o
+- **Resume score** - AI rates your resume 0–100 across ATS compatibility, impact, completeness, and keywords
+- **Tailor to job** - Paste any job description; AI rewrites your resume to match it exactly
+- **Cover letter** - Generates a personalized cover letter from your resume + job description
+- **PDF export** - Download a clean PDF in your chosen template via the browser print dialog
+- **Multiple resumes** - Create, duplicate, and manage separate resumes for different applications
+- **History** - All previously tailored resumes are saved and downloadable
+- **Auth** - Email/password signup and login (JWT + MongoDB)
+- **Paywall** - Stripe subscription in production (bypassed in development)
 
 ## Tech Stack
 

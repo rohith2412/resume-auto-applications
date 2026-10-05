@@ -249,7 +249,7 @@ export default function OnboardingPage() {
                   const f = e.target.files?.[0]
                   if (!f) return
                   if (f.type !== 'application/pdf') { setError('Only PDF files are accepted.'); return }
-                  if (f.size > 5 * 1024 * 1024) { setError('File too large — max 5 MB.'); return }
+                  if (f.size > 5 * 1024 * 1024) { setError('File too large - max 5 MB.'); return }
                   setResumeFile(f)
                   setResumeName(f.name)
                   setError('')
@@ -268,7 +268,7 @@ export default function OnboardingPage() {
                   const f = e.dataTransfer.files?.[0]
                   if (!f) return
                   if (f.type !== 'application/pdf') { setError('Only PDF files are accepted.'); return }
-                  if (f.size > 5 * 1024 * 1024) { setError('File too large — max 5 MB.'); return }
+                  if (f.size > 5 * 1024 * 1024) { setError('File too large - max 5 MB.'); return }
                   setResumeFile(f)
                   setResumeName(f.name)
                   setError('')

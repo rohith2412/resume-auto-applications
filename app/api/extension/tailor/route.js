@@ -64,7 +64,7 @@ export async function POST(request) {
     return d.toISOString().slice(0, 10)
   })()
 
-  const prompt = `You are an expert job application AI filling out a LinkedIn Easy Apply form. Use the applicant's real data to give accurate, specific answers — never generic placeholders.
+  const prompt = `You are an expert job application AI filling out a LinkedIn Easy Apply form. Use the applicant's real data to give accurate, specific answers - never generic placeholders.
 
 TODAY: ${today}
 
@@ -84,14 +84,14 @@ Return ONLY a JSON array, one object per question:
 [{"label": "<exact label from above>", "answer": "<value>"}]
 
 RULES BY FIELD TYPE
-• text / textarea — specific, professional answer drawn from resume. For behavioral/example questions write 2-3 sentences with a concrete result (use numbers/metrics if in resume). Never say "I am excited" or vague fluff.
-• select / radio — return the EXACT option text that best matches. Never invent options.
-• checkbox — comma-separated option texts to check. "none" if truly none apply.
-• number — digits only (e.g. "3")
-• date (YYYY-MM-DD) — use ${startDate} for start/availability questions
-• month (YYYY-MM) — use ${startDate.slice(0,7)} for graduation/availability months
-• years of experience — honest integer from resume, as string (e.g. "2")
-• salary / pay / compensation — digits only (e.g. "85000")
+• text / textarea - specific, professional answer drawn from resume. For behavioral/example questions write 2-3 sentences with a concrete result (use numbers/metrics if in resume). Never say "I am excited" or vague fluff.
+• select / radio - return the EXACT option text that best matches. Never invent options.
+• checkbox - comma-separated option texts to check. "none" if truly none apply.
+• number - digits only (e.g. "3")
+• date (YYYY-MM-DD) - use ${startDate} for start/availability questions
+• month (YYYY-MM) - use ${startDate.slice(0,7)} for graduation/availability months
+• years of experience - honest integer from resume, as string (e.g. "2")
+• salary / pay / compensation - digits only (e.g. "85000")
 
 SPECIFIC ANSWER RULES
 • Work authorization / eligible to work → use profile value, default "Yes"
@@ -106,7 +106,7 @@ SPECIFIC ANSWER RULES
 • Notice period / when can you start → use profile notice period, default "2 weeks"
 • Certifications (specific cert asked) → "No" unless cert is explicitly in resume
 • "Please specify" follow-up field → leave blank ("") unless context is clear
-• Cover letter / why this role — 2 sentences max, mention job title + one specific skill from resume
+• Cover letter / why this role - 2 sentences max, mention job title + one specific skill from resume
 
 Return ONLY the JSON array. No markdown. No explanation.`
 

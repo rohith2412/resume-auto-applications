@@ -44,7 +44,7 @@ ${jobDescription}
 INSTRUCTIONS:
 1. Open with a specific, engaging hook that references the company or role (NOT "I am writing to apply")
 2. In 1-2 paragraphs, connect 2-3 of the candidate's specific achievements or skills to the job's key requirements
-3. In one paragraph, express genuine interest in the company/role — be specific to what the job description mentions
+3. In one paragraph, express genuine interest in the company/role - be specific to what the job description mentions
 4. Close with confidence and a clear call to action
 5. Length: 3-4 paragraphs, professional but personable tone
 6. Address to "${hiringManager || 'Hiring Manager'}"

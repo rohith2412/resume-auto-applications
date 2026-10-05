@@ -1,4 +1,4 @@
-// reblet — Autonomous LinkedIn Easy Apply Bot
+// reblet - Autonomous LinkedIn Easy Apply Bot
 // Uses text-content matching instead of brittle CSS class selectors.
 
 ;(function () {
@@ -31,7 +31,7 @@
   // We keep sleep() unscaled so polling loops (waitFor / waitForSuccess)
   // still tick at their original cadence. Only the "human-like" jitter()
   // delays between form actions get compressed.
-  // SAFETY MODE — slower than original to stay below LinkedIn's bot detector.
+  // SAFETY MODE - slower than original to stay below LinkedIn's bot detector.
   // After getting the "applying at a fast pace" warning, we run at 1.8x speed
   // (i.e. slower) plus the human-emulation layer in stealth.js.
   const SPEED = 1.8                  // higher = slower (was 1.0)
@@ -118,7 +118,7 @@
           el.dispatchEvent(new Event('change', { bubbles: true }))
         }
       } else {
-        // Respect character limits — truncate cleanly at a word boundary
+        // Respect character limits - truncate cleanly at a word boundary
         let finalVal = String(value)
         const maxLen = el.maxLength > 0 ? el.maxLength : Infinity
         if (finalVal.length > maxLen) {
@@ -137,7 +137,7 @@
   }
 
   // After typing, pick from any typeahead / autocomplete dropdown LinkedIn shows.
-  // Works for location, school, company, skills — any combobox-style input.
+  // Works for location, school, company, skills - any combobox-style input.
   async function pickTypeaheadOption(inputEl, value) {
     if (inputEl.tagName === 'SELECT') return   // handled separately
 
@@ -147,7 +147,7 @@
       await sleep(250)
 
       // Gather all dropdown options LinkedIn might render.
-      // NOTE: cannot use offsetParent — portal/fixed elements have offsetParent=null.
+      // NOTE: cannot use offsetParent - portal/fixed elements have offsetParent=null.
       // Use computedStyle instead.
       const candidates = [...document.querySelectorAll(
         '.basic-typeahead__selectable, ' +
@@ -173,7 +173,7 @@
         candidates.find(o => o.textContent?.toLowerCase().includes(val)) ||
         candidates[0]
 
-      // Full mouse sequence — LinkedIn dropdowns need mousedown to register selection
+      // Full mouse sequence - LinkedIn dropdowns need mousedown to register selection
       best.scrollIntoView({ block: 'nearest' })
       best.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }))
       best.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }))
@@ -182,7 +182,7 @@
       await jitter(200, 350)
       return
     }
-    // No dropdown appeared — plain text field, no action needed
+    // No dropdown appeared - plain text field, no action needed
   }
 
   /* ═══════════════════════════════════════════════════════════
@@ -203,7 +203,7 @@
     )
   }
 
-  // The form content pane — scoped strictly to the modal, NO document.body fallback
+  // The form content pane - scoped strictly to the modal, NO document.body fallback
   // (body fallback was causing fake questions to be extracted from LinkedIn's search filters)
   function getFormPane() {
     const modal =
@@ -238,7 +238,7 @@
 
   // Find Easy Apply button ONLY in the job details panel.
   // IMPORTANT: LinkedIn also has an "Easy Apply" FILTER pill at the top of search results.
-  // We must not click that — it just toggles the filter, no modal opens.
+  // We must not click that - it just toggles the filter, no modal opens.
   function findEasyApplyBtn() {
     // 1. Best: the specific apply-button class that LinkedIn uses only on apply buttons
     //    (never on search filter pills)
@@ -290,7 +290,7 @@
     el.dispatchEvent(new MouseEvent('click',      opts))
   }
 
-  // Primary footer action button — scoped to modal content
+  // Primary footer action button - scoped to modal content
   function footerBtn() {
     if (!isModalOpen()) return null
 
@@ -503,7 +503,7 @@
   ═══════════════════════════════════════════════════════════ */
   function smartDefault(label = '', options = []) {
     // ── 0a. Consult the massive 1,200+ Q&A BANK first ──
-    // Pre-seeded answers for essay/behavioral/tech questions — zero AI cost.
+    // Pre-seeded answers for essay/behavioral/tech questions - zero AI cost.
     try {
       if (globalThis.REBLET_QA_BANK?.lookup) {
         const qa = globalThis.REBLET_QA_BANK.lookup(label, options, profile, currentJob)
@@ -656,7 +656,7 @@
 
     // ── Current / previous employer ───────────────────────────────
     if (/current.*company|current.*employer|where.*work|employer.*name/i.test(l))
-      return ''   // leave blank — don't expose current employer
+      return ''   // leave blank - don't expose current employer
 
     // ── URL / link fields ─────────────────────────────────────────
     if (/\blinkedin\b/i.test(l))    return p.linkedin  || ''
@@ -667,7 +667,7 @@
     if (/please specify|specify.*below|please.*provide/i.test(l)) return ''
 
     // ═══════════════════════════════════════════════════════════════
-    //  EXTRA CONDITIONS — handle MANY more common LinkedIn questions
+    //  EXTRA CONDITIONS - handle MANY more common LinkedIn questions
     // ═══════════════════════════════════════════════════════════════
 
     // ── Age / minimum-age confirmation ────────────────────────────
@@ -786,7 +786,7 @@
       return opt(/yes/i) || options[0] || 'Yes'
     }
 
-    // ── Dropdown/radio fallback — pick first sensible option ──────
+    // ── Dropdown/radio fallback - pick first sensible option ──────
     if (options.length === 2 && /yes/i.test(options[0])) return 'Yes'
     if (options.length === 2 && /yes/i.test(options[1])) return 'Yes'
     if (options.length && /select|choose|pick/i.test(options[0])) return options[1] || options[0]
@@ -802,7 +802,7 @@
   /* ═══════════════════════════════════════════════════════════
      FILL ONE STEP
   ═══════════════════════════════════════════════════════════ */
-  // Detect video-prompt steps — we can't answer these, skip the whole job
+  // Detect video-prompt steps - we can't answer these, skip the whole job
   function isVideoPromptStep(pane) {
     if (!pane) return false
     const text = pane.innerText || ''
@@ -874,8 +874,8 @@
     })
 
     if (inlineCancel && inlineSave) {
-      // Inline add form is open — try to fill it then save; cancel as fallback
-      log('Education: inline form open — filling and saving')
+      // Inline add form is open - try to fill it then save; cancel as fallback
+      log('Education: inline form open - filling and saving')
       await fillStep()
       await jitter(200, 400)
       inlineSave.click()
@@ -883,7 +883,7 @@
       return
     }
 
-    // Case A: existing entry — click Edit, fill, Save
+    // Case A: existing entry - click Edit, fill, Save
     const editBtn = buttons.find(b => {
       const t = (b.textContent || '').trim().toLowerCase()
       return t === 'edit' && !b.disabled
@@ -913,7 +913,7 @@
   // Work-experience step trick: LinkedIn opens an inline "Add work experience"
   // form by default with empty required fields. If we click "Cancel" on that
   // inline form, it collapses to just "+ Add more" and the outer step has no
-  // required fields — so Next works immediately. Way better than fake data.
+  // required fields - so Next works immediately. Way better than fake data.
   async function fillWorkExperienceForm(pane) {
     if (!pane) return
 
@@ -930,7 +930,7 @@
       cancelBtn.click()
       await jitter(500, 800)
 
-      // LinkedIn may pop a "Discard changes?" confirm — if so, confirm discard
+      // LinkedIn may pop a "Discard changes?" confirm - if so, confirm discard
       const discardConfirm = [...document.querySelectorAll('button')].find(b => {
         const t = (b.textContent || '').trim().toLowerCase()
         return (t === 'discard' || t === 'yes' || t === 'confirm') && !b.disabled
@@ -1016,7 +1016,7 @@
       // radioAnswer uses radio option labels so smartDefault can match them
       const radioAnswer = aiMatch?.answer || smartDefault(labelTxt, radioOptions.length ? radioOptions : allOptions)
 
-      // Checkboxes — answer is comma-separated option labels to check
+      // Checkboxes - answer is comma-separated option labels to check
       const checkboxes = [...fs.querySelectorAll('input[type=checkbox]')]
       if (checkboxes.length) {
         if (answer && !/^none$/i.test(answer)) {
@@ -1037,7 +1037,7 @@
         continue
       }
 
-      // Date / month pickers — ensure value is in the correct format
+      // Date / month pickers - ensure value is in the correct format
       const dateEl = fs.querySelector('input[type=date], input[type=month]')
       if (dateEl && (force || !dateEl.value || hasError)) {
         const fmt = dateEl.type === 'month' ? 'YYYY-MM' : 'YYYY-MM-DD'
@@ -1048,7 +1048,7 @@
       }
 
       // Text / select / textarea / number
-      // NOTE: no `continue` here — fall through so radios in the same fieldset
+      // NOTE: no `continue` here - fall through so radios in the same fieldset
       // are also handled (e.g. phone type radio co-located with tel input).
       const textEl = fs.querySelector(
         'input:not([type=radio]):not([type=checkbox]):not([type=date]):not([type=month]):not([type=hidden]), select, textarea'
@@ -1066,7 +1066,7 @@
         const finalTextAnswer = phoneVal || phoneAiAnswer || answer
         if (finalTextAnswer && (force || !textEl.value || hasError))
           await fillField(textEl, finalTextAnswer)
-        // Do NOT continue — fall through to handle radios in same fieldset
+        // Do NOT continue - fall through to handle radios in same fieldset
       }
 
       // Radio (runs even when textEl was also present above)
@@ -1166,7 +1166,7 @@
 
     // ── Broad radio sweep ────────────────────────────────────────────────
     // Mirrors the broad checkbox sweep above. Catches radio groups that sit
-    // outside standard fieldset/[class*="form-element"] wrappers — e.g.
+    // outside standard fieldset/[class*="form-element"] wrappers - e.g.
     // LinkedIn's "Type" radio for phone number when it renders separately.
     // Groups radios by name attribute (same name = same group).
     const radioGroupMap = new Map()
@@ -1298,7 +1298,7 @@
           /^discard$/i.test((b.textContent || '').trim())
         )
         if (discard) {
-          log('Save dialog detected — discarding')
+          log('Save dialog detected - discarding')
           discard.click()
           await sleep(500)
           return true
@@ -1350,7 +1350,7 @@
         )
       if (done) { done.click(); await jitter(500, 800); continue }
 
-      // LinkedIn upsell / promo dialogs — "Not now", "Skip", "Maybe later", "No thanks"
+      // LinkedIn upsell / promo dialogs - "Not now", "Skip", "Maybe later", "No thanks"
       const skip = [...document.querySelectorAll('button')].find(b =>
         /not now|skip|maybe later|no.?thanks|remind me later/i.test(b.textContent?.trim())
       )
@@ -1408,41 +1408,41 @@
       while (isPaused) { await sleep(400); if (!isRunning) return 'stopped' }
 
       // If LinkedIn popped a "Save this application?" dialog mid-flow,
-      // dismiss it (Discard) and bail out — this job is not recoverable.
+      // dismiss it (Discard) and bail out - this job is not recoverable.
       if (await handleSaveDialog()) {
-        log(`⚠ SKIPPED on ${pageLabel(stepCount)} — Save dialog appeared`)
+        log(`⚠ SKIPPED on ${pageLabel(stepCount)} - Save dialog appeared`)
         return 'skipped'
       }
 
       // Modal disappeared?
       if (!isModalOpen()) {
         const ok = await waitForSuccess(2000)
-        if (!ok) log(`⚠ SKIPPED on Step ${stepCount + 1} — modal closed before success`)
+        if (!ok) log(`⚠ SKIPPED on Step ${stepCount + 1} - modal closed before success`)
         return ok ? 'applied' : 'skipped'
       }
 
-      // Upload/resume step — just advance (LinkedIn pre-fills from profile)
+      // Upload/resume step - just advance (LinkedIn pre-fills from profile)
       const pane = getFormPane()
       const hasUpload = pane?.querySelector('[class*="document-upload"]')
 
-      // Video-prompt step — we can't answer these, skip the whole job
+      // Video-prompt step - we can't answer these, skip the whole job
       if (isVideoPromptStep(pane)) {
-        log(`⚠ SKIPPED on ${pageLabel(stepCount)} — video prompt detected`)
+        log(`⚠ SKIPPED on ${pageLabel(stepCount)} - video prompt detected`)
         await closeModal()
         return 'skipped'
       }
 
       if (hasUpload) {
-        log(`Step ${stepCount + 1}: resume — using existing`)
+        log(`Step ${stepCount + 1}: resume - using existing`)
         await jitter(500, 800)
       } else if (isWorkExperienceStep(pane)) {
-        log(`Step ${stepCount + 1}: work experience — filling any blanks`)
+        log(`Step ${stepCount + 1}: work experience - filling any blanks`)
         try { await fillWorkExperienceForm(pane) } catch (e) { log(`WE form err: ${e.message}`) }
-        // DOM may have changed after Save — refetch pane
+        // DOM may have changed after Save - refetch pane
         try { await fillStep() } catch (e) { log(`fillStep err: ${e.message}`) }
         await jitter(400, 700)
       } else if (isEducationStep(pane)) {
-        log(`Step ${stepCount + 1}: education — filling any blanks`)
+        log(`Step ${stepCount + 1}: education - filling any blanks`)
         try { await fillEducationForm(pane) } catch (e) { log(`Edu form err: ${e.message}`) }
         try { await fillStep() } catch (e) { log(`fillStep err: ${e.message}`) }
         await jitter(400, 700)
@@ -1456,7 +1456,7 @@
           )
         )
         if (newQs.length) {
-          log(`Step ${stepCount + 1}: ${newQs.length} new question(s) — asking AI…`)
+          log(`Step ${stepCount + 1}: ${newQs.length} new question(s) - asking AI…`)
           const res = await sendMsg('TAILOR', {
             jobTitle:       currentJob?.jobTitle,
             company:        currentJob?.company,
@@ -1506,7 +1506,7 @@
               if (idx >= 0) aiAnswers[idx] = a
               else aiAnswers.push(a)
             }
-            log(`AI suggested ${res.answers.length} answers — re-filling…`)
+            log(`AI suggested ${res.answers.length} answers - re-filling…`)
             await fillStep(true)
             await jitter(500, 800)
             if (!hasErrors()) { fixed = true }
@@ -1520,8 +1520,8 @@
             .filter(f => f.hasError)
             .map(f => f.label?.slice(0, 40))
             .filter(Boolean)
-          const fieldsStr = stillBad.length ? ` — bad fields: [${stillBad.join(' | ')}]` : ''
-          log(`⚠ SKIPPED on ${pageLabel(stepCount)} — required fields unfilled${fieldsStr}`)
+          const fieldsStr = stillBad.length ? ` - bad fields: [${stillBad.join(' | ')}]` : ''
+          log(`⚠ SKIPPED on ${pageLabel(stepCount)} - required fields unfilled${fieldsStr}`)
           await closeModal()
           return 'skipped'
         }
@@ -1544,9 +1544,9 @@
         stuckCount++
 
         // On 2nd stuck: try AI deep-analysis on whatever is on the page,
-        // even if no visible error markers — silent validation is common.
+        // even if no visible error markers - silent validation is common.
         if (stuckCount === 2) {
-          log(`Stuck on ${pageLabel(stepCount)} — escalating to AI deep analysis`)
+          log(`Stuck on ${pageLabel(stepCount)} - escalating to AI deep analysis`)
           const stepPane   = getFormPane()
           const stepFields = describeFormStep(stepPane)
           const res = await sendMsg('AI_ANALYZE_STEP', {
@@ -1563,7 +1563,7 @@
               if (idx >= 0) aiAnswers[idx] = a
               else aiAnswers.push(a)
             }
-            log(`AI suggested ${res.answers.length} answers — re-filling…`)
+            log(`AI suggested ${res.answers.length} answers - re-filling…`)
             await fillStep(true)
             await jitter(500, 800)
           }
@@ -1574,8 +1574,8 @@
             .map(f => f.label?.slice(0, 30))
             .filter(Boolean)
             .slice(0, 5)
-          const fieldsStr = visibleFields.length ? ` — fields: [${visibleFields.join(' | ')}]` : ''
-          log(`⚠ SKIPPED on ${pageLabel(stepCount)} — stuck on button "${label.slice(0, 30)}"${fieldsStr}`)
+          const fieldsStr = visibleFields.length ? ` - fields: [${visibleFields.join(' | ')}]` : ''
+          log(`⚠ SKIPPED on ${pageLabel(stepCount)} - stuck on button "${label.slice(0, 30)}"${fieldsStr}`)
           await closeModal()
           return 'skipped'
         }
@@ -1593,7 +1593,7 @@
           await dismissSuccess()
           return 'applied'
         }
-        log(`⚠ SKIPPED on ${pageLabel(stepCount)} — submit clicked but no success screen`)
+        log(`⚠ SKIPPED on ${pageLabel(stepCount)} - submit clicked but no success screen`)
         return 'skipped'
       }
 
@@ -1604,7 +1604,7 @@
       stepCount++
     }
 
-    log(`⚠ SKIPPED on ${pageLabel(stepCount)} — max steps (${MAX_STEPS}) reached`)
+    log(`⚠ SKIPPED on ${pageLabel(stepCount)} - max steps (${MAX_STEPS}) reached`)
     await closeModal()
     return 'skipped'
   }
@@ -1750,8 +1750,13 @@
     log('Loading profile…')
     const profileData = await sendMsg('GET_PROFILE')
     if (profileData.error || !profileData.profile) {
-      log('⚠ Not connected — open popup and connect first')
-      isRunning = false; renderPanel(); return
+      log('⚠ Not connected — paste your API key above')
+      isRunning = false; renderPanel()
+      const ks = document.getElementById('qr-key-section')
+      if (ks) ks.style.display = 'block'
+      const st = document.getElementById('qr-status-txt')
+      if (st) st.textContent = '⚠ Paste your API key to connect'
+      return
     }
     profile = profileData
     log(`Profile: ${profile.profile?.fullName || 'loaded'}`)
@@ -1775,7 +1780,7 @@
         if (!cards.length) {
           // ── 1. Try next page ──────────────────────────────────
           const nextPageOk = await tryNextPage()
-          if (nextPageOk) { log('Next page loaded — continuing…'); continue }
+          if (nextPageOk) { log('Next page loaded - continuing…'); continue }
 
           // ── 2. Try a similar job title ─────────────────────────
           const url = new URL(window.location.href)
@@ -1786,7 +1791,7 @@
           if (alts.length) {
             const nextTitle = alts[0]
             triedTitles.add(nextTitle.toLowerCase())
-            log(`No more jobs for "${currentKeywords || 'this search'}" — trying "${nextTitle}"…`)
+            log(`No more jobs for "${currentKeywords || 'this search'}" - trying "${nextTitle}"…`)
             await saveResumeState(triedTitles)
             url.searchParams.set('keywords', nextTitle)
             url.searchParams.set('f_AL', 'true')
@@ -1795,7 +1800,7 @@
           }
 
           // ── 3. Truly exhausted ────────────────────────────────
-          log(`All searches exhausted — Applied: ${applied}  Skipped: ${skipped}`)
+          log(`All searches exhausted - Applied: ${applied}  Skipped: ${skipped}`)
           isRunning = false; renderPanel(); return
         }
       }
@@ -1831,14 +1836,14 @@
 
       // Check for LinkedIn daily limit banner before doing anything
       if (isRateLimited()) {
-        log('⛔ LinkedIn daily limit reached — stopping. Try again tomorrow.')
+        log('⛔ LinkedIn daily limit reached - stopping. Try again tomorrow.')
         isRunning = false; renderPanel(); return
       }
 
       // Find the Easy Apply button in the detail panel
       const easyApplyBtn = await waitFor(findEasyApplyBtn, 5000)
       if (!easyApplyBtn) {
-        log('Easy Apply button not found — skipping')
+        log('Easy Apply button not found - skipping')
         skipped++; renderPanel(); continue
       }
 
@@ -1850,9 +1855,9 @@
       // Simulate real mouse click on Easy Apply (LinkedIn React needs full event sequence)
       await jitter(500, 900)
 
-      // Check again — banner sometimes only shows after selecting a job
+      // Check again - banner sometimes only shows after selecting a job
       if (isRateLimited()) {
-        log('⛔ LinkedIn daily limit reached — stopping. Try again tomorrow.')
+        log('⛔ LinkedIn daily limit reached - stopping. Try again tomorrow.')
         isRunning = false; renderPanel(); return
       }
 
@@ -1878,12 +1883,12 @@
       }
 
       if (!modalOpened) {
-        // One more check — maybe the click revealed the rate-limit banner instead
+        // One more check - maybe the click revealed the rate-limit banner instead
         if (isRateLimited()) {
-          log('⛔ LinkedIn daily limit reached — stopping. Try again tomorrow.')
+          log('⛔ LinkedIn daily limit reached - stopping. Try again tomorrow.')
           isRunning = false; renderPanel(); return
         }
-        log('⚠ Easy Apply click did not open modal — skipping')
+        log('⚠ Easy Apply click did not open modal - skipping')
         skipped++; renderPanel(); continue
       }
       log('Modal confirmed open')
@@ -1907,7 +1912,7 @@
         )
 
         if (questionsForAI.length) {
-          log(`${questionsForAI.length} question(s) — asking AI…`)
+          log(`${questionsForAI.length} question(s) - asking AI…`)
           const res = await sendMsg('TAILOR', {
             jobTitle:       jobData.jobTitle,
             company:        jobData.company,
@@ -1964,7 +1969,7 @@
           const brk = await globalThis.REBLET_STEALTH.maybeForcedBreak()
           if (brk.taken) {
             const sec = Math.round(brk.durationMs / 1000)
-            log(`☕ ${brk.type} break — ${sec}s (anti-detection)`)
+            log(`☕ ${brk.type} break - ${sec}s (anti-detection)`)
             await globalThis.REBLET_STEALTH.sleep(brk.durationMs)
           }
 
@@ -1973,7 +1978,7 @@
             try { await globalThis.REBLET_STEALTH.randomBrowseAction() } catch (e) {}
           }
 
-          // Inter-application gap — heavy-tailed, time-of-day aware
+          // Inter-application gap - heavy-tailed, time-of-day aware
           const gap = globalThis.REBLET_STEALTH.getApplicationGap()
           const gapSec = Math.round(gap / 1000)
           log(`⏱ Next job in ${gapSec}s`)
@@ -1987,7 +1992,7 @@
     }
 
     if (isRunning) {
-      log(`Complete — Applied: ${applied}  Skipped: ${skipped}`)
+      log(`Complete - Applied: ${applied}  Skipped: ${skipped}`)
       isRunning = false; renderPanel()
     }
   }
@@ -2008,31 +2013,6 @@
         <button class="qr-x" id="qr-x">×</button>
       </div>
 
-      <!-- ── Mascot stage ── -->
-      <div class="qr-mascot-stage">
-        <div class="qr-floaties" aria-hidden="true">
-          <span class="qr-fl qr-fl1">📄</span>
-          <span class="qr-fl qr-fl2">💼</span>
-          <span class="qr-fl qr-fl3">✨</span>
-          <span class="qr-fl qr-fl4">🚀</span>
-          <span class="qr-fl qr-fl5">💰</span>
-          <span class="qr-fl qr-fl6">🔥</span>
-        </div>
-        <div class="qr-bubble" id="qr-bubble">applying… 🫡</div>
-        <div class="qr-mascot">
-          <div class="qr-mascot-body">
-            <div class="qr-eye qr-eye-l"><div class="qr-pupil"></div></div>
-            <div class="qr-eye qr-eye-r"><div class="qr-pupil"></div></div>
-            <div class="qr-mouth"></div>
-            <div class="qr-cheek qr-cheek-l"></div>
-            <div class="qr-cheek qr-cheek-r"></div>
-            <div class="qr-hand qr-hand-l">📝</div>
-            <div class="qr-hand qr-hand-r">💻</div>
-          </div>
-          <div class="qr-mascot-shadow"></div>
-        </div>
-      </div>
-
       <div class="qr-stats">
         <div class="qr-stat">
           <span class="qr-stat-n" id="qr-n-applied">0</span>
@@ -2050,9 +2030,19 @@
         <span class="qr-status-txt" id="qr-status-txt">Ready</span>
       </div>
 
+      <div class="qr-stealth-msg">🕵️ We send requests slowly to stay under the radar</div>
+
       <div class="qr-job-row" id="qr-job-row" style="display:none">
         <span class="qr-job-name" id="qr-job-name"></span>
         <span class="qr-job-co"   id="qr-job-co"></span>
+      </div>
+
+      <div class="qr-key-section" id="qr-key-section">
+        <div class="qr-key-row">
+          <input id="qr-key-input" type="text" class="qr-key-input" placeholder="Paste your API key…" autocomplete="off" />
+          <button class="qr-key-save" id="qr-key-save">Connect</button>
+        </div>
+        <div class="qr-key-error" id="qr-key-error" style="display:none"></div>
       </div>
 
       <div class="qr-btns">
@@ -2064,12 +2054,129 @@
         <button class="qr-btn-diag" id="qr-diag">🔍 Diagnose</button>
       </div>
 
-      <div class="qr-log-wrap">
-        <div class="qr-log-label">Activity log</div>
+
+      <div class="qr-media-bottom">
+        <div class="qr-media-bar" id="qr-media-bar">
+          <button class="qr-media-bar-btn" id="qr-media-add" title="Upload file">📎</button>
+          <input type="text" class="qr-media-url-input" id="qr-media-url" placeholder="🎬 Drop a YouTube link to vibe while applying…" />
+        </div>
+        <input type="file" id="qr-media-file" accept="image/*,video/*" hidden />
+        <div class="qr-media-overlay" id="qr-media-overlay" style="display:none">
+          <div class="qr-media-content" id="qr-media-content"></div>
+          <div class="qr-media-controls">
+            <button class="qr-media-ctrl" id="qr-media-smaller" title="Smaller">−</button>
+            <button class="qr-media-ctrl" id="qr-media-bigger" title="Bigger">+</button>
+            <button class="qr-media-ctrl" id="qr-media-change">Change</button>
+          </div>
+          <button class="qr-media-rm" id="qr-media-rm-btn">×</button>
+        </div>
+      </div>
+
+      <div class="qr-log-wrap" id="qr-log-wrap" style="display:none">
         <div class="qr-log" id="qr-log"></div>
       </div>
     `
     document.body.appendChild(panel)
+
+    // Keep panel the same visual size regardless of browser zoom
+    const baseDpr = window.devicePixelRatio
+    function adjustPanelZoom() {
+      if (!panel) return
+      const scale = baseDpr / window.devicePixelRatio
+      panel.style.transform = `scale(${scale})`
+      panel.style.transformOrigin = 'top right'
+    }
+    adjustPanelZoom()
+    let _zoomMq = null
+    function watchZoom() {
+      if (_zoomMq) _zoomMq.removeEventListener('change', onZoom)
+      _zoomMq = window.matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`)
+      _zoomMq.addEventListener('change', onZoom)
+    }
+    function onZoom() { adjustPanelZoom(); watchZoom() }
+    watchZoom()
+
+    // ── Media upload + preview (bottom of panel) ──
+    const qrMediaFile = document.getElementById('qr-media-file')
+    const qrMediaAdd = document.getElementById('qr-media-add')
+    const qrMediaOverlay = document.getElementById('qr-media-overlay')
+    const qrMediaContent = document.getElementById('qr-media-content')
+    const qrMediaBar = document.getElementById('qr-media-bar')
+    const qrMediaUrl = document.getElementById('qr-media-url')
+
+    qrMediaAdd.onclick = () => qrMediaFile.click()
+    document.getElementById('qr-media-change').onclick = () => qrMediaFile.click()
+
+    let mediaHeight = 350
+    document.getElementById('qr-media-bigger').onclick = () => {
+      mediaHeight = Math.min(mediaHeight + 40, 400)
+      qrMediaContent.style.maxHeight = mediaHeight + 'px'
+      const el = qrMediaContent.querySelector('.qr-media-el')
+      if (el) el.style.maxHeight = mediaHeight + 'px'
+    }
+    document.getElementById('qr-media-smaller').onclick = () => {
+      mediaHeight = Math.max(mediaHeight - 40, 80)
+      qrMediaContent.style.maxHeight = mediaHeight + 'px'
+      const el = qrMediaContent.querySelector('.qr-media-el')
+      if (el) el.style.maxHeight = mediaHeight + 'px'
+    }
+
+    qrMediaFile.onchange = () => {
+      const file = qrMediaFile.files[0]
+      if (!file) return
+      const reader = new FileReader()
+      reader.onload = () => {
+        const dataUrl = reader.result
+        const mtype = file.type.startsWith('video') ? 'video' : 'image'
+        chrome.storage.local.set({ mediaData: dataUrl, mediaType: mtype })
+        showMedia(dataUrl, mtype)
+      }
+      reader.readAsDataURL(file)
+    }
+
+    function parseYouTubeId(url) {
+      const m = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([a-zA-Z0-9_-]{11})/)
+      return m ? m[1] : null
+    }
+
+    qrMediaUrl.addEventListener('keydown', e => {
+      if (e.key !== 'Enter') return
+      const url = qrMediaUrl.value.trim()
+      if (!url) return
+      const vid = parseYouTubeId(url)
+      if (!vid) { qrMediaUrl.value = ''; qrMediaUrl.placeholder = 'Invalid link — try again'; return }
+      chrome.storage.local.set({ mediaData: vid, mediaType: 'youtube' })
+      showMedia(vid, 'youtube')
+      qrMediaUrl.value = ''
+    })
+
+    function showMedia(dataUrl, mtype) {
+      if (!dataUrl) {
+        qrMediaOverlay.style.display = 'none'
+        qrMediaBar.style.display = ''
+        return
+      }
+      if (mtype === 'youtube') {
+        qrMediaContent.innerHTML = `<iframe src="https://www.youtube.com/embed/${dataUrl}?autoplay=1&mute=1&loop=1&playlist=${dataUrl}" class="qr-media-el" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>`
+      } else if (mtype === 'video') {
+        qrMediaContent.innerHTML = `<video src="${dataUrl}" playsinline autoplay muted loop class="qr-media-el"></video>`
+      } else {
+        qrMediaContent.innerHTML = `<img src="${dataUrl}" alt="" class="qr-media-el" />`
+      }
+      qrMediaOverlay.style.display = 'block'
+      qrMediaBar.style.display = 'none'
+    }
+
+    document.getElementById('qr-media-rm-btn').onclick = () => {
+      chrome.storage.local.remove(['mediaData', 'mediaType'])
+      qrMediaContent.innerHTML = ''
+      qrMediaOverlay.style.display = 'none'
+      qrMediaBar.style.display = ''
+    }
+
+    chrome.storage.local.get(['mediaData', 'mediaType'], res => {
+      if (res.mediaData) showMedia(res.mediaData, res.mediaType)
+    })
 
     document.getElementById('qr-x').onclick = () => {
       isRunning = false; isPaused = false
@@ -2094,34 +2201,48 @@
     }
     document.getElementById('qr-diag').onclick = () => runDiagnostic()
 
-    // ── rotating mascot speech bubble ──
-    const QR_QUOTES = [
-      'applying… 🫡',
-      'getting that bag 💰',
-      'recruiter pls notice 🥺',
-      'ghosted again? same 👻',
-      'speedrun: hired any%',
-      'tailoring resume 🪡',
-      'no thoughts. apply 🧠',
-      '420 apps strong 💪',
-      'manifest the offer 🔮',
-      'we vibe we apply ✨',
-      'CEO of trying 👑',
-      'one more app… last one 🤥',
-      'h1b szn loaded ⏳',
-      'touch grass after this 🌱',
-    ]
-    const bubble = document.getElementById('qr-bubble')
-    let qi = 0
-    if (panel._quoteTimer) clearInterval(panel._quoteTimer)
-    panel._quoteTimer = setInterval(() => {
-      if (!document.getElementById('qr-bubble')) return
-      qi = (qi + 1) % QR_QUOTES.length
-      bubble.style.animation = 'none'
-      void bubble.offsetWidth
-      bubble.style.animation = 'qr-bubblePop .35s ease-out'
-      bubble.textContent = QR_QUOTES[qi]
-    }, 3200)
+    // ── API key connect (inline) ──
+    const keySection = document.getElementById('qr-key-section')
+    const keyInput = document.getElementById('qr-key-input')
+    const keySave = document.getElementById('qr-key-save')
+    const keyError = document.getElementById('qr-key-error')
+
+    // Hide key section if already connected
+    sendMsg('GET_CONFIG').then(cfg => {
+      if (cfg.apiKey) keySection.style.display = 'none'
+    })
+
+    keySave.onclick = async () => {
+      const apiKey = keyInput.value.trim()
+      keyError.style.display = 'none'
+      if (!apiKey) {
+        keyError.textContent = 'Paste your API key first.'
+        keyError.style.display = 'block'
+        return
+      }
+      keySave.disabled = true
+      keySave.textContent = '…'
+      try {
+        await sendMsg('SAVE_KEY', { apiKey, baseUrl: 'https://www.reblet.com' })
+        const data = await sendMsg('VALIDATE_KEY')
+        if (data?.ok) {
+          keySection.style.display = 'none'
+          log('✓ Connected — ready to apply!')
+        } else {
+          await sendMsg('SAVE_KEY', { apiKey: '', baseUrl: 'https://www.reblet.com' })
+          keyError.textContent = 'Invalid API key.'
+          keyError.style.display = 'block'
+        }
+      } catch {
+        keyError.textContent = 'Connection failed. Try again.'
+        keyError.style.display = 'block'
+      } finally {
+        keySave.disabled = false
+        keySave.textContent = 'Connect'
+      }
+    }
+    keyInput.addEventListener('keydown', e => { if (e.key === 'Enter') keySave.click() })
+
   }
 
   async function runDiagnostic() {
@@ -2151,7 +2272,7 @@
     // 3. Try clicking the button we would use
     const btn = findEasyApplyBtn()
     if (!btn) {
-      log('⚠ findEasyApplyBtn() = null — no button to click')
+      log('⚠ findEasyApplyBtn() = null - no button to click')
       return
     }
     log(`Clicking: "${btn.getAttribute('aria-label') || btn.textContent?.trim()}"`)
@@ -2162,7 +2283,7 @@
     btn.click()
     await sleep(2000)
 
-    log(`After .click() — isModalOpen() = ${isModalOpen()}`)
+    log(`After .click() - isModalOpen() = ${isModalOpen()}`)
     log(`.jobs-easy-apply-modal = ${!!document.querySelector('.jobs-easy-apply-modal')}`)
     log(`.jobs-easy-apply-content = ${!!document.querySelector('.jobs-easy-apply-content')}`)
     log(`[role=dialog] count = ${document.querySelectorAll('[role=dialog]').length}`)
@@ -2236,7 +2357,7 @@
       logLines = []; currentJob = null
       isRunning = true; isPaused = false
       renderPanel()
-      log(`↩ Resumed — applied so far: ${applied}`)
+      log(`↩ Resumed - applied so far: ${applied}`)
       autoApplyLoop(triedTitles)
     }
   }

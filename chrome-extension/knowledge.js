@@ -59,7 +59,7 @@
 
   // ─── 2. IDENTITY & PERSONAL INFO ───────────────────────────────────────────
   const IDENTITY_PATTERNS = [
-    // Names — full
+    // Names - full
     { match: /^full.{0,5}name|^legal.{0,5}name|^complete.{0,5}name|^applicant.{0,5}name|^candidate.{0,5}name/i,
       answer: (ctx) => ctx.p.fullName || '' },
     { match: /^name\b(?!.*last|.*first|.*middle)/i,
@@ -305,7 +305,7 @@
   // ─── 6. YEARS OF EXPERIENCE ────────────────────────────────────────────────
   const YOE_PATTERNS = [
     // CATCH-ALL: anything that mentions "how many years" or "years of experience"
-    // — covers "How many years of work experience do you have with X" for ANY X
+    // - covers "How many years of work experience do you have with X" for ANY X
     { match: /how.{0,15}many.{0,15}year|years.{0,15}of.{0,15}(experience|work|hands.?on)|year.{0,15}of.{0,15}experience|experience.{0,15}with.{0,15}(years|how long)/i,
       answer: (ctx, options) => {
         const y = String(ctx.jp.yearsExp || '2')
@@ -354,7 +354,7 @@
   const VIDEO_PATTERNS = [
     { match: /record.{0,5}a.{0,5}.{0,5}(video|minute)|video.{0,5}introduc|video.{0,5}interview|video.{0,5}response|introduc.{0,5}yourself.{0,5}video|video.{0,5}message|submit.{0,5}a.{0,5}video|video.{0,5}application/i,
       answer: (_, options) => {
-        if (!options.length) return 'Yes'    // text field — promise willing
+        if (!options.length) return 'Yes'    // text field - promise willing
         if (options.length === 2 && /yes/i.test(options[0])) return 'Yes'
         return findOpt(options, /yes|willing|i am/i) || realOption(options)
       } },
@@ -657,7 +657,7 @@
   }))
 
   // ═════════════════════════════════════════════════════════════════════════
-  //  SEEDED ANSWER BANK — pre-written replies for common essay/behavioral
+  //  SEEDED ANSWER BANK - pre-written replies for common essay/behavioral
   //  questions. Bot types these directly so AI is barely ever needed.
   // ═════════════════════════════════════════════════════════════════════════
   const SEEDED_ANSWERS = {
@@ -665,13 +665,13 @@
     tellMeAboutYourself: (ctx) => {
       const role = ctx.jp.keywords || 'software engineer'
       const yrs  = ctx.jp.yearsExp || '2'
-      return `I'm a ${role} with ${yrs}+ years of hands-on experience building production systems. I enjoy taking ownership of end-to-end work — from scoping and design through implementation, testing, and rollout — and I care deeply about writing reliable, well-tested code. I'm collaborative by default, I communicate proactively, and I'm always pushing to deepen my technical craft while staying close to user outcomes. This opportunity feels like a strong match for both my skills and the kind of impact I want to have next.`
+      return `I'm a ${role} with ${yrs}+ years of hands-on experience building production systems. I enjoy taking ownership of end-to-end work - from scoping and design through implementation, testing, and rollout - and I care deeply about writing reliable, well-tested code. I'm collaborative by default, I communicate proactively, and I'm always pushing to deepen my technical craft while staying close to user outcomes. This opportunity feels like a strong match for both my skills and the kind of impact I want to have next.`
     },
 
     // ── Why this role ──────────────────────────────────────────────────────
     whyThisRole: (ctx) => {
       const co = ctx.currentJob?.company || 'your team'
-      return `This role aligns directly with the work I find most energizing — building meaningful technical work alongside a strong team. The scope and responsibilities map closely to my strengths, and the technical challenges described are exactly the kind of problems I want to be tackling in the next phase of my career. I'm also excited about what ${co} is building and the trajectory of the team, which makes this an environment where I believe I can contribute quickly and grow significantly.`
+      return `This role aligns directly with the work I find most energizing - building meaningful technical work alongside a strong team. The scope and responsibilities map closely to my strengths, and the technical challenges described are exactly the kind of problems I want to be tackling in the next phase of my career. I'm also excited about what ${co} is building and the trajectory of the team, which makes this an environment where I believe I can contribute quickly and grow significantly.`
     },
 
     // ── Why this company ───────────────────────────────────────────────────
@@ -699,15 +699,15 @@ ${name}`
 
     // ── Strengths ──────────────────────────────────────────────────────────
     strengths: () =>
-      `My top strengths are strong end-to-end ownership, clear written and verbal communication, and a deep focus on building reliable, maintainable systems. I'm known for raising the bar on engineering quality without slowing the team down, and for being a low-ego, helpful collaborator across product, design, and engineering. I also have a strong bias toward shipping — I scope problems pragmatically, get real feedback early, and iterate.`,
+      `My top strengths are strong end-to-end ownership, clear written and verbal communication, and a deep focus on building reliable, maintainable systems. I'm known for raising the bar on engineering quality without slowing the team down, and for being a low-ego, helpful collaborator across product, design, and engineering. I also have a strong bias toward shipping - I scope problems pragmatically, get real feedback early, and iterate.`,
 
     // ── Weaknesses ─────────────────────────────────────────────────────────
     weaknesses: () =>
-      `Early in my career I had a tendency to over-engineer in pursuit of the perfect solution rather than shipping a pragmatic v1 and iterating. I've been deliberate about correcting this: I now lean into smaller, faster releases, prioritize feedback loops, and trust the iteration cycle. The result is that I ship faster, learn faster, and deliver more value — without sacrificing quality.`,
+      `Early in my career I had a tendency to over-engineer in pursuit of the perfect solution rather than shipping a pragmatic v1 and iterating. I've been deliberate about correcting this: I now lean into smaller, faster releases, prioritize feedback loops, and trust the iteration cycle. The result is that I ship faster, learn faster, and deliver more value - without sacrificing quality.`,
 
     // ── Greatest accomplishment ────────────────────────────────────────────
     greatestAccomplishment: () =>
-      `My most significant accomplishment was architecting and shipping a new system that became the foundation for several downstream initiatives. I owned the design, implementation, rollout, and monitoring end-to-end. The system shipped on time, scaled cleanly under production load, and is still in active use today. Beyond the technical outcome, what I'm most proud of is the operational discipline that made it possible — clear scoping, proactive risk management, and tight collaboration across product, design, and other engineering teams.`,
+      `My most significant accomplishment was architecting and shipping a new system that became the foundation for several downstream initiatives. I owned the design, implementation, rollout, and monitoring end-to-end. The system shipped on time, scaled cleanly under production load, and is still in active use today. Beyond the technical outcome, what I'm most proud of is the operational discipline that made it possible - clear scoping, proactive risk management, and tight collaboration across product, design, and other engineering teams.`,
 
     // ── Project example ────────────────────────────────────────────────────
     projectExample: (ctx) => {
@@ -721,19 +721,19 @@ ${name}`
 
     // ── Failure / mistake ──────────────────────────────────────────────────
     failure: () =>
-      `Early on I once committed to a delivery date before fully scoping the work. We missed the deadline by a week, and I took the lesson seriously: I now invest more upfront in scoping, breaking work down, and identifying risks before committing. I also over-communicate status — flagging slippage early so stakeholders can adjust. Since then I've consistently hit my commitments, and I'm a much more reliable engineer because of that experience.`,
+      `Early on I once committed to a delivery date before fully scoping the work. We missed the deadline by a week, and I took the lesson seriously: I now invest more upfront in scoping, breaking work down, and identifying risks before committing. I also over-communicate status - flagging slippage early so stakeholders can adjust. Since then I've consistently hit my commitments, and I'm a much more reliable engineer because of that experience.`,
 
     // ── Why leaving current role ───────────────────────────────────────────
     whyLeaving: () =>
-      `I've learned a tremendous amount in my current role and I'm grateful for the opportunities I've had. At this point I'm looking for a next step with broader scope and impact — bigger technical challenges, more ownership, and the chance to work alongside a strong team on problems that genuinely matter. That's what's drawing me to this opportunity.`,
+      `I've learned a tremendous amount in my current role and I'm grateful for the opportunities I've had. At this point I'm looking for a next step with broader scope and impact - bigger technical challenges, more ownership, and the chance to work alongside a strong team on problems that genuinely matter. That's what's drawing me to this opportunity.`,
 
     // ── Career goals (5-10 yrs) ────────────────────────────────────────────
     careerGoals: () =>
-      `My long-term goal is to grow as a technical leader and contribute to products with meaningful, measurable impact at scale. In the next few years I want to deepen my technical expertise, broaden my product judgment, and develop the people around me. I'm intentional about choosing roles where the team is strong and the problems are interesting — that's how I keep compounding.`,
+      `My long-term goal is to grow as a technical leader and contribute to products with meaningful, measurable impact at scale. In the next few years I want to deepen my technical expertise, broaden my product judgment, and develop the people around me. I'm intentional about choosing roles where the team is strong and the problems are interesting - that's how I keep compounding.`,
 
     // ── Why we should hire you ─────────────────────────────────────────────
     whyHire: () =>
-      `Three reasons. First, I bring directly relevant technical experience and a track record of shipping production-quality work end-to-end. Second, I'm a collaborative, low-ego teammate who lifts the bar of the people around me. Third, I genuinely care about the work — I'm not job-hopping, I'm choosing this role because it aligns with where I want to invest the next chapter of my career.`,
+      `Three reasons. First, I bring directly relevant technical experience and a track record of shipping production-quality work end-to-end. Second, I'm a collaborative, low-ego teammate who lifts the bar of the people around me. Third, I genuinely care about the work - I'm not job-hopping, I'm choosing this role because it aligns with where I want to invest the next chapter of my career.`,
 
     // ── Greatest challenge ─────────────────────────────────────────────────
     greatestChallenge: () =>
@@ -741,19 +741,19 @@ ${name}`
 
     // ── Working under pressure ─────────────────────────────────────────────
     pressure: () =>
-      `I thrive under pressure as long as the priorities are clear. When things get intense I focus hard on identifying what's actually critical vs. what feels urgent, communicate clearly about what's in and out of scope, and stay calm in execution. I find that high-stakes moments are often where teams gel best — when I help the team focus and move with clarity, that's when I do my best work.`,
+      `I thrive under pressure as long as the priorities are clear. When things get intense I focus hard on identifying what's actually critical vs. what feels urgent, communicate clearly about what's in and out of scope, and stay calm in execution. I find that high-stakes moments are often where teams gel best - when I help the team focus and move with clarity, that's when I do my best work.`,
 
     // ── Working in a team ──────────────────────────────────────────────────
     teamwork: () =>
-      `I work best on teams that value clarity, candor, and trust. I default to over-communicating, I'm quick to offer help, and I'm comfortable having direct conversations when needed. I also make a point of being a reliable teammate — picking up the unglamorous work, mentoring more junior teammates, and giving credit generously when the team ships.`,
+      `I work best on teams that value clarity, candor, and trust. I default to over-communicating, I'm quick to offer help, and I'm comfortable having direct conversations when needed. I also make a point of being a reliable teammate - picking up the unglamorous work, mentoring more junior teammates, and giving credit generously when the team ships.`,
 
     // ── Leadership example ─────────────────────────────────────────────────
     leadership: () =>
-      `I led a small initiative to improve our team's deployment process — it had become a source of friction and outages. I rallied a small working group, scoped the changes, drove the technical work, and rolled them out. Deploy times dropped meaningfully and incident rates fell. Beyond the outcome, the experience taught me a lot about influencing without authority and bringing teammates along with a change.`,
+      `I led a small initiative to improve our team's deployment process - it had become a source of friction and outages. I rallied a small working group, scoped the changes, drove the technical work, and rolled them out. Deploy times dropped meaningfully and incident rates fell. Beyond the outcome, the experience taught me a lot about influencing without authority and bringing teammates along with a change.`,
 
     // ── Innovation / creative thinking ─────────────────────────────────────
     innovation: () =>
-      `My approach to innovation is "small bets, fast learning." I prototype quickly, test against real users or data, and double down only on the ideas that actually move metrics. One recent example: a small optimization I built and tested on a hunch ended up cutting a key processing step by 40% — it shipped to production within two weeks.`,
+      `My approach to innovation is "small bets, fast learning." I prototype quickly, test against real users or data, and double down only on the ideas that actually move metrics. One recent example: a small optimization I built and tested on a hunch ended up cutting a key processing step by 40% - it shipped to production within two weeks.`,
 
     // ── Time management / prioritization ───────────────────────────────────
     timeManagement: () =>
@@ -769,12 +769,12 @@ ${name}`
 
     // ── Learning agility / how do you learn ────────────────────────────────
     learning: () =>
-      `I'm a hands-on learner — I learn fastest by reading the source, building something small, and asking questions of teammates who know the area well. I also invest deliberately in fundamentals: I revisit core concepts regularly, read post-mortems and design docs, and pay attention to how senior engineers I respect think through problems. That habit compounds.`,
+      `I'm a hands-on learner - I learn fastest by reading the source, building something small, and asking questions of teammates who know the area well. I also invest deliberately in fundamentals: I revisit core concepts regularly, read post-mortems and design docs, and pay attention to how senior engineers I respect think through problems. That habit compounds.`,
 
     // ── Salary expectations text ───────────────────────────────────────────
     salaryReasoning: (ctx) => {
       const s = ctx.jp.expectedSalary || '85,000'
-      return `Based on my experience, the market for this role, and the responsibilities described, my expectations are in the range of $${s}, though I'm flexible and would be happy to discuss the full compensation package — base, equity, and benefits — in context of the rest of the offer.`
+      return `Based on my experience, the market for this role, and the responsibilities described, my expectations are in the range of $${s}, though I'm flexible and would be happy to discuss the full compensation package - base, equity, and benefits - in context of the rest of the offer.`
     },
 
     // ── Notice period ──────────────────────────────────────────────────────
@@ -785,7 +785,7 @@ ${name}`
 
     // ── Are you open to relocation ─────────────────────────────────────────
     relocationReasoning: () =>
-      `Yes — I'm open to relocation for the right opportunity, and this role is definitely in that category. I'd want to understand the specifics around timing and any relocation support, but those are conversations I'd be excited to have.`,
+      `Yes - I'm open to relocation for the right opportunity, and this role is definitely in that category. I'd want to understand the specifics around timing and any relocation support, but those are conversations I'd be excited to have.`,
 
     // ── Visa / sponsorship text ────────────────────────────────────────────
     sponsorshipReasoning: (ctx) => {
@@ -956,7 +956,7 @@ ${name}` }
 
     // Weaknesses
     { match: /weakness|area.{0,5}improv|develop.{0,5}area|growth.{0,5}area/i,
-      answer: () => 'Earlier in my career I had a tendency to over-engineer solutions in pursuit of perfection. I have learned to ship pragmatic v1s, gather real feedback, and iterate — which has made me a much faster, more impactful contributor.'
+      answer: () => 'Earlier in my career I had a tendency to over-engineer solutions in pursuit of perfection. I have learned to ship pragmatic v1s, gather real feedback, and iterate - which has made me a much faster, more impactful contributor.'
     },
 
     // Examples / behavioral
@@ -970,7 +970,7 @@ ${name}` }
     // Project / achievement
     { match: /achievement|accomplishment|proud.{0,5}of|impact.{0,5}you|recent.{0,5}project|favorite.{0,5}project|notable.{0,5}work/i,
       answer: () =>
-        `One of my most impactful projects involved architecting and shipping a new system from scratch that became the foundation for several downstream initiatives. I owned the design, implementation, rollout, and monitoring. The system shipped on time, scaled cleanly to production load, and is still in active use today — a result I am genuinely proud of.`
+        `One of my most impactful projects involved architecting and shipping a new system from scratch that became the foundation for several downstream initiatives. I owned the design, implementation, rollout, and monitoring. The system shipped on time, scaled cleanly to production load, and is still in active use today - a result I am genuinely proud of.`
     },
 
     // Career goals
@@ -988,13 +988,13 @@ ${name}` }
     // Manager / leadership style
     { match: /management.{0,5}style|leadership.{0,5}style|how.{0,5}do.{0,5}you.{0,5}lead/i,
       answer: () =>
-        `My style is collaborative and outcome-driven. I focus on setting clear context, removing blockers, and giving teammates the autonomy to do their best work — while staying close enough to coach, unblock, and raise the bar where it matters.`
+        `My style is collaborative and outcome-driven. I focus on setting clear context, removing blockers, and giving teammates the autonomy to do their best work - while staying close enough to coach, unblock, and raise the bar where it matters.`
     },
 
     // Handle conflict / difficult coworker
     { match: /conflict|difficult.{0,5}coworker|disagreement|disagree.{0,5}with/i,
       answer: () =>
-        `When I run into disagreement I default to understanding first — restating the other person's view in my own words and asking clarifying questions. From there we can identify where we actually differ and align on a path forward that the whole team can support, even if it isn't anyone's first choice.`
+        `When I run into disagreement I default to understanding first - restating the other person's view in my own words and asking clarifying questions. From there we can identify where we actually differ and align on a path forward that the whole team can support, even if it isn't anyone's first choice.`
     },
 
     // Failure / mistake
@@ -1299,10 +1299,10 @@ ${name}` }
   ]
 
   // ═════════════════════════════════════════════════════════════════════════
-  //  COMBINE ALL PATTERNS  (order matters — most specific first)
+  //  COMBINE ALL PATTERNS  (order matters - most specific first)
   // ═════════════════════════════════════════════════════════════════════════
   const ALL_PATTERNS = [
-    // ✦ TOP PRIORITY — pre-seeded answers (we type these directly, no AI) ✦
+    // ✦ TOP PRIORITY - pre-seeded answers (we type these directly, no AI) ✦
     ...SEEDED_PATTERNS,
     // High-priority catch-alls
     ...VIDEO_PATTERNS,
@@ -1376,5 +1376,5 @@ ${name}` }
   }
 
   // Log on load (visible in DevTools)
-  try { console.log(`[reblet] knowledge base loaded — ${ALL_PATTERNS.length} patterns`) } catch (e) {}
+  try { console.log(`[reblet] knowledge base loaded - ${ALL_PATTERNS.length} patterns`) } catch (e) {}
 })()

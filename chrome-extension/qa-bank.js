@@ -1,5 +1,5 @@
 /* ════════════════════════════════════════════════════════════════════════════
-   REBLET Q&A BANK — 1000+ PRE-SEEDED ANSWERS
+   REBLET Q&A BANK - 1000+ PRE-SEEDED ANSWERS
    ──────────────────────────────────────────────────────────────────────────
    Massive question→answer database that runs BEFORE the main knowledge base
    so the bot can type pre-written replies with zero AI calls.
@@ -69,7 +69,7 @@
   }
 
   // ════════════════════════════════════════════════════════════════════════════
-  //  SECTION A — HAND-WRITTEN ESSAY / BEHAVIORAL ANSWERS (~300)
+  //  SECTION A - HAND-WRITTEN ESSAY / BEHAVIORAL ANSWERS (~300)
   // ════════════════════════════════════════════════════════════════════════════
 
   const HAND_WRITTEN = [
@@ -79,7 +79,7 @@
     { match: /walk.{0,5}me.{0,5}through.{0,5}your.{0,5}(resume|background|cv)/i,
       answer: (c) => `My background is in ${c.jp?.keywords || 'software'}, with hands-on experience across the full stack of building, shipping, and maintaining production systems. I've collaborated cross-functionally, taken ownership of end-to-end work, and consistently focused on outcomes that matter to users and the business.` },
     { match: /describe.{0,5}your.{0,5}(background|experience|journey)/i,
-      answer: (c) => `My experience spans hands-on engineering across the full lifecycle — design, implementation, testing, deployment, and iteration. I've worked on systems at varying scales and consistently focused on the highest-leverage problems. I bring a balanced mix of technical depth and product judgment.` },
+      answer: (c) => `My experience spans hands-on engineering across the full lifecycle - design, implementation, testing, deployment, and iteration. I've worked on systems at varying scales and consistently focused on the highest-leverage problems. I bring a balanced mix of technical depth and product judgment.` },
     { match: /elevator.{0,5}pitch|sell.{0,5}yourself/i,
       answer: (c) => `I'm a ${c.jp?.keywords || 'software engineer'} who ships reliable work end-to-end, communicates clearly, and lifts the bar on the teams I'm part of. I'd love to bring those strengths here.` },
     { match: /summary.{0,5}of.{0,5}your.{0,5}(experience|qualifications|profile)/i,
@@ -91,17 +91,17 @@
     { match: /what.{0,5}draws.{0,5}you/i,
       answer: () => `The combination of technical depth, the team's caliber, and the opportunity to do work that has clear, measurable impact.` },
     { match: /why.{0,5}now|why.{0,5}make.{0,5}this.{0,5}change/i,
-      answer: () => `I've gotten a lot from my current role, but I'm ready for broader scope and impact. The fit between this opportunity and where I want to grow is excellent — that's why I'm acting on it now.` },
+      answer: () => `I've gotten a lot from my current role, but I'm ready for broader scope and impact. The fit between this opportunity and where I want to grow is excellent - that's why I'm acting on it now.` },
     { match: /what.{0,5}makes.{0,5}you.{0,5}qualified/i,
       answer: (c) => `Directly relevant ${c.jp?.yearsExp || '2'}+ years of hands-on experience, a strong record of end-to-end delivery, and the kind of collaborative attitude that helps teams move faster.` },
     { match: /how.{0,5}does.{0,5}this.{0,5}role.{0,5}fit/i,
       answer: () => `It aligns directly with both my technical strengths and the kind of impact I want to have. The scope, the team, and the trajectory all point in the same direction.` },
     { match: /what.{0,5}do.{0,5}you.{0,5}know.{0,5}about.{0,5}(us|our.{0,5}company)/i,
-      answer: (c) => `I've read through ${c.currentJob?.company || 'the company'}'s product, recent announcements, and the team behind it. The mission resonates, the technical work looks substantive, and the trajectory looks strong — those are the three things I weight most when choosing where to invest my time.` },
+      answer: (c) => `I've read through ${c.currentJob?.company || 'the company'}'s product, recent announcements, and the team behind it. The mission resonates, the technical work looks substantive, and the trajectory looks strong - those are the three things I weight most when choosing where to invest my time.` },
     { match: /research.{0,5}on.{0,5}(us|our.{0,5}company)/i,
       answer: () => `I've read the product pages, recent blog posts, and a few external reviews. The mission, the technical bar, and the trajectory all stood out to me as exactly the kind of place I want to do my next chapter of work.` },
     { match: /how.{0,5}can.{0,5}you.{0,5}contribute/i,
-      answer: (c) => `I'd start by ramping fast — reading the code, understanding the product, and listening carefully to the team. From there I'd focus on shipping reliable work end-to-end, raising the technical bar where I can, and being the kind of teammate who lifts the people around them.` },
+      answer: (c) => `I'd start by ramping fast - reading the code, understanding the product, and listening carefully to the team. From there I'd focus on shipping reliable work end-to-end, raising the technical bar where I can, and being the kind of teammate who lifts the people around them.` },
     { match: /first.{0,5}90.{0,5}days|first.{0,5}three.{0,5}months/i,
       answer: () => `Listen and learn fast: ramp on the codebase, the product, and the team's working style. Ship a few small but visible wins to build trust. Identify the highest-leverage problems I can take on next. By day 90 I want to be operating as a clearly net-positive teammate.` },
 
@@ -141,25 +141,25 @@
     { match: /tell.{0,5}me.{0,5}about.{0,5}a.{0,5}time.{0,5}things.{0,5}didn.t.{0,5}go|setback.{0,5}you.{0,5}faced/i,
       answer: () => `A project I owned slipped past its initial deadline because I underestimated the integration work. I owned the slip publicly, replanned with realistic estimates, and shipped successfully a few weeks later. The lesson: scope integration work as carefully as the core build.` },
     { match: /time.{0,5}you.{0,5}were.{0,5}wrong/i,
-      answer: () => `I once pushed strongly for a technical approach that turned out to be wrong for the use case. A teammate raised concerns, I dug in, and after looking honestly at the data I changed direction. The right outcome — and a good reminder to weight evidence over conviction.` },
+      answer: () => `I once pushed strongly for a technical approach that turned out to be wrong for the use case. A teammate raised concerns, I dug in, and after looking honestly at the data I changed direction. The right outcome - and a good reminder to weight evidence over conviction.` },
 
     // ── Conflict depth (10) ─────────────────────────────────────────────────
     { match: /tell.{0,5}me.{0,5}about.{0,5}a.{0,5}time.{0,5}you.{0,5}disagreed/i,
-      answer: () => `A colleague and I disagreed on the architecture for a new service. I listened carefully, restated their view, and then walked through my reasoning with concrete trade-offs. We ended up with a hybrid approach better than either of our original proposals — and the conversation strengthened our working relationship.` },
+      answer: () => `A colleague and I disagreed on the architecture for a new service. I listened carefully, restated their view, and then walked through my reasoning with concrete trade-offs. We ended up with a hybrid approach better than either of our original proposals - and the conversation strengthened our working relationship.` },
     { match: /handle.{0,5}difficult.{0,5}(person|situation|coworker)/i,
       answer: () => `I focus on understanding the other person's perspective first. Most "difficult" interactions get easier once I genuinely understand what they care about. From there I look for shared goals and propose a path forward that works for both sides.` },
 
     // ── Leadership depth (15) ───────────────────────────────────────────────
     { match: /describe.{0,5}your.{0,5}leadership/i,
-      answer: () => `My style is collaborative and outcome-driven. I focus on context, clear priorities, removing blockers, and giving teammates the autonomy to do their best work — while staying close enough to coach and raise the bar.` },
+      answer: () => `My style is collaborative and outcome-driven. I focus on context, clear priorities, removing blockers, and giving teammates the autonomy to do their best work - while staying close enough to coach and raise the bar.` },
     { match: /mentor|coach.{0,5}someone/i,
-      answer: () => `I've mentored several junior engineers. My approach is to coach on judgment, not just tasks — helping them see why certain trade-offs matter, then giving them space to make decisions and learn. Seeing them grow is one of the most rewarding parts of the work.` },
+      answer: () => `I've mentored several junior engineers. My approach is to coach on judgment, not just tasks - helping them see why certain trade-offs matter, then giving them space to make decisions and learn. Seeing them grow is one of the most rewarding parts of the work.` },
     { match: /influence.{0,5}without.{0,5}authority/i,
       answer: () => `Lead with credibility and clarity. Do excellent work, document your reasoning, build trust through reliability, and bring people along by showing not telling. When you've earned the trust, the influence follows.` },
 
     // ── Customer / impact depth (10) ────────────────────────────────────────
     { match: /focus.{0,5}on.{0,5}customer|user.{0,5}empathy/i,
-      answer: () => `I read support tickets, watch session recordings when possible, and stay close to the people who interact with users daily. Even on backend work I try to keep the user experience visible in my mental model — it makes for better engineering decisions.` },
+      answer: () => `I read support tickets, watch session recordings when possible, and stay close to the people who interact with users daily. Even on backend work I try to keep the user experience visible in my mental model - it makes for better engineering decisions.` },
     { match: /measure.{0,5}your.{0,5}success/i,
       answer: () => `Did the work move the metrics it was supposed to move? Did it ship on time and with high quality? Did teammates feel supported through it? Those are my three honest measures.` },
 
@@ -173,23 +173,23 @@
 
     // ── Process / methodology (15) ──────────────────────────────────────────
     { match: /agile.{0,5}vs.{0,5}waterfall/i,
-      answer: () => `Agile fits most product work — short iterations, real feedback, fast course-corrections. Waterfall can fit when scope is truly fixed and well understood (regulated, low-change domains). Most teams I've worked on benefited from agile with strong scoping discipline.` },
+      answer: () => `Agile fits most product work - short iterations, real feedback, fast course-corrections. Waterfall can fit when scope is truly fixed and well understood (regulated, low-change domains). Most teams I've worked on benefited from agile with strong scoping discipline.` },
     { match: /agile.{0,5}experience|scrum.{0,5}experience/i,
-      answer: () => `Significant. I've worked across multiple agile flavors — sprint-based scrum, kanban, and hybrid setups. I'm comfortable in any of them and I focus more on the underlying habits (clear priorities, fast feedback, retrospection) than on the ceremony.` },
+      answer: () => `Significant. I've worked across multiple agile flavors - sprint-based scrum, kanban, and hybrid setups. I'm comfortable in any of them and I focus more on the underlying habits (clear priorities, fast feedback, retrospection) than on the ceremony.` },
     { match: /testing.{0,5}approach|testing.{0,5}philosophy/i,
-      answer: () => `I write tests at the level that gives me the most confidence per minute of effort — usually a strong unit test foundation plus targeted integration tests for the critical paths. I treat test code with the same care as production code.` },
+      answer: () => `I write tests at the level that gives me the most confidence per minute of effort - usually a strong unit test foundation plus targeted integration tests for the critical paths. I treat test code with the same care as production code.` },
     { match: /code.{0,5}review.{0,5}approach/i,
-      answer: () => `I review for correctness, clarity, and long-term maintainability. I leave specific, actionable comments and ask questions rather than make demands. As a reviewee, I respond to every comment thoughtfully — accept, push back with reasoning, or take it offline.` },
+      answer: () => `I review for correctness, clarity, and long-term maintainability. I leave specific, actionable comments and ask questions rather than make demands. As a reviewee, I respond to every comment thoughtfully - accept, push back with reasoning, or take it offline.` },
 
     // ── Tech philosophy (15) ────────────────────────────────────────────────
     { match: /clean.{0,5}code.{0,5}philosophy|coding.{0,5}philosophy/i,
-      answer: () => `Optimize for the person who has to read the code next — usually a teammate, often future-me. Clear names, small functions, obvious data flow, and tests that document intent. Premature abstraction is a debt; concrete is fine until you have a real second use case.` },
+      answer: () => `Optimize for the person who has to read the code next - usually a teammate, often future-me. Clear names, small functions, obvious data flow, and tests that document intent. Premature abstraction is a debt; concrete is fine until you have a real second use case.` },
     { match: /technical.{0,5}debt/i,
       answer: () => `Pay it down deliberately. Track it visibly, weigh it against feature work in planning, and tackle the highest-interest debt first. Some debt is fine if you take it on knowingly with a payoff plan.` },
     { match: /system.{0,5}design.{0,5}approach/i,
       answer: () => `Start from the use case, work backward to the data model and APIs, then choose technologies that minimize complexity for the actual requirements. Plan for failure modes from day one and invest in observability early.` },
     { match: /favorite.{0,5}(language|framework|tool)/i,
-      answer: () => `I'm pragmatic about tools — I pick what fits the job. That said, I really enjoy working in languages with strong type systems and good developer ergonomics; they make complex code more maintainable.` },
+      answer: () => `I'm pragmatic about tools - I pick what fits the job. That said, I really enjoy working in languages with strong type systems and good developer ergonomics; they make complex code more maintainable.` },
 
     // ── Soft skills depth (20) ──────────────────────────────────────────────
     { match: /handle.{0,5}ambiguity/i,
@@ -199,11 +199,11 @@
     { match: /handle.{0,5}failure/i,
       answer: () => `Acknowledge it cleanly, learn the actual lesson (not the convenient one), and apply it concretely going forward. Don't ruminate, don't hide it. Failure is data.` },
     { match: /work.?life.{0,5}balance/i,
-      answer: () => `I work hard during work hours and I'm clear about protecting downtime. Sustainable energy compounds — burnout kills careers. I'd rather ship 80% over six months than 100% for two and then crash.` },
+      answer: () => `I work hard during work hours and I'm clear about protecting downtime. Sustainable energy compounds - burnout kills careers. I'd rather ship 80% over six months than 100% for two and then crash.` },
     { match: /remote.{0,5}work.{0,5}experience/i,
       answer: () => `I'm experienced and comfortable working remotely. I over-communicate, default to written async updates, and stay easy to reach for the synchronous moments that need it.` },
     { match: /hybrid.{0,5}work/i,
-      answer: () => `I'm comfortable with hybrid. It's the best of both worlds when done well — deep focus from home, high-bandwidth collaboration in person.` },
+      answer: () => `I'm comfortable with hybrid. It's the best of both worlds when done well - deep focus from home, high-bandwidth collaboration in person.` },
     { match: /onsite.{0,5}or.{0,5}in.?office/i,
       answer: () => `I'm comfortable working onsite. In-person collaboration is high-bandwidth and I value the time it gives the team.` },
 
@@ -239,11 +239,11 @@
     { match: /onboarding.{0,5}approach/i,
       answer: () => `Listen first. Read the code, the docs, and as many of the prior decisions as I can find. Ask questions in writing so people can answer async. Ship a few small wins early to build trust.` },
     { match: /describe.{0,5}your.{0,5}values/i,
-      answer: () => `Honesty, reliability, and craft. I do what I say, take pride in the work, and treat teammates with respect — even when (especially when) the work gets hard.` },
+      answer: () => `Honesty, reliability, and craft. I do what I say, take pride in the work, and treat teammates with respect - even when (especially when) the work gets hard.` },
     { match: /what.{0,5}matters.{0,5}most.{0,5}to.{0,5}you/i,
       answer: () => `Doing meaningful work with people I respect, on problems that matter, while continuing to grow.` },
     { match: /describe.{0,5}your.{0,5}biggest.{0,5}growth/i,
-      answer: () => `Earlier in my career I focused mostly on technical depth. Over time I've invested heavily in writing, communication, and judgment — those have multiplied the impact of the technical skills.` },
+      answer: () => `Earlier in my career I focused mostly on technical depth. Over time I've invested heavily in writing, communication, and judgment - those have multiplied the impact of the technical skills.` },
     { match: /work.{0,5}with.{0,5}difficult.{0,5}stakeholder/i,
       answer: () => `Understand what they actually care about (not what they're saying first), reflect it back, find the overlap with the team's goals, and propose a path forward. Most "difficult stakeholder" situations get easier with patience and empathy.` },
     { match: /handle.{0,5}competing.{0,5}priorities/i,
@@ -251,7 +251,7 @@
   ]
 
   // ════════════════════════════════════════════════════════════════════════════
-  //  SECTION B — PROGRAMMATICALLY-GENERATED TECH EXPERIENCE Q&A (~600)
+  //  SECTION B - PROGRAMMATICALLY-GENERATED TECH EXPERIENCE Q&A (~600)
   // ════════════════════════════════════════════════════════════════════════════
 
   // Massive list of technologies/skills LinkedIn asks about
@@ -334,7 +334,7 @@
   })
 
   // ════════════════════════════════════════════════════════════════════════════
-  //  SECTION C — PROGRAMMATIC YES/NO Q&A (~150)
+  //  SECTION C - PROGRAMMATIC YES/NO Q&A (~150)
   // ════════════════════════════════════════════════════════════════════════════
 
   const YES_NO_QUESTIONS = [
@@ -448,7 +448,7 @@
   }))
 
   // ════════════════════════════════════════════════════════════════════════════
-  //  SECTION D — PROGRAMMATIC NUMERIC / YOE Q&A (~100)
+  //  SECTION D - PROGRAMMATIC NUMERIC / YOE Q&A (~100)
   // ════════════════════════════════════════════════════════════════════════════
 
   const NUMERIC_PATTERNS = [
@@ -506,7 +506,7 @@
   ]
 
   // ════════════════════════════════════════════════════════════════════════════
-  //  SECTION E — INDUSTRY / SCENARIO Q&A (~100)
+  //  SECTION E - INDUSTRY / SCENARIO Q&A (~100)
   // ════════════════════════════════════════════════════════════════════════════
 
   const SCENARIO_PATTERNS = [
@@ -515,7 +515,7 @@
     { match: /missed.{0,5}deadline|deadline.{0,5}you.{0,5}missed/i,
       answer: () => `I once missed a deadline because I under-scoped the integration work. I owned the slip publicly, replanned with realistic estimates, and shipped successfully a few weeks later. I've been disciplined about scoping integration work ever since.` },
     { match: /angry.{0,5}customer|upset.{0,5}customer/i,
-      answer: () => `Listen first, acknowledge the impact, then move quickly to a concrete fix. Customers don't need spin — they need empathy plus action.` },
+      answer: () => `Listen first, acknowledge the impact, then move quickly to a concrete fix. Customers don't need spin - they need empathy plus action.` },
     { match: /tight.{0,5}budget|limited.{0,5}resource/i,
       answer: () => `Get crisp on the highest-leverage outcome, ruthlessly cut everything that isn't load-bearing, and ship the minimum viable version that delivers real value. Then iterate.` },
     { match: /describe.{0,5}your.{0,5}sales.{0,5}process/i,
@@ -527,7 +527,7 @@
     { match: /how.{0,5}do.{0,5}you.{0,5}make.{0,5}decision/i,
       answer: () => `Get clear on the goal, identify the few real options, weigh the trade-offs against the goal, and commit. I bias to reversible decisions where I can, so I can move fast and adjust later.` },
     { match: /strategic.{0,5}thinking/i,
-      answer: () => `I start from outcomes and work backward — what does success look like in 12-18 months, and what's the cleanest path there? Then I segment that into near-term bets that move the needle.` },
+      answer: () => `I start from outcomes and work backward - what does success look like in 12-18 months, and what's the cleanest path there? Then I segment that into near-term bets that move the needle.` },
     { match: /how.{0,5}do.{0,5}you.{0,5}handle.{0,5}risk/i,
       answer: () => `Identify it explicitly, weight it by impact and likelihood, and mitigate the highest-EV ones first. The biggest risks are usually the ones you haven't named yet.` },
     { match: /tell.{0,5}me.{0,5}about.{0,5}a.{0,5}time.{0,5}you.{0,5}sold/i,
@@ -581,5 +581,5 @@
     patterns: ALL_QA,
     size: ALL_QA.length,
   }
-  try { console.log(`[reblet] Q&A bank loaded — ${ALL_QA.length} patterns`) } catch (e) {}
+  try { console.log(`[reblet] Q&A bank loaded - ${ALL_QA.length} patterns`) } catch (e) {}
 })()
